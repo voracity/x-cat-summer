@@ -12,6 +12,8 @@
 	--back-color4: #E7D2CC;
 	--back-textcolor4: black;
 	--bar-color: var(--back-color2);
+	--bar-change-positive:rgb(29, 224, 124);
+	--bar-change-negative:rgb(29, 104, 224);
 }
 
 * { box-sizing: border-box; min-height: 0; min-width: 0; }
@@ -76,6 +78,10 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node .barParent { width: 60px; position: relative; height: 100%; border-left: solid 1px black;
 	display: flex; align-items: center; margin: -1px 0; }
 .node .bar { display: inline-block; background: black; height: 1em; transition: width 0.3s; }
+.node .barchange { position:absolute; display: inline-block;  height: 1em; transition: width 0.3s; }
+.node .barchange.positive { background-color:var(--bar-change-positive) ; }
+.node .barchange.negative { background-color:var(--bar-change-negative) ; }
+
 .node .controls { position: absolute; padding: 0; margin: -4px -4px 0 -4px; bottom: 100%; text-align: right; width: 100%; }
 .node .controls a { color: #777; font-size: 10pt; }
 /** This is ... bad. Still leaves grid-gap. For now, will leave, but maybe replace with table! **/

@@ -328,7 +328,10 @@ class BnDetail {
 			let nodes = m.model.map(node => n('div.node',
 				{dataName: node.name},
 				/* Use transform, so that alignment is the same as what GeNIe thinks it is (i.e. based on centre point) */
-				{style: `left: ${node.pos[0]}px; top: ${node.pos[1]}px; transform:translate(-50%,-50%)`},
+				// {style: `left: ${node.pos[0]}px; top: ${node.pos[1]}px; transform:translate(-50%,-50%)`},
+				/* MK: The example files don't have an offset */
+				
+				{style: `left: ${node.pos[0]}px; top: ${node.pos[1]}px; `},
 				n('div.controls',
 					n('a.setCause', {href: 'javascript:void(0)'}, 'C'),
 					n('a.setEffect', {href: 'javascript:void(0)'}, 'E'),
@@ -341,7 +344,11 @@ class BnDetail {
 						n('span.target', n('input', {type: 'checkbox'})),
 						n('span.label', s),
 						n('span.prob', (node.beliefs[i]*100).toFixed(1)),
-						n('span.barParent', n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}))),
+						n('span.barParent', 
+								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
+								n('span.barchange.positive', {style: `width: 10%; left:50%; `}),
+								n('span.barchange.negative', {style: `width: 20%; left:0%; `})
+						)),
 					),
 				),
 			));
