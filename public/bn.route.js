@@ -388,6 +388,29 @@ class BnDetail {
 		if (m.visibility != null) {
 			this.root.querySelector('button.publish').style.display = m.visibility == 'public' ? 'none' : 'inline';
 		}
+		if (m.influences) {
+			console.log("updating influences");
+			Object.entries(m.influences).forEach(([evidenceNodeName, value]) => {
+				let targetBeliefs = value['targetBeliefs'];
+				let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)
+				let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
+				Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {
+					// let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
+					let diffBelief = m.nodeBeliefs[targetNodeName][evidenceStateIdx] - beliefs[evidenceStateIdx];
+					let barchangeElem;
+					let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
+					if (diffBelief < 0) {
+						barchangeElem = stateElem.querySelector(`span.barchange.negative`);
+					} else  {
+						barchangeElem = stateElem.querySelector(`span.barchange.positive`);
+					}
+					barchangeElem.style.width = `${Math.abs(diffBelief)*100}%`;
+					barchangeElem.style.left = `${100 - Math.abs(diffBelief)*100}%`;
+
+
+				})
+			})
+		}
 	}
 }
 

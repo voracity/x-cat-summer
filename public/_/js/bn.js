@@ -58,6 +58,11 @@ var bn = {
 					this.beliefs[node.name] = node.beliefs;
 				}
 				this.measureResults = reqData.measureResults;
+				if (reqData.influences) {
+					this.influences = reqData.influences;
+				} else {
+					delete this.influences;
+				}
 				this.gui('Update');
 			}
 		})();
@@ -65,7 +70,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences});
 	},
 
 	guiUpdateInfoWindows() {
@@ -260,6 +265,10 @@ class Node {
 			//delete bn.evidence[nodeName];
 			evidence[nodeName] = null;
 			this.el().classList.remove('hasEvidence');
+			let influenceBars = this.el().querySelectorAll("span.barchange");
+			Array.from(influenceBars).forEach(elem => {
+				elem.style.width = "";
+			})
 		}
 		else {
 			//bn.evidence[nodeName] = state.dataset.index;
@@ -450,6 +459,12 @@ document.addEventListener('DOMContentLoaded', event => {
 		let target = event.target.closest('.target');
 		if (target) {
 			// target.classList.toggle('selected');
+			let possibleEvidenceNode = target.closest('.node.hasEvidence');
+			
+			// Don't react, if node is an evidence node
+			if (possibleEvidenceNode)
+				return;
+
 			target.closest('.state').classList.toggle('istarget');
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
@@ -465,6 +480,10 @@ document.addEventListener('DOMContentLoaded', event => {
 			
 			if (!states.length) {
 				delete bn.selectedStates[nodeName];
+
+				Array.from(document.querySelectorAll("span.barchange")).forEach(elem=>{
+					elem.style.width = "";
+				})
 			}
 			else {
 				bn.selectedStates[nodeName] = states;
@@ -475,6 +494,8 @@ document.addEventListener('DOMContentLoaded', event => {
 				bn.calculateTargetChange = false;
 				// bn.update(bn.evidence);
 			
+			if (Object.keys(bn.evidence).length > 0)
+				bn.update(bn.evidence);
 			return;
 		}
 		let state = event.target.closest('.state');
