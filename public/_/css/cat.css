@@ -89,6 +89,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 /** This is ... bad. Still leaves grid-gap. For now, will leave, but maybe replace with table! **/
 /* .node .target { width: 0; overflow: hidden; transition: width 0.2s; } */
 .node .target { color:red; padding: 2px; font-weight: bolder;}
+.node.hasEvidence  .state >.target { color:#ccc; padding: 2px; font-weight: bolder;}
 .node .state.istarget .target { color:black; padding: 2px; font-weight: bolder;}
 
 .node .state.istarget {
