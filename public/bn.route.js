@@ -323,6 +323,7 @@ class BnDetail {
 				this.titleEl.textContent = m.title;
 			}
 		}
+		
 		if (m.model) {
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -338,16 +339,18 @@ class BnDetail {
 					//n('a.menu', {href: 'javascript:void(0)'}, '\u22EF'),
 				),
 				n('h3', node.name),
+				
 				n('div.states',
 					node.states.map((s,i) => n('div.state',
 						{dataIndex: i},
-						n('span.target', n('input', {type: 'checkbox'})),
+						// n('span.target', n('input', {type: 'checkbox'})),
+						n('span.target', "T"),
 						n('span.label', s),
 						n('span.prob', (node.beliefs[i]*100).toFixed(1)),
 						n('span.barParent', 
 								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
-								n('span.barchange.positive', {style: `width: 10%; left:50%; `}),
-								n('span.barchange.negative', {style: `width: 20%; left:0%; `})
+								n('span.barchange.positive', /*{style: `width: 10%; left:50%; `}*/),
+								n('span.barchange.negative', /*{style: `width: 20%; left:0%; `}*/)
 						)),
 					),
 				),
@@ -421,6 +424,7 @@ module.exports = {
 				db.run('update bns set visibility = $visibility where id = $id', updParams);
 			}
 		}
+		
 		else {
 			let net = null;
 			let origNet = null;
@@ -507,65 +511,124 @@ module.exports = {
 					}
 				}
 				
-				if (req.query.evidence) {
-					let evidence = JSON.parse(req.query.evidence);
-					for (let [nodeName,stateI] of Object.entries(evidence)) {
-						console.log(nodeName, stateI);
-						net.node(nodeName).finding(Number(stateI));
-						origNet.node(nodeName).finding(Number(stateI));
-					}
-				}
-				
-				let selectedStates = null;
-				if (req.query.selectedStates) {
-					selectedStates = JSON.parse(req.query.selectedStates);
-				}
-				console.log({selectedStates});
-				
-				/// Update selected states if there are joint causes
-				console.log({roles});
-				let hasSelStates = false;
-				for (let k in selectedStates) { hasSelStates = true; break; }
-				if (roles && roles.cause && roles.cause.length > 1 && hasSelStates) {
-					let jointSelStates = ['s'];
-					for (let cause of roles.cause) {
-						let newJointSelStates = [];
-						let selCauseStates = cause in selectedStates ? selectedStates[cause] : net.node(cause).states().map(s => s.stateNum);
-						for (let selCauseState of selCauseStates) {
-							for (let i=0; i<jointSelStates.length; i++) {
-								let s = jointSelStates[i]=='s' ? '' : '_';
-								newJointSelStates.push(jointSelStates[i] + s + selCauseState);
-							}
+				if (req.query.returnType == 'targetInfluence') {
+					if (req.query.evidence) {
+						let evidence = JSON.parse(req.query.evidence);
+
+						// the selected state is our Target
+						// and we want to monitor its change when we en/disable evidence 
+
+						if (req.query.selectedStates) {
+							selectedStates = JSON.parse(req.query.selectedStates);
 						}
-						jointSelStates = newJointSelStates;
+
+						// get network with all evidence 
+						for (let [nodeName,stateI] of Object.entries(evidence)) {
+							console.log(nodeName, stateI);
+							net.node(nodeName).finding(Number(stateI));
+							// origNet.node(nodeName).finding(Number(stateI));
+						}
+						// reset one particular evidence to see its influence
+						
+						console.time('update');
+						net.update();
+						baselineModel = net.nodes().map(n => ({name: n.name(), beliefs: n.beliefs()}));
+						// origNet.update();
+						bn.model = baselineModel;
+						
+						if (Object.keys(evidence).length == 0) {
+							return bn;
+						}
+						//disable one by one with the remaining all active
+						bn.influences = {};
+						for (let nonActiveNodeName of Object.keys(evidence)) {
+							net = new Net(bnKey);
+							for (let [nodeName,stateI] of Object.entries(evidence)) {
+								if (nodeName != nonActiveNodeName) {
+									console.log(nodeName, stateI);
+									net.node(nodeName).finding(Number(stateI));
+								}
+								// origNet.node(nodeName).finding(Number(stateI));
+							}
+							// reset one particular evidence to see its influence
+							
+							// console.time('update');
+							console.log("rerunning without", nonActiveNodeName)
+							net.update();
+							// console.timeEnd('update');
+							bn.influences[nonActiveNodeName]= {targetBeliefs : {}};
+							Object.keys(selectedStates).forEach(targetNodeName => {
+								bn.influences[nonActiveNodeName].targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs()
+							})
+						}
+
+
+
+
+						return bn;
 					}
-					//let newSelectedStates = {[calculateOpts.jointCause]: jointSelStates};
-					//console.log({newSelectedStates});
-					//selectedStates = newSelectedStates;
-					selectedStates[calculateOpts.jointCause] = jointSelStates;
-					/// Remove other selectedStates for causes, to avoid issues
-					for (let cause of roles.cause) {
-						delete selectedStates[cause];
+				} else {
+					if (req.query.evidence) {
+						let evidence = JSON.parse(req.query.evidence);
+						for (let [nodeName,stateI] of Object.entries(evidence)) {
+							console.log(nodeName, stateI);
+							net.node(nodeName).finding(Number(stateI));
+							origNet.node(nodeName).finding(Number(stateI));
+						}
 					}
-					console.log('states:', net.node(calculateOpts.jointCause).stateNames());
-					console.log('selected of these states:', jointSelStates);
+					
+					let selectedStates = null;
+					if (req.query.selectedStates) {
+						selectedStates = JSON.parse(req.query.selectedStates);
+					}
+					console.log({selectedStates});
+					
+					/// Update selected states if there are joint causes
+					console.log({roles});
+					let hasSelStates = false;
+					for (let k in selectedStates) { hasSelStates = true; break; }
+					if (roles && roles.cause && roles.cause.length > 1 && hasSelStates) {
+						let jointSelStates = ['s'];
+						for (let cause of roles.cause) {
+							let newJointSelStates = [];
+							let selCauseStates = cause in selectedStates ? selectedStates[cause] : net.node(cause).states().map(s => s.stateNum);
+							for (let selCauseState of selCauseStates) {
+								for (let i=0; i<jointSelStates.length; i++) {
+									let s = jointSelStates[i]=='s' ? '' : '_';
+									newJointSelStates.push(jointSelStates[i] + s + selCauseState);
+								}
+							}
+							jointSelStates = newJointSelStates;
+						}
+						//let newSelectedStates = {[calculateOpts.jointCause]: jointSelStates};
+						//console.log({newSelectedStates});
+						//selectedStates = newSelectedStates;
+						selectedStates[calculateOpts.jointCause] = jointSelStates;
+						/// Remove other selectedStates for causes, to avoid issues
+						for (let cause of roles.cause) {
+							delete selectedStates[cause];
+						}
+						console.log('states:', net.node(calculateOpts.jointCause).stateNames());
+						console.log('selected of these states:', jointSelStates);
+					}
+					
+					console.time('update');
+					net.update();
+					origNet.update();
+					console.timeEnd('update');
+					
+					let measureResults = {};
+					for (let measure of measures) {
+						measureResults[measure] = measurePlugins[measure].calculate({
+							interventionNet: net,
+							originalNet: origNet,
+						}, roles, selectedStates, calculateOpts);
+					}
+					bn.measureResults = measureResults;
+					console.log('Done calculations');
 				}
-				
-				console.time('update');
-				net.update();
-				origNet.update();
-				console.timeEnd('update');
-				
-				let measureResults = {};
-				for (let measure of measures) {
-					measureResults[measure] = measurePlugins[measure].calculate({
-						interventionNet: net,
-						originalNet: origNet,
-					}, roles, selectedStates, calculateOpts);
-				}
-				bn.measureResults = measureResults;
-				console.log('Done calculations');
-				
+
+
 				if (req.query.returnType == 'beliefs') {
 					console.log('Getting beliefs');
 					bn.model = net.nodes().map(n => ({name: n.name(), beliefs: n.beliefs()}));
@@ -629,6 +692,7 @@ module.exports = {
 					bn.ciTable = allResults;
 					console.log('Done CI Table');
 				}
+				
 				else {
 					console.log('Returning BN info');
 					//console.log('HI2');

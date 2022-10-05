@@ -47,13 +47,19 @@ var bn = {
 		/// We can run this in parallel
 		/// er, not quite yet...
 		await (async _=>{
-			let reqData = await (await fetch(window.location.href + '&requestType=data&returnType=beliefs&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
+			let reqData;
+			if (this.calculateTargetChange)
+				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=targetInfluence&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
+			else
+				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=beliefs&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
 			//let nodeBeliefs = {};
-			for (let node of reqData.model) {
-				this.beliefs[node.name] = node.beliefs;
+			if (reqData.model) {
+				for (let node of reqData.model) {
+					this.beliefs[node.name] = node.beliefs;
+				}
+				this.measureResults = reqData.measureResults;
+				this.gui('Update');
 			}
-			this.measureResults = reqData.measureResults;
-			this.gui('Update');
 		})();
 		this.guiUpdateInfoWindows();
 	},
@@ -443,17 +449,19 @@ document.addEventListener('DOMContentLoaded', event => {
 	document.querySelector('.bnView').addEventListener('click', async event => {
 		let target = event.target.closest('.target');
 		if (target) {
+			// target.classList.toggle('selected');
+			target.closest('.state').classList.toggle('istarget');
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
 			let node = target.closest('.node');
 			
 			/// If shift key held, then allow multi-select; otherwise, clear old selects
-			if (!event.shiftKey) {
-				node.querySelectorAll('.target input').forEach(i => i != thisInput && (i.checked = false));
-			}
+			// if (!event.shiftKey) {
+			// 	node.querySelectorAll('.target input').forEach(i => i != thisInput && (i.checked = false));
+			// }
 			
-			let states = [...node.querySelectorAll('.target input:checked')].map(el => Number(el.closest('.state').dataset.index));
+			let states = [...node.querySelectorAll('.state.istarget')].map(el => Number(el.closest('.state').dataset.index));
 			
 			if (!states.length) {
 				delete bn.selectedStates[nodeName];
@@ -461,8 +469,11 @@ document.addEventListener('DOMContentLoaded', event => {
 			else {
 				bn.selectedStates[nodeName] = states;
 			}
-			
-			bn.update(bn.evidence);
+			if (Object.keys(bn.selectedStates).length > 0)
+				bn.calculateTargetChange = true;
+			else
+				bn.calculateTargetChange = false;
+				// bn.update(bn.evidence);
 			
 			return;
 		}

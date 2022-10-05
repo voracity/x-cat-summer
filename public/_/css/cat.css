@@ -69,14 +69,16 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node.moving h3, .node.moving { cursor: grabbing; }
 .node.moving { box-shadow: 3px 3px 4px #4444; margin: -2px 0 0 -2px; }
 
-.node .states { display: grid; grid-template-columns: auto auto auto auto; grid-gap: 0 3px;
+.node .states { display: table; 
 	align-items: center; margin-top: 0px; margin-bottom: -4px; }
 .node .state > * { min-width: fit-content; }
 .node .state .target { min-width: 0; }
-.node .state { font-size: 9pt; display: contents; cursor: pointer; }
+.node .state { font-size: 9pt; display: table-row; cursor: pointer; }
+.node .state > span {display:table-cell;padding: 2px 2px; }
 .node .prob { text-align: right; padding-left: 0.5em; }
 .node .barParent { width: 60px; position: relative; height: 100%; border-left: solid 1px black;
-	display: flex; align-items: center; margin: -1px 0; }
+	margin: -1px 0; }
+.node .barParent > span {vertical-align: text-top;}	
 .node .bar { display: inline-block; background: black; height: 1em; transition: width 0.3s; }
 .node .barchange { position:absolute; display: inline-block;  height: 1em; transition: width 0.3s; }
 .node .barchange.positive { background-color:var(--bar-change-positive) ; }
@@ -85,7 +87,13 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node .controls { position: absolute; padding: 0; margin: -4px -4px 0 -4px; bottom: 100%; text-align: right; width: 100%; }
 .node .controls a { color: #777; font-size: 10pt; }
 /** This is ... bad. Still leaves grid-gap. For now, will leave, but maybe replace with table! **/
-.node .target { width: 0; overflow: hidden; transition: width 0.2s; }
+/* .node .target { width: 0; overflow: hidden; transition: width 0.2s; } */
+.node .target { color:red; padding: 2px; font-weight: bolder;}
+.node .state.istarget .target { color:black; padding: 2px; font-weight: bolder;}
+
+.node .state.istarget {
+	background-color: orange;
+}
 
 /*:is(.arc, .head, .triangle, .line, .bar){ transition: transform 0.1s, transform-origin 0.1s, d 0.1s, opacity 0.1s; }
 .hasMoving :is(.arc, .head, .triangle, .line, .bar){ transition: none; }*/
@@ -93,7 +101,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node.hasEvidence { background: #eee; }
 .node[data-role="cause"] { background: var(--cause-color); }
 .node[data-role="effect"] { background: var(--effect-color); }
-.node[data-role] .target { width: 20px; overflow: unset; }
+/* .node[data-role] .target { width: 20px; overflow: unset; } */
 /** Probably should just be for setCause/setEffect **/
 .node .controls a { padding: 1px 4px; outline: none; display: inline-block; margin-bottom: 1px;
 	color: transparent; }
