@@ -70,7 +70,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, origModel:this.model});
 	},
 
 	guiUpdateInfoWindows() {
@@ -269,6 +269,14 @@ class Node {
 			Array.from(influenceBars).forEach(elem => {
 				elem.style.width = "";
 			})
+			let stateElem = this.el().querySelector(`div[data-index="${stateIndex}"]`);
+			if (!stateElem.classList.contains('istarget'))
+				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=>
+					Array.from(elem.classList).forEach(classname=> {
+						if (classname.indexOf("influence-idx") == 0)
+							elem.classList.remove(classname);
+					})
+				)
 		}
 		else {
 			//bn.evidence[nodeName] = state.dataset.index;
@@ -466,10 +474,12 @@ document.addEventListener('DOMContentLoaded', event => {
 				return;
 
 			target.closest('.state').classList.toggle('istarget');
+			target.closest('.node').classList.toggle('istargetnode');
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
 			let node = target.closest('.node');
+			
 			
 			/// If shift key held, then allow multi-select; otherwise, clear old selects
 			// if (!event.shiftKey) {
@@ -478,12 +488,20 @@ document.addEventListener('DOMContentLoaded', event => {
 			
 			let states = [...node.querySelectorAll('.state.istarget')].map(el => Number(el.closest('.state').dataset.index));
 			
+			// clean up if we have not target selected
 			if (!states.length) {
 				delete bn.selectedStates[nodeName];
 
+				// reset background colors for every evidence node 
 				Array.from(document.querySelectorAll("span.barchange")).forEach(elem=>{
 					elem.style.width = "";
 				})
+				Array.from(document.querySelectorAll(".node span:not(.barParent)")).forEach(elem=>
+					Array.from(elem.classList).forEach(classname=> {
+						if (classname.indexOf("influence-idx") == 0)
+							elem.classList.remove(classname);
+					})
+				)
 			}
 			else {
 				bn.selectedStates[nodeName] = states;

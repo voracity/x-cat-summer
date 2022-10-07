@@ -296,6 +296,7 @@ class BnDetail {
 			n('div.bnView',
 			),
 			n('div.infoWindows',
+				/*	
 				n('div.help',
 					n('h2', 'Help'),
 					n('div.tip.infoContent',
@@ -304,6 +305,20 @@ class BnDetail {
 						n('p', `To focus on the causal information for just specific states, click the checkbox next to the state name. To select multiple such states, hold down 'Shift'.`),
 					),
 				),
+				*/
+				n("h4", "Colour scale"),
+				n("div", "Colour scale showing the influence of evidence on the target."),
+				n("table", {class:"influencelegend"} ,
+					n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
+					n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
+					n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
+					n("tr", n("td", "doesn't change", {class:`influence-idx3`})),
+					n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
+					n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
+					n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
+				),
+				n("h4", "Target"),
+				n("div", n("div", {style:"display:inline-block; width:20px; height:1em; background-color:var(--probability-present); padding:3px; "}), n("span", "Colour of a selected target"))
 			),
 		);
 		this.titleEl = this.root.querySelector('.title');
@@ -312,6 +327,23 @@ class BnDetail {
 	
 	toHtml() { return this.root.outerHTML; }
 	
+	getColor(changerate) {
+		if (changerate <= -0.3) 
+			return "influence-idx6";
+		else if (-0.3 < changerate && changerate <= -0.15)
+			return "influence-idx5";
+		else if (-0.15 < changerate  && changerate < 0)
+			return "influence-idx4";
+		else if (changerate == 0)
+			return "influence-idx3";
+		else if (0 < changerate && changerate <= 0.15)
+			return "influence-idx2";
+		else if (0.15 < changerate && changerate <= 0.3)
+			return "influence-idx1";
+		else if (0.3 < changerate)
+			return "influence-idx0";
+	}
+
 	$handleUpdate(m) {
 		let barMax = 100; //px
 		if (m.title) {
@@ -349,8 +381,7 @@ class BnDetail {
 						n('span.prob', (node.beliefs[i]*100).toFixed(1)),
 						n('span.barParent', 
 								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
-								n('span.barchange.positive', /*{style: `width: 10%; left:50%; `}*/),
-								n('span.barchange.negative', /*{style: `width: 20%; left:0%; `}*/)
+								n('span.barchange')
 						)),
 					),
 				),
@@ -390,26 +421,79 @@ class BnDetail {
 		}
 		if (m.influences) {
 			console.log("updating influences");
+			let listTargetNodes = {}
 			Object.entries(m.influences).forEach(([evidenceNodeName, value]) => {
 				let targetBeliefs = value['targetBeliefs'];
 				let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)
 				let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
 				Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {
-					// let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
-					let diffBelief = m.nodeBeliefs[targetNodeName][evidenceStateIdx] - beliefs[evidenceStateIdx];
-					let barchangeElem;
-					let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
-					if (diffBelief < 0) {
-						barchangeElem = stateElem.querySelector(`span.barchange.negative`);
-					} else  {
-						barchangeElem = stateElem.querySelector(`span.barchange.positive`);
-					}
-					barchangeElem.style.width = `${Math.abs(diffBelief)*100}%`;
-					barchangeElem.style.left = `${100 - Math.abs(diffBelief)*100}%`;
+					let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
+					let targetStateElem = targetNode.querySelector(".state.istarget");
+					let targetStateIdx = targetStateElem.dataset.index;
 
+					let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
+					listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+					// calculate the relative change this evidence had on the target
+					// and set the change color accordingly
+
+					let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+					let absChange = Math.abs(relativeBeliefChange * 100);
+					let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
+					let barchangeElem = stateElem.querySelector(`span.barchange`);
+					let colorClass = this.getColor(relativeBeliefChange);
+					// set colour and width of the barchange element
+					
+					
+					barchangeElem.style.width = `${absChange}%`;
+					barchangeElem.style.left = `${100 - absChange}%`;
+
+					Array.from(barchangeElem.classList).forEach(classname=> {
+						if (classname.indexOf("influence-idx") == 0)
+							barchangeElem.classList.remove(classname);
+					})
+					barchangeElem.classList.add(colorClass);
+					
+					// for all elements not being part of the bar set backgroundcolor
+					Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
+						Array.from(elem.classList).forEach(classname=> {
+							if (classname.indexOf("influence-idx") == 0)
+								elem.classList.remove(classname);
+						});
+						elem.classList.add(colorClass);
+					})
 
 				})
 			})
+			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+				let baseBelief = data.model.beliefs[data.index];
+				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
+				let diff = currentBelief - baseBelief
+				let absDiff = 100*Math.abs(diff)
+				let colorClass = this.getColor(currentBelief/baseBelief)
+				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+				if (diff > 0) {
+					barchangeElem.style.left = `${100*baseBelief}%`;
+					barchangeElem.style.width = `${absDiff}%`;
+				} else {
+					barchangeElem.style.left = `${100*baseBelief-absDiff}%`;
+					barchangeElem.style.width = `${absDiff}%`;
+
+				}
+				Array.from(barchangeElem.classList).forEach(classname=> {
+					if (classname.indexOf("influence-idx") == 0)
+						barchangeElem.classList.remove(classname);
+				})
+				barchangeElem.classList.add(colorClass);
+				
+
+
+			})
+		} else {
+			Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
+				let barchange = targetNode.querySelector(".barchange");
+				barchange.style.width = ""
+			})
+
 		}
 	}
 }
@@ -584,9 +668,6 @@ module.exports = {
 								bn.influences[nonActiveNodeName].targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs()
 							})
 						}
-
-
-
 
 						return bn;
 					}

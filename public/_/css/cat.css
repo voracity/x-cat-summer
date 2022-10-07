@@ -14,6 +14,45 @@
 	--bar-color: var(--back-color2);
 	--bar-change-positive:rgb(29, 224, 124);
 	--bar-change-negative:rgb(29, 104, 224);
+	
+	--influence-idx0:rgb(71, 110, 0);
+	--influence-idx1:rgb(141, 220, 0);
+	--influence-idx2:rgb(223,255,165);
+	--influence-idx3:rgb(250, 245, 245);
+	--influence-idx4:rgb(215,227,255);
+	--influence-idx5:rgb(95, 145, 255);
+	--influence-idx6:rgb(0, 56, 180);
+
+	--probability-present: rgb(255,255,128);
+}
+
+.influence-idx0 {
+	background-color: rgb(71, 110, 0);
+	color: white;
+}
+.influence-idx1 {
+	background-color: rgb(141, 220, 0);
+	color: black;
+}
+.influence-idx2 {
+	background-color:rgb(223,255,165);
+	color: black;
+}
+.influence-idx3 {
+	background-color: rgb(250, 245, 245);
+	color: black;
+}
+.influence-idx4 {
+	background-color: rgb(215,227,255);
+	color: black;
+}
+.influence-idx5 {
+	background-color: rgb(95, 145, 255);
+	color: black;
+}
+.influence-idx6 {
+	background-color: rgb(0, 56, 180);
+	color: white;
 }
 
 * { box-sizing: border-box; min-height: 0; min-width: 0; }
@@ -93,9 +132,12 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node .state.istarget .target { color:black; padding: 2px; font-weight: bolder;}
 
 .node .state.istarget {
-	background-color: orange;
+	background-color: var(--probability-present);
 }
-
+.node.istargetnode H3{
+	background-color: var(--probability-present);
+	
+}
 /*:is(.arc, .head, .triangle, .line, .bar){ transition: transform 0.1s, transform-origin 0.1s, d 0.1s, opacity 0.1s; }
 .hasMoving :is(.arc, .head, .triangle, .line, .bar){ transition: none; }*/
 
@@ -183,3 +225,11 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 .bnPage .bnDetail { display: grid; grid-template-columns: 1fr 22%; grid-template-rows: auto 1fr; height: 100%; }
 .bnPage .bnDetail > .controls { grid-column: 1 / span 2; padding: 8px; background: var(--back-color2); border-bottom: solid 1px black; }
 .bnPage .bnView { height: 100%; overflow: auto; }
+
+.influencelegend {
+	padding:3px;
+}
+.influencelegend td {
+	padding: 3px;
+	text-align: center;
+}
