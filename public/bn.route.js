@@ -20,6 +20,68 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
+
+function marginalizeParentArc(child, parentToRemove, reduce = false) {
+	function getRowIndex(parIndexes) {
+		let rowIndex = 0;
+		for (let i=0; i<parIndexes.length; i++) {
+			if (i!=0)  rowIndex *= pars[i].states().length;
+			rowIndex += parIndexes[i];
+		}
+		return rowIndex;
+	}
+	
+	function addWeightedVec(vec1, vec2, weight) {
+		return vec1.map((v,i) => v + vec2[i]*weight);
+	}
+
+	let net = child.net;
+	
+	/// The CPT (we'll modify in place)
+	let cpt = child.cpt();
+	
+	let pars = child.parents();
+	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
+	
+	let marginals = parentToRemove.beliefs();
+	
+	let parIndexes = pars.map(_=>0);
+	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
+	do {
+		let row = child.states().map(_=>0);
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			//console.log(parIndexes, rowI);
+			row = addWeightedVec(row, cpt[rowI], marginals[i]);
+		}
+		let marginalizedRow = row;
+		
+		/// Replace all the matching rows with the weighted combination
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			cpt[rowI] = marginalizedRow;
+		}
+	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+	
+	if (reduce) {
+		/// Resize the CPT (i.e. remove the redundant rows)
+		let parIndexes = pars.map(_=>0);
+		let newCpt = [];
+		do {
+			newCpt.push(cpt[getRowIndex(parIndexes)]);
+		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+		
+		return newCpt;
+	}
+	else {
+		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
+		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
+		return cpt;
+	}
+}
+
 function pick(obj, keys) {
 	let newObj = {};
 	for (let key of keys) {
@@ -436,7 +498,8 @@ class BnDetail {
 					// calculate the relative change this evidence had on the target
 					// and set the change color accordingly
 
-					let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+					// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+					let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
 					let absChange = Math.abs(relativeBeliefChange * 100);
 					let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 					let barchangeElem = stateElem.querySelector(`span.barchange`);
@@ -463,6 +526,7 @@ class BnDetail {
 					})
 
 				})
+
 			})
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];
@@ -488,6 +552,27 @@ class BnDetail {
 
 
 			})
+			if (m.arcInfluence) {
+				m.arcInfluence.forEach(arcEntry => {
+					let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
+
+					Object.entries(arcEntry.targetBelief).forEach(([targetNodeName, arcBeliefs]) => {
+						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
+						let targetStateElem = targetNode.querySelector(".state.istarget");
+						let targetStateIdx = targetStateElem.dataset.index;
+
+						let diff = m.nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
+						let absDiff = Math.abs(diff);
+						let arcSize = Math.max(2, (absDiff) * 15);
+						let arcColor = this.getColor(diff)
+
+						console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
+						arc.style.strokeWidth = arcSize;
+						
+						arc.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
+					})
+				})
+			}
 		} else {
 			Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
 				let barchange = targetNode.querySelector(".barchange");
@@ -668,6 +753,45 @@ module.exports = {
 								bn.influences[nonActiveNodeName].targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs()
 							})
 						}
+
+						// calculate arc importances
+
+						let arcs = []
+						// reset network
+						net = new Net(bnKey);
+						net.nodes().forEach(child => {
+							let childname = child.name();
+							child.parents().forEach(parent => {
+								let parentname = parent.name();
+								
+								let netWithnewCPT = new Net(bnKey);
+								let newcpt = marginalizeParentArc(child, parent, true);
+								
+								let newchild = netWithnewCPT.node(childname);
+								let removeparentnode = netWithnewCPT.node(parentname);
+								newchild.removeParents([removeparentnode]);
+								newchild.cpt(newcpt);
+								
+								for (let [nodeName,stateI] of Object.entries(evidence)) {
+									netWithnewCPT.node(nodeName).finding(Number(stateI));
+								}
+
+								netWithnewCPT.update();
+
+								let entry = {
+									child:childname,
+									parent:parentname,
+									targetBelief:{}
+									
+								}
+								Object.keys(selectedStates).forEach(targetNodeName => {
+									entry.targetBelief[targetNodeName] = netWithnewCPT.node(targetNodeName).beliefs()
+								})
+								
+								arcs.push(entry)
+							})
+						})
+						bn.arcInfluence = arcs;
 
 						return bn;
 					}

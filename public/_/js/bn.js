@@ -60,6 +60,7 @@ var bn = {
 				this.measureResults = reqData.measureResults;
 				if (reqData.influences) {
 					this.influences = reqData.influences;
+					this.arcInfluence = reqData.arcInfluence;
 				} else {
 					delete this.influences;
 				}
@@ -70,7 +71,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, origModel:this.model});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model});
 	},
 
 	guiUpdateInfoWindows() {

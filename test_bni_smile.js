@@ -1,37 +1,20 @@
 var {Net, Node} = require('./bni_smile');
 var netsDir = "nets/";
+var filename = "Dermascare-v5.2.dne";
+var nodename = "Dermascare_disease";
 
 function mainTests() {
 	console.log("[Open NF_V1.dne]");
-	let myNet = new Net(netsDir + "NF_V1.dne");
+	let myNet = new Net(netsDir + filename);
 	console.log();
-
-	console.log("[Call close() garbage collect]");
-	myNet.close();
-
-	console.log("[Re-open NF_V1.dne]");
-	myNet = new Net(netsDir+"NF_V1.dne");
-	console.log();
-
-	console.log("Net name:", myNet.name())
-	console.log("[Change name to NFAV1]")
-	myNet.name("NFAV1")
-	console.log("Check new net name:", myNet.name())
-	console.log()
-
-	console.log("Net title:", myNet.title())
-	console.log("[Change title to 'Native Fish A V1']")
-	myNet.title("Native Fish A V1")
-	console.log("Check new net title:", myNet.title())
-	console.log()
 
 	console.log("[Get RiverFlow node]")
-	let rf = myNet.node("RiverFlow")
+	let rf = myNet.node(nodename)
 	console.log(rf)
 
 	console.log("RiverFlow number states:", rf.numberStates())
 	console.log("RiverFlow node beliefs:", rf.beliefs())
-	console.log("FishAbundance node beliefs:", myNet.node("FishAbundance").beliefs())
+	console.log("CPT:", rf.cpt())
 	console.log("P(All Evidence):", myNet.findingsProbability())
 	console.log()
 
