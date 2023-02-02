@@ -342,6 +342,7 @@ class BnDetail {
 			n('script', {src: sitePath('/_/js/arrows.js')}),
 			n('script', {src: sitePath('/_/js/bn.js')}),
 			n('div.controls',
+				n('button.downloadpng', 'Download As PNG'),
 				n('button.save', 'Save to My Library'),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),

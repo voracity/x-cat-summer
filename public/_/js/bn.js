@@ -589,4 +589,7 @@ document.addEventListener('DOMContentLoaded', event => {
 			n('button.cancel', 'Cancel', {on: {click:ui.dismissDialogs}}),
 		]});
 	});
+	q('button.downloadpng').addEventListener('click', () => {
+		render.Network();
+	})
 });
