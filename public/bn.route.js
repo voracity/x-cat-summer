@@ -368,19 +368,21 @@ class BnDetail {
 					),
 				),
 				*/
-				n("h4", "Colour scale"),
-				n("div", "Colour scale showing the influence of evidence on the target."),
-				n("table", {class:"influencelegend"} ,
-					n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
-					n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
-					n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
-					n("tr", n("td", "doesn't change", {class:`influence-idx3`})),
-					n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
-					n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
-					n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
-				),
-				n("h4", "Target"),
-				n("div", n("div", {style:"display:inline-block; width:20px; height:1em; background-color:var(--probability-present); padding:3px; "}), n("span", "Colour of a selected target"))
+				n("div", {class:"evidence-scale"}, 
+					n("div", {class:"evidence-scale-header"}, "Evidence impact scale"),
+					// n("div", "Colour scale showing the influence of evidence on the target."),
+					n("table", {class:"influencelegend"} ,
+						n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
+						n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
+						n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
+						n("tr", n("td", "barely changes", {class:`influence-idx3`})),
+						n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
+						n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
+						n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
+					),
+					n("div", {style:"text-align:center; padding:3px;"}, "probability of"),
+					n("div", n("div", {class:"target"}, "target state"))
+				)
 			),
 		);
 		this.titleEl = this.root.querySelector('.title');
