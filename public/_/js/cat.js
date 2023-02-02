@@ -96,8 +96,35 @@ var ui = {
 };
 
 var render = {
+	 css: function(el) {
+		
+		var sheets = document.styleSheets, ret = {};
+		el.matches = el.matches || el.webkitMatchesSelector || el.mozMatchesSelector 
+			|| el.msMatchesSelector || el.oMatchesSelector;
+		for (var i in sheets) {
+
+			var rules = sheets[i].rules || sheets[i].cssRules;
+			for (var r in rules) {
+				if (el.matches(rules[r].selectorText)) {
+					let style = rules[r].style;
+					for(let i = 0; i < style.length; i++) {
+						let cssprop = style[i];
+						let prop = cssprop.replace(/\-([a-z])/g, v => v[1].toUpperCase());
+						let val = style[prop]
+						if (val.indexOf("var(") == 0) {
+							let s = getComputedStyle(el);
+							let cval = s[cssprop]
+							val = cval
+						}
+						ret[prop] = val;
+					}
+				}
+			}
+		}
+		return ret;
+	},
 	applyStyle: function(el, target) {
-		s = getComputedStyle(el);
+		let s = getComputedStyle(el);
 		if (target == undefined)
 			target = el
 		for (let key in s) {
@@ -119,78 +146,121 @@ var render = {
 		outimg.style.top + "0px"
 		outimg.style.left + "0px"
 		
-		document.body.appendChild(outimg)
+		// document.body.appendChild(outimg)
 
 
 		let networkView = document.querySelector(".bnView")
+		let legend = document.querySelector(".evidence-scale")
 		let nodes = networkView.querySelectorAll(".node");
 		let edges = networkView.querySelectorAll("svg");
 		
+		// This container will contain a copy of the DOM that represents the bayes network.
+		// After all elements have been added, those clones will then
+		// have inline CSS added to them, which is necessary for rendering
+		// inside the SVG Doc.
+		let copyContainerRoot = document.createElement("div");
+		
+		copyContainerRoot.style.position = "absolute";
+		copyContainerRoot.style.width = "100%"
+		copyContainerRoot.style.height = "100%"
+		copyContainerRoot.style.top = "1000px"		
+		// Container needs to be added to DOM to allow CSS referencing
+		document.body.appendChild(copyContainerRoot)
 		
 		let copyContainer = document.createElement("div");
-		copyContainer.style.position = "absolute";
 		copyContainer.style.width = "100%"
 		copyContainer.style.height = "100%"
-		copyContainer.style.top = "1000px"		
+		copyContainer.style.fontFamily = 'arial'
+		copyContainerRoot.appendChild(copyContainer)
 
-		let k = document.createElement("div");
-		k.className = "bnView"
-		
-		document.body.appendChild(copyContainer)
+		let k = networkView.cloneNode();//document.createElement("div");
+		// k.className = "bnView"
+		k.style.display = "inline-block"
+		k.style.position = "absolute";
+
 		copyContainer.appendChild(k)
 
-
+		// Following vars contain data to create an image of the exact size of the network
+		// Contain the translate coordinates
 		minx = networkView.clientWidth
 		miny = networkView.clientHeight
-		width = 0
-		height = 0
+		// Final size of the canvas
+		networkWidth = 0
+		networkHeight = 0
+
+		// Clone all Nodes 
 		Array.from(nodes).forEach(n => {
 			let copy = n.cloneNode(true)
 			// rect = n.getBoundingClientRect()
 			miny = Math.min(n.offsetTop, miny)
 			minx = Math.min(n.offsetLeft, minx)
-			width = Math.max(n.offsetLeft + n.clientWidth) - minx
-			height = Math.max(n.offsetTop + n.clientHeight) - miny
+			networkWidth = Math.max(n.offsetLeft + n.clientWidth) - minx
+			networkHeight = Math.max(n.offsetTop + n.clientHeight) - miny
 			k.append(copy)
 		})
-		let s = `translate(-${minx}px, -${miny}px)`
-		
-		// convert styles to inline styles
-		Array.from(copyContainer.querySelectorAll("*")).forEach(node => {
-			render.applyStyle(node)
+		// Add clone of the legend
+		let clonedLegend = legend.cloneNode(true);
+		clonedLegend.style.display = "inline-block"
+		clonedLegend.style.position = "absolute";
+		clonedLegend.style.fontSize = "0.8em"
+		clonedLegend.style.top = "0px"
+		clonedLegend.style.left = "0px";
+
+		copyContainer.append(clonedLegend);
+
+		let legendGap = 10;
+		let legendHeight = clonedLegend.clientHeight
+		let legendWidth = clonedLegend.clientWidth
+		let height = Math.max(legendHeight, networkHeight)
+		let width = legendWidth + legendGap + networkWidth
+
+		k.style.width = `${width*devicePixelRatio}px`
+		k.style.height = `${height*devicePixelRatio}px`
+
+		// Move legend to the bottom of the network
+		clonedLegend.style.transform = `translate(0px, ${legendHeight< networkHeight ? networkHeight-legendHeight :0}px)`
+
+
+		// convert referenced CSS to inline styles
+		let allNodes = Array.from(copyContainer.querySelectorAll("*"))
+		allNodes.forEach(node => {
+			let style = render.css(node)
+			console.log(node)
+			Object.keys(style).forEach(key => node.style[key] = style[key])
+			
 		})
 
+		// allNodes.forEach(node => {
+		// 	node.className = ""
+		// })
+		
+		// Add copies of the SVG Elements
 		Array.from(edges).forEach(n => {
 			let copy = n.cloneNode(true)
 			k.append(copy)
 		})
 
-		k.style.transform = s
+		// Move network right of the legend
+		let networktop = legendHeight > networkHeight ? (legendHeight - networkHeight) / 2 : -miny;
+		k.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
+
 
 		let c = document.createElement('canvas')
-		c.width = width
-		c.height = height
+		c.width = width+10
+		c.height = height+10
 		ctx = c.getContext('2d')
 
-		let data = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-		// data.setAttribute("version", "1.1")
-		// data.setAttribute("width", networkView.clientWidth)
-		// data.setAttribute("height", networkView.clientHeight)
-		
-		// let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle")
-		// circle.setAttribute("cx", 40)
-		// circle.setAttribute("cy", 40)
-		// circle.setAttribute("r", 40)
-		// circle.setAttribute("fill", "red")
-		// data.appendChild(circle)
+		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
 
+		// To put HTML content inside a special element
+		// This allows us to render HTML to PNG
 		fo = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
-		fo.setAttribute("width", networkView.clientWidth)
-		fo.setAttribute("height", networkView.clientHeight)
-		fo.innerHTML = copyContainer.innerHTML
-		data.appendChild(fo)
+		fo.setAttribute("width", width*devicePixelRatio)
+		fo.setAttribute("height", height*devicePixelRatio)
+		fo.innerHTML = copyContainerRoot.innerHTML
+		svgdoc.appendChild(fo)
 
-		xmlencoded = new XMLSerializer().serializeToString(data);
+		xmlencoded = new XMLSerializer().serializeToString(svgdoc);
 
 		/**
 		 * Cannot use Blob here because of crossOrigin policy in Chrome
@@ -200,12 +270,11 @@ var render = {
 		 */
 		bloburi = "data:image/svg+xml;charset=utf-8,"+xmlencoded
 		var img = new Image()
-		// img.crossOrigin = "Anonymous";
 		img.onload = function() {
 			ctx.drawImage(this, 0, 0)
 
 			imguri = c.toDataURL("image/png", 1)
-			outimg.src = imguri
+			// outimg.src = imguri
 
 			let a = document.createElement('a')
 			a.href = imguri
@@ -214,13 +283,10 @@ var render = {
 			a.click()
 			
 			URL.revokeObjectURL(bloburi)
-			document.body.removeChild(copyContainer)
+			document.body.removeChild(copyContainerRoot)
 		}
 
 		img.src = bloburi;
-		
-
 
 	}
 }
-
