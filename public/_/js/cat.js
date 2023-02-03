@@ -241,7 +241,7 @@ var render = {
 		})
 
 		// Move network right of the legend
-		let networktop = legendHeight > networkHeight ? (legendHeight - networkHeight) / 2 : -miny;
+		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
 		k.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
 
 
