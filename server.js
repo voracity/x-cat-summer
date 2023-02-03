@@ -68,8 +68,9 @@ var sqlite3 = require('sqlite3');
 var sqlite = require('sqlite');
 var pages = require('./pages');
 var fileUpload = require('express-fileupload');
+var basicAuth  = require('express-basic-auth');
 var cookieParser = require('cookie-parser');
-
+var argv = require('minimist')(process.argv.slice(2))
 var app = express();
 var port = 3000;
 
@@ -81,6 +82,27 @@ var appCache = {};
 	db = await sqlite.open({filename:'cat.sqlite', driver:sqlite3.Database});
 })();
 
+if (argv.h) {
+	console.log("Usage:");
+	console.log("-p <PORT>: Listening server port");
+	console.log("-s <PASSWORD>: Set password and enable HTTP basic auth");
+	console.log("-u <USERNAME>: Set custom username. Default is: 'user'.");
+	return;
+}
+if (argv.p != undefined)
+	port = argv.p
+if (argv.s != undefined && typeof argv.s === 'string') {
+	console.log("Setting Basic Auth")
+	let username = "user"
+	if (argv.u != undefined)
+		username = argv.u
+	users = {}
+	users[username] = argv.s
+	app.use(basicAuth ({
+		users:users,
+		challenge:true
+	}));
+}
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(fileUpload());
