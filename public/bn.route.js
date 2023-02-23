@@ -2,6 +2,7 @@ var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
+const { getRounds } = require('bcrypt');
 
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
@@ -19,6 +20,7 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
 	return tempNodeName;
 }
+
 
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
@@ -368,24 +370,30 @@ class BnDetail {
 					),
 				),
 				*/
-				n("h4", "Colour scale"),
-				n("div", "Colour scale showing the influence of evidence on the target."),
+				// n('div.parentfloat',
+                n('div.float',
+				n('div.text',n("h2", "Evidence",),
+				n("h2"," impact scale")),
+				// n("div", "Colour scale showing the influence of evidence on the target."),
 				n("table", {class:"influencelegend"} ,
 					n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
-					n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
+					n("tr", n("td", "moderately", " increases", {class:`influence-idx1`})),
 					n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
-					n("tr", n("td", "doesn't change", {class:`influence-idx3`})),
+					n("tr", n("td", "barely changes", {class:`influence-idx3`})),
 					n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
 					n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
 					n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
 				),
-				n("h4", "Target"),
-				n("div", n("div", {style:"display:inline-block; width:20px; height:1em; background-color:var(--probability-present); padding:3px; "}), n("span", "Colour of a selected target"))
-			),
+				n('div.text2',n("h2", "probability of"),
+				n('div.parentyellow-box',
+				n('div.yellow-box', n("h4","target state")),
+			)))),
 		);
 		this.titleEl = this.root.querySelector('.title');
 		this.bnView = this.root.querySelector('.bnView');
 	}
+
+	
 	
 	toHtml() { return this.root.outerHTML; }
 	
@@ -432,15 +440,19 @@ class BnDetail {
 					n('a.setEffect', {href: 'javascript:void(0)'}, 'E'),
 					//n('a.menu', {href: 'javascript:void(0)'}, '\u22EF'),
 				),
-				n('h3', node.name),
-				
+				// n('div.grow',
+				n('h3', node.name.replaceAll("_"," ")), //used replaceAll() to remove the underscore.
+			    
 				n('div.states',
 					node.states.map((s,i) => n('div.state',
 						{dataIndex: i},
 						// n('span.target', n('input', {type: 'checkbox'})),
-						n('span.target', "T"),
-						n('span.label', s),
-						n('span.prob', (node.beliefs[i]*100).toFixed(1)),
+						
+						n('div.checkbox-div',
+						n('span.target', n('input', {type: 'checkbox'},{class:`ccheckbox`})),
+						n('span.label',s.replaceAll("_"," "),)),
+						n('span.prob', Math.trunc(Math.round(node.beliefs[i]*100).toFixed(1))),
+						// n('div.arrow'),
 						n('span.barParent', 
 								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
 								n('span.barchange')
@@ -458,8 +470,11 @@ class BnDetail {
 			for (let [nodeName,beliefs] of Object.entries(m.nodeBeliefs)) {
 				let nodeEl = this.bnView.querySelector(`div.node[data-name=${nodeName}]`);
 				nodeEl.querySelectorAll('.state').forEach((state,i) => {
-					state.querySelector('.prob').textContent = (beliefs[i]*100).toFixed(1);
+					state.querySelector('.prob').textContent =  Math.trunc(Math.round(beliefs[i]*100).toFixed(1));
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
+					
+					
+					
 				});
 			}
 		}
