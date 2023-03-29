@@ -140,7 +140,7 @@ var render = {
 		}
 		target
 	},
-	Network: function(){
+	Network: function(scaling = 1){
 		let outimg = document.createElement("img")
 		outimg.style.position = "absolute"
 		outimg.style.top + "0px"
@@ -202,7 +202,7 @@ var render = {
 		let clonedLegend = legend.cloneNode(true);
 		clonedLegend.style.display = "inline-block"
 		clonedLegend.style.position = "absolute";
-		clonedLegend.style.fontSize = "0.8em"
+		clonedLegend.style.fontSize = "0.64em" // the scale container inherited 0.8em and is itself 0.8em
 		clonedLegend.style.top = "0px"
 		clonedLegend.style.left = "0px";
 
@@ -226,13 +226,10 @@ var render = {
 		allNodes.forEach(node => {
 			let style = render.css(node)
 			console.log(node)
-			Object.keys(style).forEach(key => node.style[key] = style[key])
-			
+			Object.keys(style).forEach(key => 
+				node.style[key] == '' ? node.style[key] = style[key] : undefined)			
 		})
 
-		// allNodes.forEach(node => {
-		// 	node.className = ""
-		// })
 		
 		// Add copies of the SVG Elements
 		Array.from(edges).forEach(n => {
@@ -246,19 +243,22 @@ var render = {
 
 
 		let c = document.createElement('canvas')
-		c.width = width+10
-		c.height = height+10
+		c.width = (width+10) * scaling
+		c.height = (height+10) * scaling
 		ctx = c.getContext('2d')
 
 		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-
+		let rootgroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		svgdoc.appendChild(rootgroup)
+		rootgroup.setAttribute('transform', `scale(${scaling}, ${scaling})`)
 		// To put HTML content inside a special element
 		// This allows us to render HTML to PNG
 		fo = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
 		fo.setAttribute("width", width*devicePixelRatio)
 		fo.setAttribute("height", height*devicePixelRatio)
 		fo.innerHTML = copyContainerRoot.innerHTML
-		svgdoc.appendChild(fo)
+		rootgroup.appendChild(fo)
+		
 
 		xmlencoded = new XMLSerializer().serializeToString(svgdoc);
 

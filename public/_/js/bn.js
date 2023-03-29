@@ -542,37 +542,37 @@ document.addEventListener('DOMContentLoaded', event => {
 	
 	q('h1 .text').setAttribute('contenteditable', 'true');
 	q('h1 .text').setAttribute('spellcheck', 'false');
-	q('button.save').addEventListener('click', event => {
-		let doSave = async _=> {
-			let qs = new URLSearchParams(location.search);
-			let bnName = dlg.querySelector('[name=bnName]').value;
-			let bnDescription = dlg.querySelector('[name=description]').value;
-			bnDetail.$handleUpdate({title: bnName, temporary: false});
-			let fd = new FormData();
-			fd.append('name', bnName);
-			fd.append('description', bnDescription);
-			fd.append('key', qs.get('tempId'));
-			fd.append('type', qs.get('type'));
-			ui.dismissDialogs();
-			let res = await fetch('/upload?step=2&requestType=data', {method:'POST', body: fd}).then(r => r.json());
-			let usp = new URLSearchParams({id: res.id});
-			history.replaceState(null, '', '?'+usp.toString());
-		};
-		let dlg = ui.popupDialog([
-			n('h2', 'Save BN'),
-			n('div',
-				n('label', 'Name:'),
-				n('input', {type: 'text', name: 'bnName', value: q('h1 .text').textContent}),
-			),
-			n('div',
-				n('textarea', {name:'description', placeholder: 'Description'}),
-			),
-		], {buttons: [
-			n('button.save', 'Save', {on: {click: doSave}}),
-			n('button.cancel', 'Cancel', {on:{click:ui.dismissDialogs}}),
-		]});
-		q(dlg).querySelector('[name=bnName]').select().focus();
-	});
+	// q('button.save').addEventListener('click', event => {
+	// 	let doSave = async _=> {
+	// 		let qs = new URLSearchParams(location.search);
+	// 		let bnName = dlg.querySelector('[name=bnName]').value;
+	// 		let bnDescription = dlg.querySelector('[name=description]').value;
+	// 		bnDetail.$handleUpdate({title: bnName, temporary: false});
+	// 		let fd = new FormData();
+	// 		fd.append('name', bnName);
+	// 		fd.append('description', bnDescription);
+	// 		fd.append('key', qs.get('tempId'));
+	// 		fd.append('type', qs.get('type'));
+	// 		ui.dismissDialogs();
+	// 		let res = await fetch('/upload?step=2&requestType=data', {method:'POST', body: fd}).then(r => r.json());
+	// 		let usp = new URLSearchParams({id: res.id});
+	// 		history.replaceState(null, '', '?'+usp.toString());
+	// 	};
+	// 	let dlg = ui.popupDialog([
+	// 		n('h2', 'Save BN'),
+	// 		n('div',
+	// 			n('label', 'Name:'),
+	// 			n('input', {type: 'text', name: 'bnName', value: q('h1 .text').textContent}),
+	// 		),
+	// 		n('div',
+	// 			n('textarea', {name:'description', placeholder: 'Description'}),
+	// 		),
+	// 	], {buttons: [
+	// 		n('button.save', 'Save', {on: {click: doSave}}),
+	// 		n('button.cancel', 'Cancel', {on:{click:ui.dismissDialogs}}),
+	// 	]});
+	// 	q(dlg).querySelector('[name=bnName]').select().focus();
+	// });
 	q('button.publish').addEventListener('click', event => {
 		let doPublish = async _=> {
 			let qs = new URLSearchParams(location.search);
@@ -590,6 +590,7 @@ document.addEventListener('DOMContentLoaded', event => {
 		]});
 	});
 	q('button.downloadpng').addEventListener('click', () => {
-		render.Network();
+		let scaling = q('select.scaleimage').value
+		render.Network(Number(scaling));
 	})
 });
