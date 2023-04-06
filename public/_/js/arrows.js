@@ -145,6 +145,12 @@ var draw = {
 						class: 'line',
 						//"marker-end": `url(#arrowhead${blockedMarker})`
 					}),
+					this.makeSvg("path", {
+						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
+						class: 'line',
+						stroke:"gray",
+						"stroke-width": 1
+					}),
 					/* 'transform': `rotate(${angle},${endX},${endY})` */
 					this.makeSvg('g', {style: `transform: rotate(${angle}deg); transform-origin: ${endX}px ${endY}px;`, 'class': 'head'}, [
 						this.makeSvg('path', {
