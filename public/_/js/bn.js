@@ -496,10 +496,14 @@ document.addEventListener('DOMContentLoaded', event => {
 				// reset background colors for every evidence node 
 				Array.from(document.querySelectorAll("span.barchange")).forEach(elem=>{
 					elem.style.width = "";
+					Array.from(elem.classList).forEach(classname=> {
+						if (classname.indexOf("influence-") == 0)
+							elem.classList.remove(classname);
+					})
 				})
 				Array.from(document.querySelectorAll(".node span:not(.barParent)")).forEach(elem=>
 					Array.from(elem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0)
+						if (classname.indexOf("influence-") == 0)
 							elem.classList.remove(classname);
 					})
 				)
@@ -592,5 +596,9 @@ document.addEventListener('DOMContentLoaded', event => {
 	q('button.downloadpng').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling));
+	})
+	q('input.influence-as-frame').addEventListener('click', (event) => {
+		bnDetail.drawFrame = event.target.checked
+		bnDetail.$handleUpdate({updateFrameMode:""});
 	})
 });

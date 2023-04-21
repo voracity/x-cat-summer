@@ -337,6 +337,7 @@ var measurePlugins = {
 
 class BnDetail {
 	make(root) {
+		this.drawFrame = false
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),
@@ -352,6 +353,11 @@ class BnDetail {
 					),
 					),
 				// n('button.save', 'Save to My Library'),
+					
+				n('label', 
+					'Influence Frame',
+					n('input.influence-as-frame', {type:"checkbox"})
+				),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),
 				n('span.scenarioControls',
@@ -492,7 +498,44 @@ class BnDetail {
 		if (m.visibility != null) {
 			this.root.querySelector('button.publish').style.display = m.visibility == 'public' ? 'none' : 'inline';
 		}
+
+		if (m.updateFrameMode != null) {
+			// clear all influences first, as we set them anyway
+			Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
+				Array.from(node.classList).forEach(classname => {
+					if (classname.indexOf("influence-") == 0) {
+
+						node.classList.remove(classname);
+						let boxidx = classname.indexOf('-box')
+						if (this.drawFrame) {
+							node.classList.add('frame');
+							if (boxidx < 0)
+								classname = classname + '-box'
+						} else {
+							node.classList.remove('frame');
+							if (boxidx > 0)
+								classname = classname.substring(0, boxidx)
+						}
+						node.classList.add(classname);
+					}									
+				})
+			
+			})
+		} else {
+
+			// clear all influences first, as we set them anyway
+			Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
+				Array.from(node.classList).forEach(classname => {
+					if (classname.indexOf("influence-") == 0) {
+						node.classList.remove(classname);
+					}									
+				})
+				node.classList.remove('frame');
+			
+			})
+		}
 		if (m.influences) {
+			let asFrame = true;
 			console.log("updating influences");
 			let listTargetNodes = {}
 			Object.entries(m.influences).forEach(([evidenceNodeName, value]) => {
@@ -522,10 +565,22 @@ class BnDetail {
 					barchangeElem.style.left = `${100 - absChange}%`;
 
 					Array.from(barchangeElem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0)
+						if (classname.indexOf("influence-idx") == 0) {
 							barchangeElem.classList.remove(classname);
+							barchangeElem.classList.remove(`${colorClass}-box`);
+							barchangeElem.classList.remove(`frame`);
+						}
 					})
-					barchangeElem.classList.add(colorClass);
+
+					
+					if (this.drawFrame) {
+
+						barchangeElem.classList.add(`${colorClass}-box`);
+						barchangeElem.classList.add(`frame`);
+					} else {
+
+						barchangeElem.classList.add(colorClass);
+					}
 					
 					// for all elements not being part of the bar set backgroundcolor
 					Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
@@ -555,10 +610,22 @@ class BnDetail {
 
 				}
 				Array.from(barchangeElem.classList).forEach(classname=> {
-					if (classname.indexOf("influence-idx") == 0)
+					if (classname.indexOf("influence-idx") == 0) {
 						barchangeElem.classList.remove(classname);
+						barchangeElem.classList.remove(`${colorClass}-box`);
+						barchangeElem.classList.remove(`influence-box`);
+					}
 				})
-				barchangeElem.classList.add(colorClass);
+				if (this.drawFrame) {
+
+					barchangeElem.classList.add(`${colorClass}-box`);
+					barchangeElem.classList.add(`influence-box`);
+				} else {
+
+					barchangeElem.classList.add(colorClass);
+				}
+				
+				// barchangeElem.classList.add(colorClass);
 				
 
 
@@ -585,10 +652,12 @@ class BnDetail {
 				})
 			}
 		} else {
-			Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
-				let barchange = targetNode.querySelector(".barchange");
-				barchange.style.width = ""
-			})
+
+
+			// Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
+			// 	let barchange = targetNode.querySelector(".barchange");
+			// 	barchange.style.width = ""
+			// })
 
 		}
 	}

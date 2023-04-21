@@ -54,6 +54,35 @@
 	background-color: rgb(0, 56, 180);
 	color: white;
 }
+.frame {
+	border-width: 4px;
+	border-style: solid;
+	padding: 5px 0px;
+	top:-1px;
+	background-color:transparent;
+}
+.influence-idx0-box.frame{
+	border-color: rgb(71, 110, 0);
+}
+
+.influence-idx1-box.frame {
+	border-color: rgb(141, 220, 0);
+}
+.influence-idx2-box.frame {
+	border-color:rgb(223,255,165);
+}
+.influence-idx3-box.frame {
+	border-color: rgb(250, 245, 245);
+}
+.influence-idx4-box.frame {
+	border-color: rgb(215,227,255);
+}
+.influence-idx5-box.frame {
+	border-color: rgb(95, 145, 255);
+}
+.influence-idx6-box.frame {
+	border-color: rgb(0, 56, 180);
+}
 
 * { box-sizing: border-box; min-height: 0; min-width: 0; }
 

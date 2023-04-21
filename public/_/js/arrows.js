@@ -148,7 +148,7 @@ var draw = {
 					this.makeSvg("path", {
 						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
 						class: 'line',
-						stroke:"gray",
+						stroke:"black",
 						"stroke-width": 1
 					}),
 					/* 'transform': `rotate(${angle},${endX},${endY})` */
