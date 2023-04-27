@@ -609,7 +609,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
   
 	function handleDragEnter(e) {
 	  this.classList.add('over');
-	  this.dragstart = []
 	}
   
 	function handleDragLeave(e) {
@@ -619,9 +618,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 	function handleDragMove(e) {
 		if (this.classList.contains('over')) {
-			console.log(e.movementX, e.movementY)
+			// console.log(e.movementX, e.movementY, window.devicePixelRatio, e.movementX / window.devicePixelRatio)
 			let matrix = new WebKitCSSMatrix(window.getComputedStyle(this).getPropertyValue('transform'))
-			let moved = matrix.translate(e.movementX, e.movementY)
+			let moved = matrix.translate(e.movementX / window.devicePixelRatio, e.movementY / window.devicePixelRatio)
 			this.style.transform = moved.toString()
 		}
 		
@@ -631,6 +630,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	let items = document.querySelector('.evidence-scale');
 	items.onmousedown = handleDragEnter
 	items.onmouseup = handleDragLeave
+	items.onmouseleave = handleDragLeave
 	items.onmousemove = handleDragMove
 
   });
