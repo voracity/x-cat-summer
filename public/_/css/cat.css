@@ -197,7 +197,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 /** Temporary **/
 path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 
-.infoWindows { /*display: flex; flex-direction: column; align-items: end;*/ border-left: solid 1px black; background: var(--back-color3); height: 100%; overflow: auto;
+.infoWindows { height: 100%; overflow: none;
 	font-size: 0.8em; }
 .infoWindows .tip { font-size: 8pt; margin-bottom: 1em; padding: 10px; }
 .infoWindows h2 { margin: 0; font-size: 1.2em; padding: 3px;  }
@@ -265,11 +265,15 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	text-align: center;
 }
 
+.evidence-scale:hover {
+	cursor: move;
+}
 .evidence-scale {
 	font-size: 0.8em;
 	display:inline-block;
 	border: 1px solid black;
 	background-color: #fff;
+	user-select: none;
 }
 
 .evidence-scale-header{
@@ -288,3 +292,31 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	padding:2px 0px;
 	border: 1px solid black;
 }
+
+.over {
+	border: 1px dotted black;
+	opacity: 0.6;
+}
+
+.ccheckbox {
+	opacity: 0;
+	  
+}
+
+.checkbox-div:hover{
+	background-color:white;
+}
+.ccheckbox:hover ,
+.ccheckbox:checked  {
+	opacity: 1;
+}
+
+.node .checkbox-div  {
+	background-color: initial;
+	cursor: default;
+	appearance: auto;
+	box-sizing: border-box;
+	margin: 0px 0px 0px -25px;
+	padding: initial;
+	border: initial;
+	} 

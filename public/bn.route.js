@@ -455,9 +455,12 @@ class BnDetail {
 					node.states.map((s,i) => n('div.state',
 						{dataIndex: i},
 						// n('span.target', n('input', {type: 'checkbox'})),
-						n('span.target', "T"),
-						n('span.label', s),
-						n('span.prob', (node.beliefs[i]*100).toFixed(1)),
+						
+						n('div.checkbox-div',
+						n('span.target', n('input', {type: 'checkbox'},{class:`ccheckbox`})),
+						n('span.label', s)),
+						n('span.prob', Math.trunc(Math.round(node.beliefs[i]*100).toFixed(1))),
+						// n('div.arrow'),
 						n('span.barParent', 
 								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
 								n('span.barchange')
@@ -475,7 +478,7 @@ class BnDetail {
 			for (let [nodeName,beliefs] of Object.entries(m.nodeBeliefs)) {
 				let nodeEl = this.bnView.querySelector(`div.node[data-name=${nodeName}]`);
 				nodeEl.querySelectorAll('.state').forEach((state,i) => {
-					state.querySelector('.prob').textContent = (beliefs[i]*100).toFixed(1);
+					state.querySelector('.prob').textContent =  Math.trunc(Math.round(beliefs[i]*100).toFixed(1));
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}

@@ -602,3 +602,35 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.$handleUpdate({updateFrameMode:""});
 	})
 });
+
+// drag and drop
+document.addEventListener('DOMContentLoaded', (event) => {
+
+  
+	function handleDragEnter(e) {
+	  this.classList.add('over');
+	  this.dragstart = []
+	}
+  
+	function handleDragLeave(e) {
+	  this.classList.remove('over');
+	}
+
+
+	function handleDragMove(e) {
+		if (this.classList.contains('over')) {
+			console.log(e.movementX, e.movementY)
+			let matrix = new WebKitCSSMatrix(window.getComputedStyle(this).getPropertyValue('transform'))
+			let moved = matrix.translate(e.movementX, e.movementY)
+			this.style.transform = moved.toString()
+		}
+		
+	}
+	
+  
+	let items = document.querySelector('.evidence-scale');
+	items.onmousedown = handleDragEnter
+	items.onmouseup = handleDragLeave
+	items.onmousemove = handleDragMove
+
+  });
