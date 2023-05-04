@@ -609,6 +609,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   
 	function handleDragEnter(e) {
 	  this.classList.add('over');
+
+	  this.currentZoom = Math.trunc((window.outerWidth-10)/window.innerWidth*100)/100
 	}
   
 	function handleDragLeave(e) {
@@ -620,7 +622,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		if (this.classList.contains('over')) {
 			// console.log(e.movementX, e.movementY, window.devicePixelRatio, e.movementX / window.devicePixelRatio)
 			let matrix = new WebKitCSSMatrix(window.getComputedStyle(this).getPropertyValue('transform'))
-			let moved = matrix.translate(e.movementX / window.devicePixelRatio, e.movementY / window.devicePixelRatio)
+			let moved = matrix.translate(e.movementX /  this.currentZoom, e.movementY /  this.currentZoom)
 			this.style.transform = moved.toString()
 		}
 		
