@@ -258,8 +258,8 @@ var render = {
 		// To put HTML content inside a special element
 		// This allows us to render HTML to PNG
 		let svgForeignObject = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
-		svgForeignObject.setAttribute("width", spacer+width*devicePixelRatio)
-		svgForeignObject.setAttribute("height", spacer+height*devicePixelRatio)
+		svgForeignObject.setAttribute("width", spacer+width)
+		svgForeignObject.setAttribute("height", spacer+height)
 		svgForeignObject.innerHTML = copyContainerRoot.innerHTML
 		rootgroup.appendChild(svgForeignObject)
 		
