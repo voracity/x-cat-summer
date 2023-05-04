@@ -210,6 +210,7 @@ var render = {
 		clonedLegend.style.fontSize = "0.64em" // the scale container inherited 0.8em and is itself 0.8em
 		clonedLegend.style.bottom = `${spacer}px`
 		clonedLegend.style.left = "0px";
+		clonedLegend.style.transform = "none"
 
 		copyContainer.append(clonedLegend);
 
@@ -230,7 +231,7 @@ var render = {
 		let allNodes = Array.from(copyContainer.querySelectorAll("*"))
 		allNodes.forEach(node => {
 			let style = render.css(node)
-			console.log(node)
+			// console.log(node)
 			Object.keys(style).forEach(key => 
 				node.style[key] == '' ? node.style[key] = style[key] : undefined)			
 		})
@@ -266,6 +267,28 @@ var render = {
 
 		xmlencoded = new XMLSerializer().serializeToString(svgdoc);
 
+		
+		// debugging size layout issues
+		if (window.DEBUGGING) {
+			let renderedcopy = document.createElement('div');
+			renderedcopy.style.width = "600px"
+			renderedcopy.style.height = "600px"
+			renderedcopy.style.position = "absolute"
+			renderedcopy.style.left = `${width}px`;
+			networkView.appendChild(renderedcopy)
+			renderedcopy.appendChild(svgdoc)
+			
+			let renderedimage = document.createElement('div');
+			renderedimage.style.width = "600px"
+			renderedimage.style.height = "600px"
+			renderedimage.style.position = "absolute"
+			renderedimage.style.top = `${height}px`;
+			renderedimage.style.left = `${width}px`;
+			networkView.appendChild(renderedimage)
+			let i = document.createElement('img')
+			i.src = bloburi
+			renderedimage.appendChild(i)
+		}
 		/**
 		 * Cannot use Blob here because of crossOrigin policy in Chrome
 		 * 		blob = new Blob([xmlencoded], {type:"image/svg+xml"})
