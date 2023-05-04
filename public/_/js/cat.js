@@ -146,10 +146,15 @@ var render = {
 		outimg.style.top + "0px"
 		outimg.style.left + "0px"
 		
-		// document.body.appendChild(outimg)
-
+		let spacer = 5
+		let legendGap = 10;
 
 		let networkView = document.querySelector(".bnView")
+		
+		// Cloned nodes won't render as checked, so we set the 'checked' attribute explicitely
+		// to have a selected checkbox in the clonded DOM
+		Array.from(document.querySelector('.bnView').querySelectorAll(".ccheckbox")).forEach(e=>e.checked ? e.setAttribute('checked','') : e.removeAttribute('checked'))
+		
 		let legend = document.querySelector(".evidence-scale")
 		let nodes = networkView.querySelectorAll(".node");
 		let edges = networkView.querySelectorAll("svg");
@@ -173,17 +178,17 @@ var render = {
 		copyContainer.style.fontFamily = 'arial'
 		copyContainerRoot.appendChild(copyContainer)
 
-		let k = networkView.cloneNode();//document.createElement("div");
-		// k.className = "bnView"
-		k.style.display = "inline-block"
-		k.style.position = "absolute";
+		let clonedNetwork = networkView.cloneNode();//document.createElement("div");
+		
+		clonedNetwork.style.display = "inline-block"
+		clonedNetwork.style.position = "absolute";
 
-		copyContainer.appendChild(k)
+		copyContainer.appendChild(clonedNetwork)
 
 		// Following vars contain data to create an image of the exact size of the network
 		// Contain the translate coordinates
-		minx = networkView.clientWidth
-		miny = networkView.clientHeight
+		minx = 1e100
+		miny = 1e100
 		// Final size of the canvas
 		networkWidth = 0
 		networkHeight = 0
@@ -194,31 +199,31 @@ var render = {
 			// rect = n.getBoundingClientRect()
 			miny = Math.min(n.offsetTop, miny)
 			minx = Math.min(n.offsetLeft, minx)
-			networkWidth = Math.max(n.offsetLeft + n.clientWidth) - minx
-			networkHeight = Math.max(n.offsetTop + n.clientHeight) - miny
-			k.append(copy)
+			networkWidth = Math.max(n.offsetLeft + n.offsetWidth) - minx
+			networkHeight = Math.max(n.offsetTop + n.offsetHeight) - miny
+			clonedNetwork.append(copy)
 		})
 		// Add clone of the legend
 		let clonedLegend = legend.cloneNode(true);
 		clonedLegend.style.display = "inline-block"
 		clonedLegend.style.position = "absolute";
 		clonedLegend.style.fontSize = "0.64em" // the scale container inherited 0.8em and is itself 0.8em
-		clonedLegend.style.top = "0px"
+		clonedLegend.style.bottom = `${spacer}px`
 		clonedLegend.style.left = "0px";
 
 		copyContainer.append(clonedLegend);
 
-		let legendGap = 10;
+		
 		let legendHeight = clonedLegend.clientHeight
 		let legendWidth = clonedLegend.clientWidth
 		let height = Math.max(legendHeight, networkHeight)
 		let width = legendWidth + legendGap + networkWidth
 
-		k.style.width = `${width*devicePixelRatio}px`
-		k.style.height = `${height*devicePixelRatio}px`
+		clonedNetwork.style.width = `${(width)*devicePixelRatio}px`
+		clonedNetwork.style.height = `${(miny+height)*devicePixelRatio}px`
 
 		// Move legend to the bottom of the network
-		clonedLegend.style.transform = `translate(0px, ${legendHeight< networkHeight ? networkHeight-legendHeight :0}px)`
+		// clonedLegend.style.transform = `translate(0px, ${legendHeight< networkHeight ? networkHeight-legendHeight :0}px)`
 
 
 		// convert referenced CSS to inline styles
@@ -234,30 +239,29 @@ var render = {
 		// Add copies of the SVG Elements
 		Array.from(edges).forEach(n => {
 			let copy = n.cloneNode(true)
-			k.append(copy)
+			clonedNetwork.append(copy)
 		})
 
 		// Move network right of the legend
 		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
-		k.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
-
-
-		let c = document.createElement('canvas')
-		c.width = (width+10) * scaling
-		c.height = (height+10) * scaling
-		ctx = c.getContext('2d')
+		clonedNetwork.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
 
 		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+		svgdoc.setAttribute("width", spacer+width*devicePixelRatio)
+		svgdoc.setAttribute("height", miny+spacer+height*devicePixelRatio)
+
+		// Add a root group to enable scaling
 		let rootgroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
-		svgdoc.appendChild(rootgroup)
 		rootgroup.setAttribute('transform', `scale(${scaling}, ${scaling})`)
+		svgdoc.appendChild(rootgroup)
+
 		// To put HTML content inside a special element
 		// This allows us to render HTML to PNG
-		fo = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
-		fo.setAttribute("width", 10+width*devicePixelRatio)
-		fo.setAttribute("height", miny+3+height*devicePixelRatio)
-		fo.innerHTML = copyContainerRoot.innerHTML
-		rootgroup.appendChild(fo)
+		let svgForeignObject = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
+		svgForeignObject.setAttribute("width", spacer+width*devicePixelRatio)
+		svgForeignObject.setAttribute("height", spacer+height*devicePixelRatio)
+		svgForeignObject.innerHTML = copyContainerRoot.innerHTML
+		rootgroup.appendChild(svgForeignObject)
 		
 
 		xmlencoded = new XMLSerializer().serializeToString(svgdoc);
@@ -271,9 +275,15 @@ var render = {
 		bloburi = "data:image/svg+xml;charset=utf-8,"+xmlencoded
 		var img = new Image()
 		img.onload = function() {
+			let renderCanvas = document.createElement('canvas')
+			renderCanvas.width = (width+spacer) * scaling
+			renderCanvas.height = (height) * scaling
+			ctx = renderCanvas.getContext('2d')
+
 			ctx.drawImage(this, 0, 0)
 
-			imguri = c.toDataURL("image/png", 1)
+	
+			imguri = renderCanvas.toDataURL("image/png", 1)
 			// outimg.src = imguri
 
 			let a = document.createElement('a')
