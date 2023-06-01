@@ -62,7 +62,7 @@ var bn = {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
 				} else {
-					delete this.influences;
+					this.influences = {};
 				}
 				this.gui('Update');
 			}

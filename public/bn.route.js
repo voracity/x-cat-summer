@@ -555,64 +555,108 @@ class BnDetail {
 			let asFrame = true;
 			console.log("updating influences");
 			let listTargetNodes = {}
-			Object.entries(m.influences).forEach(([evidenceNodeName, value]) => {
-				let targetBeliefs = value['targetBeliefs'];
-				let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)
-				let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
-				Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {
-					let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
-					let targetStateElem = targetNode.querySelector(".state.istarget");
-					let targetStateIdx = targetStateElem.dataset.index;
+			let entries = Object.entries(m.influences)
 
-					let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
-					listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
-					// calculate the relative change this evidence had on the target
-					// and set the change color accordingly
-
-					// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
-					let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
-					let absChange = Math.abs(relativeBeliefChange * 100);
-					let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
-					let barchangeElem = stateElem.querySelector(`span.barchange`);
-					let colorClass = this.getColor(relativeBeliefChange);
-					// set colour and width of the barchange element
-					
-					barchangeElem.style.width = `${absChange}%`;
-					barchangeElem.style.left = `${100 - absChange}%`;
-					
-					
-					Array.from(barchangeElem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0) {
-							barchangeElem.classList.remove(classname);
-							barchangeElem.classList.remove(`${colorClass}-box`);
-							barchangeElem.classList.remove(`frame`);
-						}
+			if (entries.length == 0) {
+				// clear all influences first, as we set them anyway
+				Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
+					Array.from(node.classList).forEach(classname => {
+						if (classname.indexOf("influence-") == 0) {
+							node.classList.remove(classname);
+						}									
 					})
-					
-					barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-					
-					
-					if (this.drawFrame) {
+					node.classList.remove('frame');
+				
+				})		
+				
+				// clear all arks
+				if (m.arcInfluence)
+					m.arcInfluence.forEach(arcEntry => {
+						let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
+						arc.style.strokeWidth = 0;
+						arc.style.stroke = 'none'
+					})
+			} else {
+				entries.forEach(([evidenceNodeName, value]) => {
+					let targetBeliefs = value['targetBeliefs'];
+					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)
+					let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
+					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {
+						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
+						let targetStateElem = targetNode.querySelector(".state.istarget");
+						let targetStateIdx = targetStateElem.dataset.index;
 
-						barchangeElem.classList.add(`${colorClass}-box`);
-						barchangeElem.classList.add(`frame`);
-					} else {
+						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
+						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+						// calculate the relative change this evidence had on the target
+						// and set the change color accordingly
 
-						barchangeElem.classList.add(colorClass);
-					}
-					
-					// for all elements not being part of the bar set backgroundcolor
-					Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
-						Array.from(elem.classList).forEach(classname=> {
-							if (classname.indexOf("influence-idx") == 0)
-								elem.classList.remove(classname);
-						});
-						elem.classList.add(colorClass);
+						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+						let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
+						let absChange = Math.abs(relativeBeliefChange * 100);
+						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
+						let barchangeElem = stateElem.querySelector(`span.barchange`);
+						let colorClass = this.getColor(relativeBeliefChange);
+						// set colour and width of the barchange element
+						
+						barchangeElem.style.width = `${absChange}%`;
+						barchangeElem.style.left = `${100 - absChange}%`;
+						
+						
+						Array.from(barchangeElem.classList).forEach(classname=> {
+							if (classname.indexOf("influence-idx") == 0) {
+								barchangeElem.classList.remove(classname);
+								barchangeElem.classList.remove(`${colorClass}-box`);
+								barchangeElem.classList.remove(`frame`);
+							}
+						})
+						
+						barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
+						
+						
+						if (this.drawFrame) {
+
+							barchangeElem.classList.add(`${colorClass}-box`);
+							barchangeElem.classList.add(`frame`);
+						} else {
+
+							barchangeElem.classList.add(colorClass);
+						}
+						
+						// for all elements not being part of the bar set backgroundcolor
+						Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
+							Array.from(elem.classList).forEach(classname=> {
+								if (classname.indexOf("influence-idx") == 0)
+									elem.classList.remove(classname);
+							});
+							elem.classList.add(colorClass);
+						})
+
 					})
 
 				})
-
-			})
+				if (m.arcInfluence) {
+					m.arcInfluence.forEach(arcEntry => {
+						let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
+	
+						Object.entries(arcEntry.targetBelief).forEach(([targetNodeName, arcBeliefs]) => {
+							let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
+							let targetStateElem = targetNode.querySelector(".state.istarget");
+							let targetStateIdx = targetStateElem.dataset.index;
+	
+							let diff = m.nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
+							let absDiff = Math.abs(diff);
+							let arcSize = Math.max(3, (absDiff) * 15);
+							let arcColor = this.getColor(diff)
+	
+							console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
+							arc.style.strokeWidth = arcSize;
+							
+							arc.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
+						})
+					})
+				}
+			}
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
@@ -649,27 +693,7 @@ class BnDetail {
 
 
 			})
-			if (m.arcInfluence) {
-				m.arcInfluence.forEach(arcEntry => {
-					let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
-
-					Object.entries(arcEntry.targetBelief).forEach(([targetNodeName, arcBeliefs]) => {
-						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
-						let targetStateElem = targetNode.querySelector(".state.istarget");
-						let targetStateIdx = targetStateElem.dataset.index;
-
-						let diff = m.nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
-						let absDiff = Math.abs(diff);
-						let arcSize = Math.max(3, (absDiff) * 15);
-						let arcColor = this.getColor(diff)
-
-						console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
-						arc.style.strokeWidth = arcSize;
-						
-						arc.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
-					})
-				})
-			}
+			
 		} else {
 
 
