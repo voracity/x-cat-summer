@@ -358,6 +358,10 @@ class BnDetail {
 					'Influence Frame',
 					n('input.influence-as-frame', {type:"checkbox"})
 				),
+				n('label', 
+					'Only Show Target Node',
+					n('input.influence-target-node', {type:"checkbox"})
+				),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),
 				n('span.scenarioControls',
@@ -524,19 +528,29 @@ class BnDetail {
 				})
 			
 			})
-		} else {
-
-			// clear all influences first, as we set them anyway
-			Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
-				Array.from(node.classList).forEach(classname => {
-					if (classname.indexOf("influence-") == 0) {
-						node.classList.remove(classname);
-					}									
-				})
-				node.classList.remove('frame');
-			
-			})
 		}
+		// else {
+
+		// 	// clear all influences first, as we set them anyway
+		// 	Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
+		// 		Array.from(node.classList).forEach(classname => {
+		// 			if (classname.indexOf("influence-") == 0) {
+		// 				node.classList.remove(classname);
+		// 			}									
+		// 		})
+		// 		node.classList.remove('frame');
+			
+		// 	})
+		// }
+		if (m.updateShowBarChange != null) {
+			let evidencenodes = this.bnView.querySelectorAll(`div.node.hasEvidence`)
+
+			Array.from(evidencenodes).forEach(node=>
+				Array.from(node.querySelectorAll('span.barchange'))
+					.forEach(e=>e.style.display = this.onlyTargetNode ? 'none' : "inline-block")
+			)
+			
+		} 
 		if (m.influences) {
 			let asFrame = true;
 			console.log("updating influences");
@@ -563,10 +577,10 @@ class BnDetail {
 					let colorClass = this.getColor(relativeBeliefChange);
 					// set colour and width of the barchange element
 					
-					
 					barchangeElem.style.width = `${absChange}%`;
 					barchangeElem.style.left = `${100 - absChange}%`;
-
+					
+					
 					Array.from(barchangeElem.classList).forEach(classname=> {
 						if (classname.indexOf("influence-idx") == 0) {
 							barchangeElem.classList.remove(classname);
@@ -574,7 +588,9 @@ class BnDetail {
 							barchangeElem.classList.remove(`frame`);
 						}
 					})
-
+					
+					barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
+					
 					
 					if (this.drawFrame) {
 

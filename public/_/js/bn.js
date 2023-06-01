@@ -601,6 +601,10 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.drawFrame = event.target.checked
 		bnDetail.$handleUpdate({updateFrameMode:""});
 	})
+	q('input.influence-target-node').addEventListener('click', (event) => {
+		bnDetail.onlyTargetNode = event.target.checked
+		bnDetail.$handleUpdate({updateShowBarChange:""});
+	})
 });
 
 // drag and drop
