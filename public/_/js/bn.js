@@ -593,9 +593,13 @@ document.addEventListener('DOMContentLoaded', event => {
 			n('button.cancel', 'Cancel', {on: {click:ui.dismissDialogs}}),
 		]});
 	});
-	q('button.downloadpng').addEventListener('click', () => {
+	// q('button.downloadpng').addEventListener('click', () => {
+	// 	let scaling = q('select.scaleimage').value
+	// 	render.Network(Number(scaling), "png");
+	// })
+	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
-		render.Network(Number(scaling));
+		render.Network(Number(scaling), "svg");
 	})
 	q('input.influence-as-frame').addEventListener('click', (event) => {
 		bnDetail.drawFrame = event.target.checked

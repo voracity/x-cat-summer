@@ -140,7 +140,7 @@ var render = {
 		}
 		target
 	},
-	Network: function(scaling = 1){
+	Network: async function(scaling = 1, type = "png"){
 		let outimg = document.createElement("img")
 		outimg.style.position = "absolute"
 		outimg.style.top + "0px"
@@ -237,11 +237,6 @@ var render = {
 		})
 
 		
-		// Add copies of the SVG Elements
-		Array.from(edges).forEach(n => {
-			let copy = n.cloneNode(true)
-			clonedNetwork.append(copy)
-		})
 
 		// Move network right of the legend
 		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
@@ -296,30 +291,113 @@ var render = {
 		 * So we just create a texturi
 		 */
 		bloburi = "data:image/svg+xml;charset=utf-8,"+xmlencoded
-		var img = new Image()
-		img.onload = function() {
-			let renderCanvas = document.createElement('canvas')
-			renderCanvas.width = (width+spacer) * scaling
-			renderCanvas.height = (height) * scaling
-			ctx = renderCanvas.getContext('2d')
+		// if (type == "svg") {
+		// 	let a = document.createElement('a')
+		// 	a.href = bloburi
+		// 	a.download = "graph.svg"
+		// 	a.target = "_blank"
+		// 	a.click()
+		// 	document.body.removeChild(copyContainerRoot)
+		// } else if (type == "png") {
+		// 	var img = new Image()
+		// 	img.onload = function() {
+		// 		let renderCanvas = document.createElement('canvas')
+		// 		renderCanvas.width = (width+spacer) * scaling
+		// 		renderCanvas.height = (height) * scaling
+		// 		ctx = renderCanvas.getContext('2d')
 
-			ctx.drawImage(this, 0, 0)
+		// 		ctx.drawImage(this, 0, 0)
 
-	
-			imguri = renderCanvas.toDataURL("image/png", 1)
-			// outimg.src = imguri
+		
+		// 		imguri = renderCanvas.toDataURL("image/png", 1)
 
-			let a = document.createElement('a')
-			a.href = imguri
-			a.download = "graph"
-			a.target = "_blank"
-			a.click()
+		// 		let a = document.createElement('a')
+		// 		a.href = imguri
+		// 		a.download = "graph"
+		// 		a.target = "_blank"
+		// 		a.click()
+				
+		// 		URL.revokeObjectURL(bloburi)
+		// 		document.body.removeChild(copyContainerRoot)
+		// 	}
+
+		// 	img.src = bloburi;
+		// }
+
+		// Render the HTML nodes
+		let imguri = await render.renderImageToDataURI(bloburi, width, height, spacer, scaling)
+		URL.revokeObjectURL(bloburi)
+		document.body.removeChild(copyContainerRoot)
+
+		let outSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg")
+		outSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
+		outSVG.setAttribute("width", spacer+width*devicePixelRatio)
+		outSVG.setAttribute("height", miny+spacer+height*devicePixelRatio)
+		
+		// Add a root group to enable scaling
+		let scaleGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		scaleGroup.setAttribute('transform', `scale(${scaling}, ${scaling})`)
+		outSVG.appendChild(scaleGroup)
+
+		// Add group holding all edges
+		let edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		edgeGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
+		scaleGroup.appendChild(edgeGroup)
+				
+		// Add group holding the image 
+		let imageGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		scaleGroup.appendChild(imageGroup)
+
+		let svgImage = document.createElementNS("http://www.w3.org/2000/svg", "image")
+		svgImage.setAttribute("xlink:href", imguri)
+		imageGroup.appendChild(svgImage)
+
+		// Add copies of the SVG Elements (edges, arrow heads)
+		Array.from(edges)/*.slice(0,1)*/.forEach(n => {
+			let copy = n.cloneNode(true)
+			let width = copy.getAttribute("width") 
+			let height = copy.getAttribute("height") 
+			let top = 'top' in copy.style ? Number(copy.style.top.substring(0, copy.style.top.length-2)) : 0
+			let left = 'left' in copy.style ? Number(copy.style.left.substring(0, copy.style.left.length-2)) : 0
+			let g = document.createElementNS("http://www.w3.org/2000/svg", "g")
+			g.setAttribute("transform", `translate(${left} ${top})`)
+			g.setAttribute("transform-origin", `${left+width/2}px ${top+height/2}px`)
+			g.appendChild(copy)
+			edgeGroup.append(g)
+		})
+		
+		outXMLEncode = new XMLSerializer().serializeToString(outSVG);
+		outURI = "data:image/svg+xml;charset=utf-8,"+outXMLEncode
+		let a = document.createElement('a')
+		a.href = outURI
+		a.download = "graph"
+		a.target = "_blank"
+		a.click()
+		
+	},
+
+	renderImageToDataURI: function (bloburi, width, height, spacer, scaling) {
+		return new Promise((res, rej) => {
 			
-			URL.revokeObjectURL(bloburi)
-			document.body.removeChild(copyContainerRoot)
-		}
+			var img = new Image()
+			img.onload = function() {
+				let renderCanvas = document.createElement('canvas')
+				renderCanvas.width = (width+spacer) * scaling
+				renderCanvas.height = (height) * scaling
+				ctx = renderCanvas.getContext('2d')
 
-		img.src = bloburi;
+				ctx.drawImage(this, 0, 0)
 
+		
+				imguri = renderCanvas.toDataURL("image/png", 1)
+
+				res(imguri)
+
+				
+			}
+
+			img.src = bloburi;
+	
+		})
 	}
 }
