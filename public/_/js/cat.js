@@ -223,10 +223,6 @@ var render = {
 		clonedNetwork.style.width = `${(width)*devicePixelRatio}px`
 		clonedNetwork.style.height = `${(miny+height)*devicePixelRatio}px`
 
-		// Move legend to the bottom of the network
-		// clonedLegend.style.transform = `translate(0px, ${legendHeight< networkHeight ? networkHeight-legendHeight :0}px)`
-
-
 		// convert referenced CSS to inline styles
 		let allNodes = Array.from(copyContainer.querySelectorAll("*"))
 		allNodes.forEach(node => {
@@ -354,16 +350,26 @@ var render = {
 
 		// Add copies of the SVG Elements (edges, arrow heads)
 		Array.from(edges)/*.slice(0,1)*/.forEach(n => {
-			let copy = n.cloneNode(true)
-			let width = copy.getAttribute("width") 
-			let height = copy.getAttribute("height") 
-			let top = 'top' in copy.style ? Number(copy.style.top.substring(0, copy.style.top.length-2)) : 0
-			let left = 'left' in copy.style ? Number(copy.style.left.substring(0, copy.style.left.length-2)) : 0
-			let g = document.createElementNS("http://www.w3.org/2000/svg", "g")
-			g.setAttribute("transform", `translate(${left} ${top})`)
-			g.setAttribute("transform-origin", `${left+width/2}px ${top+height/2}px`)
-			g.appendChild(copy)
-			edgeGroup.append(g)
+			let copy = n.cloneNode(true);
+			let width = copy.getAttribute("width");
+			let height = copy.getAttribute("height");
+			let top = 'top' in copy.style ? Number(copy.style.top.substring(0, copy.style.top.length-2)) : 0;
+			let left = 'left' in copy.style ? Number(copy.style.left.substring(0, copy.style.left.length-2)) : 0;
+			let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+			g.setAttribute("transform", `translate(${left} ${top})`);
+			g.setAttribute("transform-origin", `${left+width/2}px ${top+height/2}px`);
+			g.appendChild(copy);
+
+			// copy data attributes from copied arc
+			let orgArc = copy.querySelector("g.arc");
+			if (orgArc != undefined) {
+				["data-parent", "data-child"].forEach(att =>g.setAttribute(att, orgArc.getAttribute(att)))
+				g.classList.add("arc")
+				orgArc.classList.remove("arc")
+			}
+
+			
+			edgeGroup.append(g);
 		})
 		
 		outXMLEncode = new XMLSerializer().serializeToString(outSVG);
