@@ -153,7 +153,7 @@ var render = {
 		
 		// Cloned nodes won't render as checked, so we set the 'checked' attribute explicitely
 		// to have a selected checkbox in the clonded DOM
-		Array.from(document.querySelector('.bnView').querySelectorAll(".ccheckbox")).forEach(e=>e.checked ? e.setAttribute('checked','') : e.removeAttribute('checked'))
+		Array.from(document.querySelector('.bnView').querySelectorAll(".hiddencheckbox")).forEach(e=>e.checked ? e.setAttribute('checked','') : e.removeAttribute('checked'))
 		
 		let legend = document.querySelector(".evidence-scale")
 		let nodes = networkView.querySelectorAll(".node");
@@ -239,8 +239,8 @@ var render = {
 		clonedNetwork.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
 
 		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
-		svgdoc.setAttribute("width", spacer+width*devicePixelRatio)
-		svgdoc.setAttribute("height", miny+spacer+height*devicePixelRatio)
+		svgdoc.setAttribute("width", spacer+width)
+		svgdoc.setAttribute("height", miny+spacer+height)
 
 		// Add a root group to enable scaling
 		let rootgroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
@@ -327,26 +327,32 @@ var render = {
 
 		let outSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg")
 		outSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
-		outSVG.setAttribute("width", spacer+width*devicePixelRatio)
-		outSVG.setAttribute("height", miny+spacer+height*devicePixelRatio)
+		outSVG.setAttribute("width", spacer+width)
+		outSVG.setAttribute("height", miny+spacer+height)
 		
 		// Add a root group to enable scaling
 		let scaleGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
 		scaleGroup.setAttribute('transform', `scale(${scaling}, ${scaling})`)
 		outSVG.appendChild(scaleGroup)
 
+
+		// Add nodes (foreignobject)
+		let nodesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		nodesGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
+		scaleGroup.appendChild(svgForeignObject)
+
 		// Add group holding all edges
 		let edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
 		edgeGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
 		scaleGroup.appendChild(edgeGroup)
 				
-		// Add group holding the image 
-		let imageGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
-		scaleGroup.appendChild(imageGroup)
+		// // Add group holding the image 
+		// let imageGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
+		// scaleGroup.appendChild(imageGroup)
 
-		let svgImage = document.createElementNS("http://www.w3.org/2000/svg", "image")
-		svgImage.setAttribute("xlink:href", imguri)
-		imageGroup.appendChild(svgImage)
+		// let svgImage = document.createElementNS("http://www.w3.org/2000/svg", "image")
+		// svgImage.setAttribute("xlink:href", imguri)
+		// imageGroup.appendChild(svgImage)
 
 		// Add copies of the SVG Elements (edges, arrow heads)
 		Array.from(edges)/*.slice(0,1)*/.forEach(n => {
