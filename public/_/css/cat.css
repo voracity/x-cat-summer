@@ -138,19 +138,111 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node.moving { box-shadow: 3px 3px 4px #4444; margin: -2px 0 0 -2px; }
 
 .node .states { display: table; 
-	align-items: center; margin-top: 0px; margin-bottom: -4px; }
-.node .state > * { min-width: fit-content; }
+	table-layout: fixed;
+	position:relative;
+	/* align-items: center; */
+	margin-top: 0px; margin-bottom: -4px; }
+/* .node .state > * { min-width: fit-content; } */
 .node .state .target { min-width: 0; }
 .node .state { font-size: 9pt; display: table-row; cursor: pointer; }
+
 .node .state > span {display:table-cell;padding: 2px 2px; }
-.node .prob { text-align: right; padding-left: 0.5em; }
+.node .state > div {display:table-cell;padding: 2px 2px; }
+
+/* .node .prob { text-align: right; padding-left: 0.5em; }
 .node .barParent { width: 60px; position: relative; height: 100%; border-left: solid 1px black;
 	margin: -1px 0; }
 .node .barParent > span {vertical-align: text-top;}	
 .node .bar { display: inline-block; background: black; height: 1em; transition: width 0.3s; }
 .node .barchange { position:absolute; display: inline-block;  height: 1em; transition: width 0.3s; }
-.node .barchange.positive { background-color:var(--bar-change-positive) ; }
-.node .barchange.negative { background-color:var(--bar-change-negative) ; }
+*/
+.barchange.positive { background-color:var(--bar-change-positive) ; }
+.barchange.negative { background-color:var(--bar-change-negative) ; } 
+
+.states {
+	display:table;
+	/* table-layout: fixed; */
+	position:relative;
+}
+.state {
+	display: table-row;
+
+}
+.cellProbability {
+	display:table-cell;
+	/* background-color: #ee4; */
+	/* width:50%; */
+	vertical-align: middle;
+}
+.propWrapper {
+	display:flex;
+	justify-content: space-between;
+	align-items: center;
+	height:100%;
+}
+.propWrapper .label {
+	margin-right:1em;
+}
+.propWrapper .prob {
+	font-family: monospace;
+	min-width: 3ch;
+	text-align: right;
+}
+
+.cellBar {
+	display:table-cell;
+	/* background-color: #e4e; */
+	/* width:50%; */
+	vertical-align: middle;
+	border-left: solid 1px black;
+}
+
+.barParent {
+	display:flex;
+	flex-flow: row;
+	align-items: center;
+	
+	/* padding:2px 1px; */
+	width:65px;
+
+}
+.barParent .bar {
+	display: inline-block;
+	height: 1em;
+	background: black; 
+	transition: width 0.3s;
+}
+.barParent .barchange {
+	display: inline-block;
+	height: 1.4em;
+	transition: all 0.3s;
+}
+.hiddencheckboxcontainer {
+	position:absolute;
+	left:-25px;
+	/* background-color: aquamarine; */
+	width:25px;
+	/* height:1em; */
+	display:flex;
+}
+.hiddencheckbox {
+	/* display:none; */
+	opacity: 0;
+	transition: 0.2s;
+}
+.hiddencheckboxcontainer:hover .hiddencheckbox{
+	/* display:inline; */
+	opacity: 1;
+}
+.state:hover .hiddencheckbox{
+	opacity: 1;
+	/* display:inline; */
+}
+.hiddencheckbox:checked {
+	opacity: 1;
+	/* display:inline; */
+}
+
 
 .node .controls { position: absolute; padding: 0; margin: -4px -4px 0 -4px; bottom: 100%; text-align: right; width: 100%; }
 .node .controls a { color: #777; font-size: 10pt; }
@@ -297,7 +389,7 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	border: 1px dotted black;
 	opacity: 0.6;
 }
-
+/* 
 .ccheckbox {
 	opacity: 0;
 	  
@@ -319,4 +411,4 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	margin: 0px 0px 0px -25px;
 	padding: initial;
 	border: initial;
-	} 
+	}  */

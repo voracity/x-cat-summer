@@ -268,7 +268,7 @@ class Node {
 			this.el().classList.remove('hasEvidence');
 			let influenceBars = this.el().querySelectorAll("span.barchange");
 			Array.from(influenceBars).forEach(elem => {
-				elem.style.width = "";
+				elem.style.width = "0%";
 			})
 			let stateElem = this.el().querySelector(`div[data-index="${stateIndex}"]`);
 			if (!stateElem.classList.contains('istarget'))

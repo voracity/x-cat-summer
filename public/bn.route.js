@@ -461,18 +461,26 @@ class BnDetail {
 						{dataIndex: i},
 						// n('span.target', n('input', {type: 'checkbox'})),
 						
-						n('div.checkbox-div',
-						n('span.target', n('input', {type: 'checkbox'},{class:`ccheckbox`})),
-						n('span.label', s)),
-						n('span.prob', Math.trunc(Math.round(node.beliefs[i]*100).toFixed(1))),
-						// n('div.arrow'),
-						n('span.barParent', 
-								n('span.bar', {style: `width: ${node.beliefs[i]*barMax}%`}),
+						n('div.cellProbability',
+							n('div.propWrapper',
+
+								n('div.hiddencheckboxcontainer.target', 
+									n('input', {type: 'checkbox'},{class:`hiddencheckbox`})
+								),
+								n('span.label', s),
+								n('span.prob', Math.trunc(Math.round(node.beliefs[i]*100).toFixed(1))),
+							)
+						),
+						
+						n('div.cellBar',
+							n('div.barParent', 
+								n('span.bar', {style: `width: ${node.beliefs[i]*100}%`}),
 								n('span.barchange')
-						)),
-					),
-				),
-			));
+							)
+						),
+					)) // states.map
+				)
+			)); // model.map
 			this.bnView.append(...nodes);
 			this.bnView.append(n('script', `
 				bn.model = ${JSON.stringify(m.model)};
@@ -567,6 +575,7 @@ class BnDetail {
 						}									
 					})
 					node.classList.remove('frame');
+					node.style.width = '0px';
 				
 				})		
 				
@@ -601,7 +610,8 @@ class BnDetail {
 						// set colour and width of the barchange element
 						
 						barchangeElem.style.width = `${absChange}%`;
-						barchangeElem.style.left = `${100 - absChange}%`;
+						barchangeElem.style.marginLeft = `-${absChange}%`;
+						// barchangeElem.style.left = `${100 - absChange}%`;
 						
 						
 						Array.from(barchangeElem.classList).forEach(classname=> {
@@ -666,10 +676,10 @@ class BnDetail {
 				let colorClass = this.getColor(currentBelief/baseBelief)
 				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 				if (diff > 0) {
-					barchangeElem.style.left = `${100*baseBelief}%`;
+					barchangeElem.style.marginLeft = `-${absDiff}%`;
 					barchangeElem.style.width = `${absDiff}%`;
 				} else {
-					barchangeElem.style.left = `${100*baseBelief-absDiff}%`;
+					barchangeElem.style.marginLeft = `-${absDiff}%`;
 					barchangeElem.style.width = `${absDiff}%`;
 
 				}
