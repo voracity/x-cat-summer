@@ -606,6 +606,7 @@ class BnDetail {
 						let absChange = Math.abs(relativeBeliefChange * 100);
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
+						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = this.getColor(relativeBeliefChange);
 						// set colour and width of the barchange element
 						
@@ -616,6 +617,8 @@ class BnDetail {
 						
 						Array.from(barchangeElem.classList).forEach(classname=> {
 							if (classname.indexOf("influence-idx") == 0) {
+								cellProbabilityElem.classList.remove(classname);
+
 								barchangeElem.classList.remove(classname);
 								barchangeElem.classList.remove(`${colorClass}-box`);
 								barchangeElem.classList.remove(`frame`);
@@ -624,6 +627,7 @@ class BnDetail {
 						
 						barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
 						
+						cellProbabilityElem.classList.add(colorClass);
 						
 						if (this.drawFrame) {
 
