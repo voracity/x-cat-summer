@@ -560,6 +560,12 @@ class BnDetail {
 			)
 			
 		} 
+		// Update all evidence nodes and show the influence (as a bar overlayed of the evidence state)
+		// they have on the target node
+
+		Array.from(this.bnView.querySelectorAll(`.barchange`)).forEach(node=>node.style.width = "0%")
+
+		
 		if (m.influences) {
 			let asFrame = true;
 			console.log("updating influences");
@@ -709,6 +715,33 @@ class BnDetail {
 
 			})
 			
+			// Now set the change of belief for all remaining nodes, so show how their states
+			// changed given all evidence VS no evidence
+			Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
+				let nodelabel = node.getAttribute("data-name");
+				
+				let currentBelief = m.nodeBeliefs[nodelabel];
+				let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
+
+				currentBelief.forEach((curBelief, idx) => {
+					let absDiff = (curBelief - origBeliefs[idx]) * 100;
+					
+					let colorClass = this.getColor(curBelief/origBeliefs[idx])
+
+					let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
+					barchangeElem.classList.add(colorClass)
+
+					if (absDiff > 0) {
+						// overlay change over the current belief bar
+						barchangeElem.style.marginLeft = `-${absDiff}%`;
+						barchangeElem.style.width = `${absDiff}%`;
+					} else {
+						// the change will be placed right next to the original belief bar
+						barchangeElem.style.width = `${absDiff}%`;
+					}
+				})
+			})
+
 		} else {
 
 

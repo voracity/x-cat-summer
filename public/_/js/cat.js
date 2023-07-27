@@ -149,6 +149,7 @@ var render = {
 		let spacer = 5
 		let legendGap = 10;
 
+		let widthfactor = 1.08;
 		let networkView = document.querySelector(".bnView")
 		
 		// Cloned nodes won't render as checked, so we set the 'checked' attribute explicitely
@@ -220,8 +221,8 @@ var render = {
 		let height = Math.max(legendHeight, networkHeight)
 		let width = legendWidth + legendGap + networkWidth
 
-		clonedNetwork.style.width = `${(width)*devicePixelRatio}px`
-		clonedNetwork.style.height = `${(miny+height)*devicePixelRatio}px`
+		clonedNetwork.style.width = `${(width*widthfactor)}px`
+		clonedNetwork.style.height = `${(miny+height)}px`
 
 		// convert referenced CSS to inline styles
 		let allNodes = Array.from(copyContainer.querySelectorAll("*"))
@@ -250,7 +251,7 @@ var render = {
 		// To put HTML content inside a special element
 		// This allows us to render HTML to PNG
 		let svgForeignObject = document.createElementNS("http://www.w3.org/2000/svg", 'foreignObject')
-		svgForeignObject.setAttribute("width", spacer+width)
+		svgForeignObject.setAttribute("width", spacer+width*widthfactor)
 		svgForeignObject.setAttribute("height", spacer+height)
 		svgForeignObject.innerHTML = copyContainerRoot.innerHTML
 		rootgroup.appendChild(svgForeignObject)
@@ -327,7 +328,7 @@ var render = {
 
 		let outSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg")
 		outSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
-		outSVG.setAttribute("width", spacer+width)
+		outSVG.setAttribute("width", spacer+width*widthfactor)
 		outSVG.setAttribute("height", miny+spacer+height)
 		
 		// Add a root group to enable scaling
@@ -343,7 +344,7 @@ var render = {
 
 		// Add group holding all edges
 		let edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
-		edgeGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
+		edgeGroup.setAttribute("transform", `translate(${-legendGap} ${networktop})`)
 		scaleGroup.appendChild(edgeGroup)
 				
 		// // Add group holding the image 
