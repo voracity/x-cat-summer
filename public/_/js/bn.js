@@ -597,6 +597,9 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	let scaling = q('select.scaleimage').value
 	// 	render.Network(Number(scaling), "png");
 	// })
+	q('button.savesnapshot').addEventListener('click', () => {
+		bnDetail.saveSnapshot()
+	})
 	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");

@@ -344,6 +344,7 @@ class BnDetail {
 			n('script', {src: sitePath('/_/js/bn.js')}),
 			n('div.controls',
 				// n('button.downloadpng', 'Download As PNG'),
+				n('button.savesnapshot', 'Save Snapshot'),
 				n('button.downloadsvg', 'Download As SVG'),
 				n('label', 
 					'Scale Image',
@@ -719,6 +720,37 @@ class BnDetail {
 
 		}
 	}
+
+	saveSnapshot() {
+
+
+		let btnOK = n("button", "OK", {type:'button', on:{click: () => {
+			// let snapshotNode = document.querySelector('.bnView .snapshots')
+			let snapshots = {};
+			let bnView = document.querySelector('.bnView')
+			if (bnView.dataset.snapshots != undefined) {
+				snapshots = JSON.parse(atob(bnView.dataset.snapshots))
+			}
+			let snapshotname = document.getElementById("snapshotname").value
+			snapshots[snapshotname] = {
+				model : bn.model,
+				beliefs : bn.beliefs,
+				influences: bn.influences,
+				arcInfluence: bn.arcInfluence
+			}
+			let encoded = btoa(JSON.stringify(snapshots));
+			bnView.setAttribute("data-snapshots",encoded);
+			ui.dismissDialog(dlg)
+		}}})
+		let dlg = ui.popupDialog([
+			n('h2', "Enter Snapshot Name"),
+			n('input', {id:"snapshotname"})
+		], {buttons:[btnOK]})
+		
+		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
+		
+	}
+
 }
 
 module.exports = {

@@ -287,43 +287,11 @@ var render = {
 		 * So we just create a texturi
 		 */
 		bloburi = "data:image/svg+xml;charset=utf-8,"+xmlencoded
-		// if (type == "svg") {
-		// 	let a = document.createElement('a')
-		// 	a.href = bloburi
-		// 	a.download = "graph.svg"
-		// 	a.target = "_blank"
-		// 	a.click()
-		// 	document.body.removeChild(copyContainerRoot)
-		// } else if (type == "png") {
-		// 	var img = new Image()
-		// 	img.onload = function() {
-		// 		let renderCanvas = document.createElement('canvas')
-		// 		renderCanvas.width = (width+spacer) * scaling
-		// 		renderCanvas.height = (height) * scaling
-		// 		ctx = renderCanvas.getContext('2d')
-
-		// 		ctx.drawImage(this, 0, 0)
-
-		
-		// 		imguri = renderCanvas.toDataURL("image/png", 1)
-
-		// 		let a = document.createElement('a')
-		// 		a.href = imguri
-		// 		a.download = "graph"
-		// 		a.target = "_blank"
-		// 		a.click()
-				
-		// 		URL.revokeObjectURL(bloburi)
-		// 		document.body.removeChild(copyContainerRoot)
-		// 	}
-
-		// 	img.src = bloburi;
-		// }
 
 		// Render the HTML nodes
-		let imguri = await render.renderImageToDataURI(bloburi, width, height, spacer, scaling)
-		URL.revokeObjectURL(bloburi)
-		document.body.removeChild(copyContainerRoot)
+		// let imguri = await render.renderImageToDataURI(bloburi, width, height, spacer, scaling)
+		// URL.revokeObjectURL(bloburi)
+		// document.body.removeChild(copyContainerRoot)
 
 		let outSVG = document.createElementNS("http://www.w3.org/2000/svg", "svg")
 		outSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
@@ -386,6 +354,7 @@ var render = {
 		a.target = "_blank"
 		a.click()
 		
+		document.body.removeChild(copyContainerRoot)
 	},
 
 	renderImageToDataURI: function (bloburi, width, height, spacer, scaling) {
