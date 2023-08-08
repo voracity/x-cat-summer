@@ -668,11 +668,20 @@ class BnDetail {
 							let targetStateIdx = targetStateElem.dataset.index;
 	
 							let diff = m.nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
-							let absDiff = Math.abs(diff);
-							let arcSize = Math.max(3, (absDiff) * 15);
+							
+							
+							// let absDiff = Math.abs(diff);
+							// let arcSize = Math.max(3, (absDiff) * 15);
+							
+							// Changed to fixed arc size
+							let arcSize = 6; 
+							let headSize = 2; 
 							let arcColor = this.getColor(diff)
 	
 							console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
+							// we know the first child is the colour arc
+							arc.children[0].style.strokeWidth = arcSize;
+							arc.querySelector('.head').style.strokeWidth = headSize;
 							arc.style.strokeWidth = arcSize;
 							
 							arc.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
