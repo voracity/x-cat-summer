@@ -194,7 +194,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 /*:is(.arc, .head, .triangle, .line, .bar){ transition: transform 0.1s, transform-origin 0.1s, d 0.1s, opacity 0.1s; }
 .hasMoving :is(.arc, .head, .triangle, .line, .bar){ transition: none; }*/
 
-.node.hasEvidence { background: #eee; }
+.node.hasEvidence { background: #ccc; }
 .node[data-role="cause"] { background: var(--cause-color); }
 .node[data-role="effect"] { background: var(--effect-color); }
 /* .node[data-role] .target { width: 20px; overflow: unset; } */
