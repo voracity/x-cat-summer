@@ -604,6 +604,10 @@ document.addEventListener('DOMContentLoaded', event => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");
 	})
+	q('button.downloadbase64').addEventListener('click', () => {
+		let scaling = q('select.scaleimage').value
+		render.Network(Number(scaling), "base64");
+	})
 	q('input.influence-as-frame').addEventListener('click', (event) => {
 		bnDetail.drawFrame = event.target.checked
 		bnDetail.$handleUpdate({updateFrameMode:""});

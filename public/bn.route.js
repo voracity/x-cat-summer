@@ -346,6 +346,7 @@ class BnDetail {
 				// n('button.downloadpng', 'Download As PNG'),
 				n('button.savesnapshot', 'Save Snapshot'),
 				n('button.downloadsvg', 'Download As SVG'),
+				n('button.downloadbase64', 'Download As Base64'),
 				n('label', 
 					'Scale Image',
 					n('select.scaleimage', 

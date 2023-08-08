@@ -314,7 +314,16 @@ var render = {
 		let edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
 		edgeGroup.setAttribute("transform", `translate(${-legendGap} ${networktop})`)
 		scaleGroup.appendChild(edgeGroup)
-				
+			
+		let cssinfluences = document.createElementNS("http://www.w3.org/2000/svg", "style")
+		cssinfluences.type = "text/css";
+		outSVG.appendChild(cssinfluences)
+
+		// extract all styles from the influeces.css file
+		let influenceStyleSheet = Array.from(document.styleSheets).filter(s => s.href != null && s.href.indexOf("influence.css") > 0)[0]
+		let csstext = Array.from(influenceStyleSheet.cssRules).map(s=>s.cssText).join('\n')
+		cssinfluences.innerHTML = csstext;
+		
 		// // Add group holding the image 
 		// let imageGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
 		// scaleGroup.appendChild(imageGroup)
@@ -346,12 +355,21 @@ var render = {
 			
 			edgeGroup.append(g);
 		})
-		
-		outXMLEncode = new XMLSerializer().serializeToString(outSVG);
-		outURI = "data:image/svg+xml;charset=utf-8,"+outXMLEncode
+		let outURI;
+		let filename = 'graph';
+		let outXMLEncode = new XMLSerializer().serializeToString(outSVG);
+		if (type!="base64") {
+			outURI = "data:image/svg+xml;charset=utf-8,"+outXMLEncode;
+			filename += ".svg"
+		} else {
+			let base64 = btoa(outXMLEncode);
+			outURI = "data:text/plain;charset=utf-8,"+base64.toString()
+			filename += ".base64"
+		}
+
 		let a = document.createElement('a')
 		a.href = outURI
-		a.download = "graph"
+		a.download = filename
 		a.target = "_blank"
 		a.click()
 		
