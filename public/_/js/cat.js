@@ -148,6 +148,7 @@ var render = {
 		
 		let spacer = 5
 		let legendGap = 10;
+		let highlightFrame=5; // thickness of the highlight frame
 
 		let widthfactor = 1.08;
 		let networkView = document.querySelector(".bnView")
@@ -222,7 +223,7 @@ var render = {
 		let width = legendWidth + legendGap + networkWidth
 
 		clonedNetwork.style.width = `${(width*widthfactor)}px`
-		clonedNetwork.style.height = `${(miny+height)}px`
+		clonedNetwork.style.height = `${(miny+height+highlightFrame)}px`
 
 		// convert referenced CSS to inline styles
 		let allNodes = Array.from(copyContainer.querySelectorAll("*"))
@@ -237,6 +238,7 @@ var render = {
 
 		// Move network right of the legend
 		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
+		networktop += highlightFrame;
 		clonedNetwork.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
 
 		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
