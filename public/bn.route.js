@@ -566,6 +566,15 @@ class BnDetail {
 		// they have on the target node
 
 		Array.from(this.bnView.querySelectorAll(`.barchange`)).forEach(node=>node.style.width = "0%")
+		Array.from(this.bnView.querySelectorAll(`.cellProbability`)).forEach(node=>{
+			Array.from(node.classList).forEach(classname => {
+				if (classname.indexOf("influence-") == 0) {
+					node.classList.remove(classname);
+					node.classList.remove('frame');
+				}									
+			})
+		})
+		
 
 		
 		if (m.influences) {
@@ -575,17 +584,7 @@ class BnDetail {
 			let entries = Object.entries(m.influences)
 
 			if (entries.length == 0) {
-				// clear all influences first, as we set them anyway
-				Array.from(this.bnView.querySelectorAll(`span.barchange`)).forEach(node => {
-					Array.from(node.classList).forEach(classname => {
-						if (classname.indexOf("influence-") == 0) {
-							node.classList.remove(classname);
-						}									
-					})
-					node.classList.remove('frame');
-					node.style.width = '0px';
-				
-				})		
+
 				
 				// clear all arks
 				if (m.arcInfluence)
