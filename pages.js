@@ -6,6 +6,7 @@ class StandardPage {
 		this.root = n('html',
 			this.headEl = n('head',
 				n('link', {href: sitePath('/_/css/cat.css'), rel: 'stylesheet', type: 'text/css'}),
+				n('link', {href: sitePath('/_/css/influence.css'), id:"influence-css", rel: 'stylesheet', type: 'text/css'}),
 				n('link', {href: sitePath('/_/js/menu/menu_styles.css'), rel: 'stylesheet', type: 'text/css'}),
 				/*n('style', `
 					.cbi { color: rgb(128,0,0); }
