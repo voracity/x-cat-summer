@@ -776,7 +776,7 @@ class BnDetail {
 			let snapshotname = document.getElementById("snapshotname").value
 			snapshots[snapshotname] = {
 				model : bn.model,
-				beliefs : bn.beliefs,
+				nodeBeliefs : bn.beliefs,
 				influences: bn.influences,
 				arcInfluence: bn.arcInfluence
 			}
