@@ -2,7 +2,7 @@
 	--influence-idx0:rgb(71, 110, 0);
 	--influence-idx1:rgb(141, 220, 0);
 	--influence-idx2:rgb(223,255,165);
-	--influence-idx3:rgb(250, 245, 245);
+	--influence-idx3:rgb(255, 235, 235);
 	--influence-idx4:rgb(215,227,255);
 	--influence-idx5:rgb(95, 145, 255);
 	--influence-idx6:rgb(0, 56, 180);
@@ -23,7 +23,7 @@
 	color: black;
 }
 .influence-idx3 {
-	background-color: rgb(250, 245, 245);
+	background-color: rgb(255, 235, 235);
 	color: black;
 }
 .influence-idx4 {
@@ -56,7 +56,7 @@
 	border-color:rgb(223,255,165);
 }
 .influence-idx3-box.frame {
-	border-color: rgb(250, 245, 245);
+	border-color: rgb(255, 235, 235);
 }
 .influence-idx4-box.frame {
 	border-color: rgb(215,227,255);
