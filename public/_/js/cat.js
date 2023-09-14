@@ -191,6 +191,8 @@ var render = {
 		// Contain the translate coordinates
 		minx = 1e100
 		miny = 1e100
+		maxx = 0
+		maxy = 0
 		// Final size of the canvas
 		networkWidth = 0
 		networkHeight = 0
@@ -201,10 +203,12 @@ var render = {
 			// rect = n.getBoundingClientRect()
 			miny = Math.min(n.offsetTop, miny)
 			minx = Math.min(n.offsetLeft, minx)
-			networkWidth = Math.max(n.offsetLeft + n.offsetWidth) - minx
-			networkHeight = Math.max(n.offsetTop + n.offsetHeight) - miny
+			maxy = Math.max(maxy, n.offsetTop + n.offsetHeight)
+			maxx = Math.max(maxx, n.offsetLeft + n.offsetWidth)
 			clonedNetwork.append(copy)
 		})
+		networkWidth = maxx - minx;//Math.max(networkWidth, n.offsetLeft + n.offsetWidth) - minx
+		networkHeight = maxy - miny;//Math.max(networkHeight, n.offsetTop + n.offsetHeight) - miny
 		// Add clone of the legend
 		let clonedLegend = legend.cloneNode(true);
 		clonedLegend.style.display = "inline-block"
@@ -239,7 +243,11 @@ var render = {
 		// Move network right of the legend
 		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
 		networktop += highlightFrame;
-		clonedNetwork.style.transform = `translate(${legendWidth + legendGap -minx}px, ${networktop}px)`
+		// let networkleft = legendWidth + legendGap -minx
+
+		let leftoffset = legendWidth + legendGap -minx
+
+		clonedNetwork.style.transform = `translate(${leftoffset}px, ${networktop}px)`
 
 		let svgdoc = document.createElementNS("http://www.w3.org/2000/svg", "svg")
 		svgdoc.setAttribute("width", spacer+width)
@@ -263,26 +271,7 @@ var render = {
 
 		
 		// debugging size layout issues
-		if (window.DEBUGGING) {
-			let renderedcopy = document.createElement('div');
-			renderedcopy.style.width = "600px"
-			renderedcopy.style.height = "600px"
-			renderedcopy.style.position = "absolute"
-			renderedcopy.style.left = `${width}px`;
-			networkView.appendChild(renderedcopy)
-			renderedcopy.appendChild(svgdoc)
-			
-			let renderedimage = document.createElement('div');
-			renderedimage.style.width = "600px"
-			renderedimage.style.height = "600px"
-			renderedimage.style.position = "absolute"
-			renderedimage.style.top = `${height}px`;
-			renderedimage.style.left = `${width}px`;
-			networkView.appendChild(renderedimage)
-			let i = document.createElement('img')
-			i.src = bloburi
-			renderedimage.appendChild(i)
-		}
+
 		/**
 		 * Cannot use Blob here because of crossOrigin policy in Chrome
 		 * 		blob = new Blob([xmlencoded], {type:"image/svg+xml"})
@@ -300,7 +289,32 @@ var render = {
 		outSVG.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
 		outSVG.setAttribute("width", spacer+width*widthfactor)
 		outSVG.setAttribute("height", miny+spacer+height)
+
+		window.DEBUGGING = false
+		if (window.DEBUGGING) {
+			let renderedcopy = document.createElement('div');
+			renderedcopy.style.width = "800px"
+			renderedcopy.style.height = "600px"
+			renderedcopy.style.position = "absolute"
+			renderedcopy.style.left = `${0}px`;
+			renderedcopy.style.top = `${1.5*height}px`;
+			networkView.appendChild(renderedcopy)
+			renderedcopy.appendChild(outSVG)
+			
+			// let renderedimage = document.createElement('div');
+			// renderedimage.style.width = "600px"
+			// renderedimage.style.height = "600px"
+			// renderedimage.style.position = "absolute"
+			// renderedimage.style.top = `${height}px`;
+			// renderedimage.style.left = `${width}px`;
+			// networkView.appendChild(renderedimage)
+			// let i = document.createElement('img')
+			// i.src = bloburi
+			// renderedimage.appendChild(i)
+		}		
 		
+
+
 		// Add a root group to enable scaling
 		let scaleGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
 		scaleGroup.setAttribute('transform', `scale(${scaling}, ${scaling})`)
@@ -309,12 +323,13 @@ var render = {
 
 		// Add nodes (foreignobject)
 		let nodesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
-		nodesGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
+		// nodesGroup.setAttribute("transform", `translate(${legendGap} ${networktop})`)
+		nodesGroup.setAttribute("transform", `translate(${0} ${networktop})`)
 		scaleGroup.appendChild(svgForeignObject)
 
 		// Add group holding all edges
 		let edgeGroup = document.createElementNS("http://www.w3.org/2000/svg", "g")
-		edgeGroup.setAttribute("transform", `translate(${-legendGap} ${networktop})`)
+		edgeGroup.setAttribute("transform", `translate(${leftoffset} ${networktop})`)
 		scaleGroup.appendChild(edgeGroup)
 			
 		let cssinfluences = document.createElementNS("http://www.w3.org/2000/svg", "style")
@@ -333,7 +348,7 @@ var render = {
 		// let svgImage = document.createElementNS("http://www.w3.org/2000/svg", "image")
 		// svgImage.setAttribute("xlink:href", imguri)
 		// imageGroup.appendChild(svgImage)
-
+		
 		// Add copies of the SVG Elements (edges, arrow heads)
 		Array.from(edges)/*.slice(0,1)*/.forEach(n => {
 			let copy = n.cloneNode(true);
@@ -342,9 +357,10 @@ var render = {
 			let top = 'top' in copy.style ? Number(copy.style.top.substring(0, copy.style.top.length-2)) : 0;
 			let left = 'left' in copy.style ? Number(copy.style.left.substring(0, copy.style.left.length-2)) : 0;
 			let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+			edgeGroup.append(g);
+			g.appendChild(copy);
 			g.setAttribute("transform", `translate(${left} ${top})`);
 			g.setAttribute("transform-origin", `${left+width/2}px ${top+height/2}px`);
-			g.appendChild(copy);
 
 			// copy data attributes from copied arc
 			let orgArc = copy.querySelector("g.arc");
@@ -355,8 +371,9 @@ var render = {
 			}
 
 			
-			edgeGroup.append(g);
+			
 		})
+
 		let outURI;
 		let filename = 'graph';
 		let outXMLEncode = new XMLSerializer().serializeToString(outSVG);
