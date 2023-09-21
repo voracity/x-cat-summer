@@ -749,9 +749,11 @@ class BnDetail {
 					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
 
 					currentBelief.forEach((curBelief, idx) => {
-						let absDiff = (curBelief - origBeliefs[idx]) * 100;
+						let diff = curBelief - origBeliefs[idx]
+						let absDiff = diff * 100;
 						
-						let colorClass = this.getColor(curBelief/origBeliefs[idx])
+						// let colorClass = this.getColor(/curBelief/origBeliefs[idx])
+						let colorClass = this.getColor(diff)
 
 						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
 						barchangeElem.classList.add(colorClass)
