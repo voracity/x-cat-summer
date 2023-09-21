@@ -336,8 +336,19 @@ var measurePlugins = {
 };
 
 class BnDetail {
+	constructor(drawOptions = {}) {
+		
+		const DEFAULT_OPTS = {
+			drawFrame:false,
+			drawChangeBar:true
+		}
+		this.drawOptions = Object.assign({}, drawOptions)
+		Object.keys(DEFAULT_OPTS).forEach(key => {
+			if (this.drawOptions[key] == undefined)
+				this.drawOptions[key] = DEFAULT_OPTS[key]
+		})
+	}
 	make(root) {
-		this.drawFrame = false
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),
@@ -616,35 +627,37 @@ class BnDetail {
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = this.getColor(relativeBeliefChange);
 						// set colour and width of the barchange element
-						
-						barchangeElem.style.width = `${absChange}%`;
-						barchangeElem.style.marginLeft = `-${absChange}%`;
-						// barchangeElem.style.left = `${100 - absChange}%`;
-						
-						
-						Array.from(barchangeElem.classList).forEach(classname=> {
-							if (classname.indexOf("influence-idx") == 0) {
-								cellProbabilityElem.classList.remove(classname);
 
-								barchangeElem.classList.remove(classname);
-								barchangeElem.classList.remove(`${colorClass}-box`);
-								barchangeElem.classList.remove(`frame`);
+						if (this.drawOptions.drawChangeBar) {
+							barchangeElem.style.width = absChange+"%";
+							barchangeElem.style.marginLeft = "-"+absChange+"%";
+							// barchangeElem.style.left = `${100 - absChange}%`;
+	
+	
+							Array.from(barchangeElem.classList).forEach(classname => {
+								if (classname.indexOf("influence-idx") == 0) {
+									cellProbabilityElem.classList.remove(classname);
+	
+									barchangeElem.classList.remove(classname);
+									barchangeElem.classList.remove(colorClass+"-box");
+									barchangeElem.classList.remove("frame");
+								}
+							})
+	
+							barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
+	
+							if (this.drawOptions.drawFrame) {
+	
+								barchangeElem.classList.add(colorClass+"-box");
+								barchangeElem.classList.add('frame');
+							} else {
+	
+								barchangeElem.classList.add(colorClass);
 							}
-						})
-						
-						barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-						
-						cellProbabilityElem.classList.add(colorClass);
-						
-						if (this.drawFrame) {
-
-							barchangeElem.classList.add(`${colorClass}-box`);
-							barchangeElem.classList.add(`frame`);
-						} else {
-
-							barchangeElem.classList.add(colorClass);
 						}
 						
+						cellProbabilityElem.classList.add(colorClass);
+
 						// for all elements not being part of the bar set backgroundcolor
 						Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
 							Array.from(elem.classList).forEach(classname=> {
@@ -693,7 +706,8 @@ class BnDetail {
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
 				let diff = currentBelief - baseBelief
 				let absDiff = 100*Math.abs(diff)
-				let colorClass = this.getColor(currentBelief/baseBelief)
+				let colorClass = this.getColor(diff)
+				// let colorClass = this.getColor(currentBelief/baseBelief)
 				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 				if (diff > 0) {
 					barchangeElem.style.marginLeft = `-${absDiff}%`;
@@ -725,32 +739,33 @@ class BnDetail {
 
 			})
 			
-			// Now set the change of belief for all remaining nodes, so show how their states
-			// changed given all evidence VS no evidence
-			Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
-				let nodelabel = node.getAttribute("data-name");
-				
-				let currentBelief = m.nodeBeliefs[nodelabel];
-				let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
-
-				currentBelief.forEach((curBelief, idx) => {
-					let absDiff = (curBelief - origBeliefs[idx]) * 100;
+			if (this.drawOptions.drawChangeBar)
+				// Now set the change of belief for all remaining nodes, so show how their states
+				// changed given all evidence VS no evidence
+				Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
+					let nodelabel = node.getAttribute("data-name");
 					
-					let colorClass = this.getColor(curBelief/origBeliefs[idx])
+					let currentBelief = m.nodeBeliefs[nodelabel];
+					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
 
-					let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-					barchangeElem.classList.add(colorClass)
+					currentBelief.forEach((curBelief, idx) => {
+						let absDiff = (curBelief - origBeliefs[idx]) * 100;
+						
+						let colorClass = this.getColor(curBelief/origBeliefs[idx])
 
-					if (absDiff > 0) {
-						// overlay change over the current belief bar
-						barchangeElem.style.marginLeft = `-${absDiff}%`;
-						barchangeElem.style.width = `${absDiff}%`;
-					} else {
-						// the change will be placed right next to the original belief bar
-						barchangeElem.style.width = `${absDiff}%`;
-					}
+						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
+						barchangeElem.classList.add(colorClass)
+
+						if (absDiff > 0) {
+							// overlay change over the current belief bar
+							barchangeElem.style.marginLeft = `-${absDiff}%`;
+							barchangeElem.style.width = `${absDiff}%`;
+						} else {
+							// the change will be placed right next to the original belief bar
+							barchangeElem.style.width = `${absDiff}%`;
+						}
+					})
 				})
-			})
 
 		} else {
 
@@ -766,6 +781,7 @@ class BnDetail {
 	saveSnapshot() {
 
 
+		
 		let btnOK = n("button", "OK", {type:'button', on:{click: () => {
 			// let snapshotNode = document.querySelector('.bnView .snapshots')
 			let snapshots = {};
@@ -784,11 +800,14 @@ class BnDetail {
 			bnView.setAttribute("data-snapshots",encoded);
 			ui.dismissDialog(dlg)
 		}}})
+		let btnCANCEL = n("button", "Canel", {type:'button', on:{click: () => {
+			ui.dismissDialog(dlg)
+		}}})
 		let dlg = ui.popupDialog([
 			n('h2', "Enter Snapshot Name"),
-			n('input', {id:"snapshotname"})
-		], {buttons:[btnOK]})
-		
+			n('input', {id:"snapshotname", autofocus:""})
+		], {buttons:[btnOK, btnCANCEL]})
+		document.getElementById("snapshotname").focus()
 		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
 		
 	}

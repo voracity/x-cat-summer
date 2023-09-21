@@ -145,6 +145,7 @@ var draw = {
 						class: 'line',
 						//"marker-end": `url(#arrowhead${blockedMarker})`
 					}),
+					
 					this.makeSvg("path", {
 						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
 						class: 'line',
@@ -165,6 +166,7 @@ var draw = {
 		}
 		/// Store opts for next time, if updating
 		$(path).data('opts', opts);
+		path.setAttribute("data-influencearc", true);
 		return path;
 	},
 	drawArrowBetweenBoxes: function(outputEl, from, to, opts = {}) {
