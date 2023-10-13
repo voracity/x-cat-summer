@@ -45,25 +45,25 @@
 	top:-1px;
 	background-color:transparent;
 }
-.influence-idx0-box.frame{
-	border-color: rgb(71, 110, 0);
+.influence-idx0-box{
+	box-shadow:  0px 0px 3px 3px rgb(71, 110, 0);
 }
 
-.influence-idx1-box.frame {
-	border-color: rgb(141, 220, 0);
+.influence-idx1-box {
+	box-shadow:  0px 0px 3px 3px rgb(141, 220, 0);
 }
-.influence-idx2-box.frame {
-	border-color:rgb(223,255,165);
+.influence-idx2-box {
+	box-shadow:  0px 0px 3px 3px rgb(223,255,165);
 }
-.influence-idx3-box.frame {
-	border-color: rgb(255, 235, 235);
+.influence-idx3-box {
+	box-shadow:  0px 0px 3px 3px rgb(255, 235, 235);
 }
-.influence-idx4-box.frame {
-	border-color: rgb(215,227,255);
+.influence-idx4-box {
+	box-shadow:  0px 0px 3px 3px rgb(215,227,255);
 }
-.influence-idx5-box.frame {
-	border-color: rgb(95, 145, 255);
+.influence-idx5-box {
+	box-shadow:  0px 0px 3px 3px rgb(95, 145, 255);
 }
-.influence-idx6-box.frame {
-	border-color: rgb(0, 56, 180);
+.influence-idx6-box {
+	box-shadow:  0px 0px 3px 3px rgb(0, 56, 180);
 }

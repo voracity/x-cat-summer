@@ -133,7 +133,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	display:flex;
 	flex-flow: row;
 	align-items: center;
-	
+	height: 1.4em;
 	/* padding:2px 1px; */
 	width:65px;
 
@@ -147,6 +147,12 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .barParent .barchange {
 	display: inline-block;
 	height: 1.4em;
+	transition: all 0.3s;
+}
+
+.istargetnode .barParent .barchange {
+	display: inline-block;
+	height: 0.8em;
 	transition: all 0.3s;
 }
 .hiddencheckboxcontainer {
@@ -184,7 +190,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .node.hasEvidence  .state >.target { color:#ccc; padding: 2px; font-weight: bolder;}
 .node .state.istarget .target { color:black; padding: 2px; font-weight: bolder;}
 
-.node .state.istarget {
+.node .state.istarget .cellProbability{
 	background-color: var(--probability-present);
 }
 .node.istargetnode H3{

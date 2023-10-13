@@ -645,15 +645,8 @@ class BnDetail {
 							})
 	
 							barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-	
-							if (this.drawOptions.drawFrame) {
-	
-								barchangeElem.classList.add(colorClass+"-box");
-								barchangeElem.classList.add('frame');
-							} else {
-	
-								barchangeElem.classList.add(colorClass);
-							}
+							
+							barchangeElem.classList.add(colorClass);
 						}
 						
 						cellProbabilityElem.classList.add(colorClass);
@@ -686,17 +679,19 @@ class BnDetail {
 							// let arcSize = Math.max(3, (absDiff) * 15);
 							
 							// Changed to fixed arc size
-							let arcSize = 6; 
+							let arcSize = 8; 
 							let headSize = 2; 
 							let arcColor = this.getColor(diff)
 	
 							console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
 							// we know the first child is the colour arc
-							arc.children[0].style.strokeWidth = arcSize;
-							arc.querySelector('.head').style.strokeWidth = headSize;
-							arc.style.strokeWidth = arcSize;
+							let influeceArcElems = arc.querySelectorAll('[data-influencearc=true]')
+							influeceArcElems.forEach(elem=> {
+
+								elem.style.strokeWidth = arcSize;
+								elem.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
+							})
 							
-							arc.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
 						})
 					})
 				}
@@ -707,8 +702,16 @@ class BnDetail {
 				let diff = currentBelief - baseBelief
 				let absDiff = 100*Math.abs(diff)
 				let colorClass = this.getColor(diff)
-				// let colorClass = this.getColor(currentBelief/baseBelief)
 				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+				Array.from(barchangeElem.classList).forEach(classname=> {
+					if (classname.indexOf("influence-idx") == 0) {
+						barchangeElem.classList.remove(classname);
+						barchangeElem.classList.remove(`${colorClass}-box`);
+						barchangeElem.classList.remove(`influence-box`);
+					}
+				})
+
 				if (diff > 0) {
 					barchangeElem.style.marginLeft = `-${absDiff}%`;
 					barchangeElem.style.width = `${absDiff}%`;
@@ -717,25 +720,9 @@ class BnDetail {
 					barchangeElem.style.width = `${absDiff}%`;
 
 				}
-				Array.from(barchangeElem.classList).forEach(classname=> {
-					if (classname.indexOf("influence-idx") == 0) {
-						barchangeElem.classList.remove(classname);
-						barchangeElem.classList.remove(`${colorClass}-box`);
-						barchangeElem.classList.remove(`influence-box`);
-					}
-				})
-				if (this.drawFrame) {
-
-					barchangeElem.classList.add(`${colorClass}-box`);
-					barchangeElem.classList.add(`influence-box`);
-				} else {
-
-					barchangeElem.classList.add(colorClass);
-				}
-				
-				// barchangeElem.classList.add(colorClass);
-				
-
+				// shadow-boxes with width 0 still show their glow
+				if (Math.abs(diff)>0)
+					barchangeElem.classList.add(colorClass+"-box");
 
 			})
 			

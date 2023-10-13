@@ -76,6 +76,7 @@ var draw = {
 
 		//onsole.debug(svgX, svgY);
 		var path = null;
+		var arrow = null;
 		let startX = svgX-sx+firstX;
 		let startY = svgY-sy+firstY;
 		let endX = svgX-sx+lastX-marginEndX;
@@ -139,6 +140,7 @@ var draw = {
 				let endpoints = {};
 				if (opts.parent)  endpoints['data-parent'] = opts.parent;
 				if (opts.child)   endpoints['data-child'] = opts.child;
+				
 				$svg.append(this.makeSvg('g', {class: opts.isBlocked ? 'blocked arc': 'arc', ...endpoints}, [
 					path = this.makeSvg("path", {
 						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
@@ -152,6 +154,14 @@ var draw = {
 						stroke:"rgb(180,180,180)",
 						"stroke-width": 1
 					}),
+					/* 'transform': `rotate(${angle},${endX},${endY})` */
+					arrow = this.makeSvg('g', {style: `transform: rotate(${angle}deg); transform-origin: ${endX}px ${endY}px;`, 'class': 'head'}, [
+						this.makeSvg('path', {
+							d: `M${endX},${endY} l-1,-4 l10,4 l-10,4 l1,-4 Z`,
+							class: 'triangle',
+						}),
+						block
+					]),
 					/* 'transform': `rotate(${angle},${endX},${endY})` */
 					this.makeSvg('g', {style: `transform: rotate(${angle}deg); transform-origin: ${endX}px ${endY}px;`, 'class': 'head'}, [
 						this.makeSvg('path', {
@@ -167,6 +177,7 @@ var draw = {
 		/// Store opts for next time, if updating
 		$(path).data('opts', opts);
 		path.setAttribute("data-influencearc", true);
+		arrow.setAttribute("data-influencearc", true);
 		return path;
 	},
 	drawArrowBetweenBoxes: function(outputEl, from, to, opts = {}) {
