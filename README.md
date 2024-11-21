@@ -34,4 +34,6 @@ pm2 stop server.js
 pm2 save
 ```
 
-Note, this uses GeNIe's SMILE API for working with Bayesian networks, via an abstraction layer called 'bni'. A Monash academic license (baked into bni) is included in this repository, but occasionally needs to be renewed.
+Note, this uses GeNIe's SMILE API for working with Bayesian networks, via an abstraction layer called 'bni'.
+A Monash academic license (baked into bni) is included in this repository, but occasionally needs to be renewed
+(this license is 2 years, and should cover the summer project period).
