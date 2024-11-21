@@ -4,7 +4,7 @@
 
 X-CAT uses a custom framework, where components look as follows:
 
-```
+```js
 class MyComponent {
     make() {
         this.root = n('div.myComponent',
@@ -41,7 +41,7 @@ Every page has an associated component, which will be rendered statically first.
 Each page specifies a main component for that page, and a template. These will be combined for the first static rendering.
 The page is treated as a module with this information exported. e.g.:
 
-```
+```js
 # MyPage
 
 class MyPageComponent {
@@ -59,7 +59,7 @@ module.exports = {
 You can also query the database or do other data preparation in order to hydrate (i.e., call $handleUpdate() with data)
 a component:
 
-```
+```js
 module.exports = {
 	template: 'StandardPage',
 	component: MyPageComponent,
@@ -70,9 +70,9 @@ module.exports = {
         return msg;
     }
 }
+```
 
 prepareData() can also be used to save data to the database (e.g. in response to a POST).
-```
 
 If you have a prepareData() exported function, this will automatically be called (which will hydrate the page via $handleUpdate).
 
