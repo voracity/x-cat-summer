@@ -19,6 +19,8 @@ Just run:
 npm start
 ```
 
+Then visit `http://localhost:3000` to see if things are working.
+
 For development, you can use nodemon (install with `npm install -g nodemon`) which will auto-reload the JS files:
 
 ```
