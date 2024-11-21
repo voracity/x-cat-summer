@@ -30,7 +30,7 @@ For running as a server, you can use pm2 (install with `npm install -g pm2`). An
 ```
 pm2 start server.js
 pm2 stop server.js
-# optionally reload on boot
+# Optionally, you can autostart on boot with this after starting the server:
 pm2 save
 ```
 
