@@ -361,9 +361,16 @@ class Node {
   }
 
   setEvidence(stateIndex, o = {}) {
+    console.log("setEvidence: ", stateIndex);
     let nodeName = this.nodeName;
     let evidence = {};
     let nodeEl = this.el();
+    let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
+    let allStateElem = nodeEl.querySelectorAll(".state");
+
+    allStateElem.forEach((elem) => {
+      elem.style.backgroundColor = "";
+    });
 
     if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
       //delete bn.evidence[nodeName];
@@ -373,7 +380,6 @@ class Node {
       Array.from(influenceBars).forEach((elem) => {
         elem.style.width = "0%";
       });
-      let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
       if (!stateElem.classList.contains("istarget"))
         Array.from(
           stateElem.querySelectorAll(":scope>span:not(.barParent)")
@@ -383,11 +389,15 @@ class Node {
               elem.classList.remove(classname);
           })
         );
+      stateElem.style.backgroundColor = "";
       nodeEl.style.boxShadow = "";
     } else {
       //bn.evidence[nodeName] = state.dataset.index;
       evidence[nodeName] = stateIndex;
       nodeEl.classList.add("hasEvidence");
+
+      stateElem.style.backgroundColor =
+        stateIndex == 0 ? "rgba(0, 255, 0, 0.5)" : "rgba(255, 0, 0, 0.3)";
 
       // Flashing Node when activated
       let flashes = 2;
@@ -401,10 +411,7 @@ class Node {
           nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
         }
       };
-
       flash(flashes * 2);
-
-      nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
     }
     if (o.update) bn.update(evidence);
   }
