@@ -371,6 +371,7 @@ class Node {
     allStateElem.forEach((elem) => {
       elem.style.backgroundColor = "";
     });
+    nodeEl.style.boxShadow = "";
 
     if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
       //delete bn.evidence[nodeName];
@@ -389,8 +390,6 @@ class Node {
               elem.classList.remove(classname);
           })
         );
-      stateElem.style.backgroundColor = "";
-      nodeEl.style.boxShadow = "";
     } else {
       //bn.evidence[nodeName] = state.dataset.index;
       evidence[nodeName] = stateIndex;
