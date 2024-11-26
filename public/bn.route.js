@@ -960,11 +960,10 @@ class BnDetail {
         },
       },
     });
-    let btnCANCEL = n("button", "Cancel", {
+    let btnCANCEL = n("button", "Canel", {
       type: "button",
       on: {
         click: () => {
-          console.log("Saved snapshot cancelled");
           ui.dismissDialog(dlg);
         },
       },
