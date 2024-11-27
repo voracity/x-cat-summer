@@ -366,11 +366,6 @@ class Node {
     let evidence = {};
     let nodeEl = this.el();
     let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
-    let allStateElem = nodeEl.querySelectorAll(".state");
-
-    allStateElem.forEach((elem) => {
-      elem.style.backgroundColor = "";
-    });
     nodeEl.style.boxShadow = "";
 
     if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
@@ -394,9 +389,6 @@ class Node {
       //bn.evidence[nodeName] = state.dataset.index;
       evidence[nodeName] = stateIndex;
       nodeEl.classList.add("hasEvidence");
-
-      stateElem.style.backgroundColor =
-        stateIndex == 0 ? "rgba(0, 255, 0, 0.5)" : "rgba(255, 0, 0, 0.3)";
 
       // Flashing Node when activated
       let flashes = 2;
