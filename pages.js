@@ -5,6 +5,7 @@ class StandardPage {
 	make() {
 		this.root = n('html',
 			this.headEl = n('head',
+				n('title', 'X-CAT'),
 				n('link', {href: sitePath('/_/css/cat.css'), rel: 'stylesheet', type: 'text/css'}),
 				n('link', {href: sitePath('/_/css/influence.css'), id:"influence-css", rel: 'stylesheet', type: 'text/css'}),
 				n('link', {href: sitePath('/_/js/menu/menu_styles.css'), rel: 'stylesheet', type: 'text/css'}),
@@ -19,7 +20,7 @@ class StandardPage {
 			),
 			n('body',
 				n('div.header',
-					n('h1', n('a', {href: '/'}, n('img.logo', {src:'/_/images/cat_logo.png', alt: 'CAT logo'})), n('span.text', 'Causal Attribution Tool (beta)')),
+					n('h1', n('a', {href: '/'}, n('img.logo', {src:'/_/images/cat_logo.png', alt: 'CAT logo'})), n('span.text', 'X-CAT: eXplainable Causal Attribution Tool (beta)')),
 					n('div.siteLinks',
 						this.loginSection = n('span.loginSection', n('button.login', 'Login')),
 					),
@@ -48,6 +49,13 @@ class StandardPage {
 		}
 		if (m.h1) {
 			this.root.querySelector('.header h1 .text').textContent = m.h1;
+		}
+		if (m.componentName) {
+			this.root.append(n('script', `
+				window.defaultRoot = new ${m.componentName};
+				window.defaultRoot.make(document.querySelector('.content *'));
+				window.defaultRoot.setupEvents?.();
+			`));
 		}
 	}
 }

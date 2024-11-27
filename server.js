@@ -269,7 +269,7 @@ function loadRoute(app, path) {
 				}
 				else {
 					console.log('user:', user);
-					req._page.$handleUpdate({body: cmpt.root, user});
+					req._page.$handleUpdate({body: cmpt.root, user, componentName: cmpt.constructor.name});
 					responseContent = req._page.toHtml();
 				}
 				if (!redirected)  res.send(responseContent);
