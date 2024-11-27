@@ -368,6 +368,11 @@ class Node {
     let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
     nodeEl.style.boxShadow = "";
 
+    if (this.flashTimeoutid) {
+      clearTimeout(this.flashTimeoutid);
+      this.flashTimeoutid = null;
+    }
+
     if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
       //delete bn.evidence[nodeName];
       evidence[nodeName] = null;
@@ -397,9 +402,13 @@ class Node {
         if (count > 0) {
           nodeEl.style.boxShadow =
             count % 2 === 0 ? "0px 0px 12px rgba(255,0,0,0.9)" : "";
-          setTimeout(() => flash(count - 1), flashDuration);
+          this.flashTimeoutid = setTimeout(
+            () => flash(count - 1),
+            flashDuration
+          );
         } else {
           nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
+          this.flashTimeoutid = null;
         }
       };
       flash(flashes * 2);
