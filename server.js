@@ -124,6 +124,7 @@ app.use((req,res,next) => {
 /// All components that are available on the server can be retrieved via this path
 /// TODO: Provide a way to retrieve just the required components
 app.get('/_/js/components.js', (req,res) => {
+	res.type('application/javascript');
 	res.send(componentStore.map(c => c.toString()+'\n\n').join(''));
 });
 
