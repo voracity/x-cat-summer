@@ -812,6 +812,7 @@ class BnDetail {
           });
         });
         if (m.arcInfluence) {
+          let delay = 0;
           m.arcInfluence.forEach((arcEntry) => {
             let arc = document.querySelector(
               `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
@@ -846,15 +847,47 @@ class BnDetail {
                   arcColor
                 );
                 // we know the first child is the colour arc
-                let influeceArcElems = arc.querySelectorAll(
-                  "[data-influencearc=true]"
-                );
-                influeceArcElems.forEach((elem) => {
-                  elem.style.strokeWidth = arcSize;
-                  elem.style.stroke = getComputedStyle(
-                    document.documentElement
-                  ).getPropertyValue(`--${arcColor}`);
-                });
+                setTimeout(() => {
+                  let influeceArcElems = arc.querySelectorAll(
+                    "[data-influencearc=true]"
+                  );
+                  influeceArcElems.forEach((elem) => {
+                    let color = getComputedStyle(
+                      document.documentElement
+                    ).getPropertyValue(`--${arcColor}`);
+                    elem.style.stroke = color;
+                    elem.style.strokeWidth = arcSize;
+
+                    let length = elem.getTotalLength();
+                    elem.style.strokeDasharray = length;
+                    elem.style.strokeDashoffset = length;
+                    elem.style.transition = "none";
+
+                    let markerEnd = elem.getAttribute("marker-end");
+                    elem.setAttribute("data-original-marker-end", markerEnd);
+                    elem.removeAttribute("marker-end");
+
+                    elem.getBoundingClientRect();
+
+                    elem.style.transition = "stroke-dashoffset 1s ease-in-out";
+
+                    setTimeout(() => {
+                      elem.style.strokeDashoffset = "0";
+                      // setTimeout(() => {
+                      //   let originalMarkerEnd = elem.getAttribute(
+                      //     "data-original-marker-end"
+                      //   );
+                      //   if (originalMarkerEnd) {
+                      //     elem.setAttribute("marker-end", originalMarkerEnd);
+                      //     elem.removeAttribute("data-original-marker-end");
+                      //   }
+                      // }, 2000);
+                    }, 1000);
+                  });
+                }, delay);
+
+                // Increment the delay for the next arc
+                delay += 500; // Adjust delay time as needed
               }
             );
           });
