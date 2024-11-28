@@ -172,12 +172,12 @@ var draw = {
 					])
 				]))
 					.css({left: svgX-sx, top: svgY-sy, position: "absolute"});
+				path.setAttribute("data-influencearc", true);
+				arrow.setAttribute("data-influencearc", true);
 			}
 		}
 		/// Store opts for next time, if updating
 		$(path).data('opts', opts);
-		path.setAttribute("data-influencearc", true);
-		arrow.setAttribute("data-influencearc", true);
 		return path;
 	},
 	drawArrowBetweenBoxes: function(outputEl, from, to, opts = {}) {
