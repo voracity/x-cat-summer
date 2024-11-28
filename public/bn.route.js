@@ -583,11 +583,11 @@ class BnDetail {
 			
 		} 
 		if (m.influences) {
-			// 清空影响说明列表
+		
 			let influenceListEl = this.root.querySelector('.influenceList');
 			influenceListEl.innerHTML = '';
 		
-			// 遍历影响数据，生成列表项
+		
 			for (let [nodeName, influenceData] of Object.entries(m.influences)) {
 				let explanation = influenceData.explanation;
 				let listItem = n('li', explanation);
@@ -1193,29 +1193,29 @@ module.exports = {
 								bn.influences[nonActiveNodeName].targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs()
 							});
 
-							// 计算影响百分比和生成文字说明
+							
 							let influenceData = bn.influences[nonActiveNodeName];
 
 							Object.keys(selectedStates).forEach(targetNodeName => {
 								let baselineBelief = baselineBeliefs[targetNodeName];
 								let newBelief = influenceData.targetBeliefs[targetNodeName];
 
-								// 假设 selectedStates[targetNodeName] 只有一个状态
+								
 								let targetStateIndex = selectedStates[targetNodeName][0];
 								let baselineProb = baselineBelief[targetStateIndex];
 								let newProb = newBelief[targetStateIndex];
 
-								// 计算影响百分比
+							
 								let influencePercentage = (baselineProb - newProb) / baselineProb;
 								influenceData.influencePercentage = influencePercentage;
 
-								// 将影响百分比映射到 [-3, 3] 的整数范围
+								
 								let scale = mapInfluencePercentageToScale(influencePercentage);
 
-								// 获取描述
+								
 								let description = Contribute_DESCRIPTIONS[scale.toString()];
 
-								// 格式化影响百分比，取绝对值并转换为百分比格式
+							
 								let influencePercentFormatted = (Math.abs(influencePercentage) * 100).toFixed(1) + '%';
 
 								
