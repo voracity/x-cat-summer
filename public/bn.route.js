@@ -848,46 +848,71 @@ class BnDetail {
                 );
                 // we know the first child is the colour arc
                 setTimeout(() => {
-                  let influeceArcElems = arc.querySelectorAll(
-                    "[data-influencearc=true]"
+                  let influeceArcBodyElems = arc.querySelectorAll(
+                    "[data-influencearc=body]"
                   );
-                  influeceArcElems.forEach((elem) => {
-                    let color = getComputedStyle(
+                  let influeceArcHeadElems = arc.querySelectorAll(
+                    "[data-influencearc=head]"
+                  );
+
+                  let combinedElems = Array.from(influeceArcBodyElems).map(
+                    (bodyElem, index) => {
+                      return {
+                        body: bodyElem,
+                        head: influeceArcHeadElems[index],
+                      };
+                    }
+                  );
+
+                  combinedElems.forEach((pair, index) => {
+                    let bodyElem = pair.body;
+                    let headElem = pair.head;
+
+                    let bodyColor = getComputedStyle(
                       document.documentElement
                     ).getPropertyValue(`--${arcColor}`);
-                    elem.style.stroke = color;
-                    elem.style.strokeWidth = arcSize;
+                    bodyElem.style.stroke = bodyColor;
+                    bodyElem.style.strokeWidth = arcSize;
 
-                    let length = elem.getTotalLength();
-                    elem.style.strokeDasharray = length;
-                    elem.style.strokeDashoffset = length;
-                    elem.style.transition = "none";
+                    let bodyLength = bodyElem.getTotalLength();
+                    bodyElem.style.strokeDasharray = bodyLength;
+                    bodyElem.style.strokeDashoffset = bodyLength;
+                    bodyElem.style.transition = "none";
 
-                    let markerEnd = elem.getAttribute("marker-end");
-                    elem.setAttribute("data-original-marker-end", markerEnd);
-                    elem.removeAttribute("marker-end");
+                    bodyElem.getBoundingClientRect();
 
-                    elem.getBoundingClientRect();
-
-                    elem.style.transition = "stroke-dashoffset 1s ease-in-out";
+                    bodyElem.style.transition =
+                      "stroke-dashoffset 1s ease-in-out";
 
                     setTimeout(() => {
-                      elem.style.strokeDashoffset = "0";
-                      // setTimeout(() => {
-                      //   let originalMarkerEnd = elem.getAttribute(
-                      //     "data-original-marker-end"
-                      //   );
-                      //   if (originalMarkerEnd) {
-                      //     elem.setAttribute("marker-end", originalMarkerEnd);
-                      //     elem.removeAttribute("data-original-marker-end");
-                      //   }
-                      // }, 2000);
-                    }, 1000);
+                      bodyElem.style.strokeDashoffset = "0";
+
+                      setTimeout(() => {
+                        let headColor = getComputedStyle(
+                          document.documentElement
+                        ).getPropertyValue(`--${arcColor}`);
+                        headElem.style.stroke = headColor;
+                        headElem.style.strokeWidth = arcSize;
+
+                        let headLength = headElem.getTotalLength();
+                        headElem.style.strokeDasharray = headLength;
+                        headElem.style.strokeDashoffset = headLength;
+                        headElem.style.transition = "none";
+
+                        headElem.getBoundingClientRect();
+
+                        headElem.style.transition =
+                          "stroke-dashoffset 1s ease-in-out";
+
+                        setTimeout(() => {
+                          headElem.style.strokeDashoffset = "0";
+                        }, 0);
+                      }, 1000);
+                    }, index * 1200);
                   });
                 }, delay);
 
-                // Increment the delay for the next arc
-                delay += 500; // Adjust delay time as needed
+                delay += 500;
               }
             );
           });
