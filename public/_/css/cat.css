@@ -327,6 +327,18 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	border: 1px dotted black;
 	opacity: 0.6;
 }
+.variable-name {
+    font-weight: bold;
+    color: #007BFF; /* 蓝色高亮 */
+}
+
+p {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}
+
 /* 
 .ccheckbox {
 	opacity: 0;

@@ -1,0 +1,15 @@
+.explanation {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+}
+
+.variable-name {
+    font-weight: bold;
+    color: #007BFF;
+}
+
+.important {
+    font-style: italic;
+    color: #FF5733;
+}

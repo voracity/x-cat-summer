@@ -90,7 +90,7 @@ module.exports = {
 				}
 			}
 		}
-		
+
 		return {step: req.query.step || 1};
 	}
 }
