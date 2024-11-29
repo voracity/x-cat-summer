@@ -733,8 +733,12 @@ class BnDetail {
             let arc = document.querySelector(
               `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
             );
-            arc.style.strokeWidth = 0;
-            arc.style.stroke = "none";
+            // arc.style.strokeWidth = 0;
+            // arc.style.stroke = "none";
+            if (arc) {
+              arc.remove();
+              bn.drawArcs();
+            }
           });
       } else {
         entries.forEach(([evidenceNodeName, value]) => {
@@ -831,6 +835,8 @@ class BnDetail {
                   m.nodeBeliefs[targetNodeName][targetStateIdx] -
                   arcBeliefs[targetStateIdx];
 
+                console.log("diff:", diff);
+
                 // let absDiff = Math.abs(diff);
                 // let arcSize = Math.max(3, (absDiff) * 15);
 
@@ -840,6 +846,7 @@ class BnDetail {
                 let arcColor = this.getColor(diff);
 
                 console.log(
+                  "Block of log: ",
                   arcEntry.child,
                   arcEntry.parent,
                   diff,
@@ -847,6 +854,7 @@ class BnDetail {
                   arcColor
                 );
                 // we know the first child is the colour arc
+                // coloring order of arrows
                 setTimeout(() => {
                   let influeceArcBodyElems = arc.querySelectorAll(
                     "[data-influencearc=body]"
@@ -860,9 +868,31 @@ class BnDetail {
                       return {
                         body: bodyElem,
                         head: influeceArcHeadElems[index],
+                        color: arcColor,
                       };
                     }
                   );
+
+                  const colorOrder = [
+                    "--influence-idx0",
+                    "--influence-idx1",
+                    "--influence-idx2",
+                    "--influence-idx3",
+                    "--influence-idx4",
+                    "--influence-idx5",
+                    "--influence-idx6",
+                  ];
+                  console.log("colorOrder", colorOrder);
+
+                  combinedElems.sort((a, b) => {
+                    const aIndex = colorOrder.indexOf(a.color.trim());
+                    console.log(
+                      "indexOf(a.color.trim())",
+                      indexOf(a.color.trim())
+                    );
+                    const bIndex = colorOrder.indexOf(b.color.trim());
+                    return aIndex - bIndex;
+                  });
 
                   combinedElems.forEach((pair, index) => {
                     let bodyElem = pair.body;
@@ -908,7 +938,7 @@ class BnDetail {
                           headElem.style.strokeDashoffset = "0";
                         }, 0);
                       }, 1000);
-                    }, index * 1200);
+                    }, index * 1200); // delay between arrows
                   });
                 }, delay);
 
