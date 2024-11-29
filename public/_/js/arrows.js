@@ -273,16 +273,16 @@ var draw = {
             )
           )
           .css({ left: svgX - sx, top: svgY - sy, position: "absolute" });
+        // Assign 'body' to the arrow body path
+        path.setAttribute("data-influencearc", "body");
+
+        // Assign 'head' to the arrowhead
+        arrow.setAttribute("data-influencearc", "head");
       }
     }
     /// Store opts for next time, if updating
     $(path).data("opts", opts);
 
-    // Assign 'body' to the arrow body path
-    path.setAttribute("data-influencearc", "body");
-
-    // Assign 'head' to the arrowhead
-    arrow.setAttribute("data-influencearc", "head");
     return path;
   },
   drawArrowBetweenBoxes: function (outputEl, from, to, opts = {}) {

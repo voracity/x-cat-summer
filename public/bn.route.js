@@ -731,7 +731,6 @@ class BnDetail {
       let entries = Object.entries(m.influences);
 
       if (entries.length == 0) {
-        // clear all arks
         clearAllArcs(m.arcInfluence, bn);
       } else {
         entries.forEach(([evidenceNodeName, value]) => {
@@ -812,7 +811,6 @@ class BnDetail {
           let delay = 0;
           // console.log("arcInfluence:", m.arcInfluence);
 
-          // clear all arks
           clearAllArcs(m.arcInfluence, bn);
 
           const sortedArcInfluence = sortArcInfluenceByDiff(
@@ -822,7 +820,7 @@ class BnDetail {
           // console.log("sortedArcInfluence:", sortedArcInfluence);
 
           sortedArcInfluence.forEach((arcEntry) => {
-            console.log("arcEntry:", arcEntry);
+            // console.log("arcEntry:", arcEntry);
             let arc = document.querySelector(
               `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
             );
