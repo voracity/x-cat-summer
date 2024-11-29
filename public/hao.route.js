@@ -1,10 +1,9 @@
 var {n} = require('htm');
 
-let explanation = '123'
 
 class Hao_page {
     make() {
-        let targetNodeName = 'NODE'; // 目标节点名称
+        let targetNodeName = 'NODE'; 
         let explanation = `
             <p>Finding out <strong><span class="variable-name">${targetNodeName}</span></strong> 
             was used contributes due to 2 connections: <br><br>
@@ -13,11 +12,9 @@ class Hao_page {
             being in the target state.</p>
         `;
 
-        // 创建一个容器节点
+
         let container = document.createElement('div');
         container.innerHTML = explanation;
-
-        // 插入到页面中
         document.body.appendChild(container);
     }
 }
