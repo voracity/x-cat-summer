@@ -730,20 +730,6 @@ class BnDetail {
       let listTargetNodes = {};
       let entries = Object.entries(m.influences);
 
-      // function clearAllArcs(arcInfluence, bn) {
-      //   if (arcInfluence) {
-      //     arcInfluence.forEach((arcEntry) => {
-      //       let arc = document.querySelector(
-      //         `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-      //       );
-      //       if (arc) {
-      //         arc.remove();
-      //         bn.drawArcs();
-      //       }
-      //     });
-      //   }
-      // }
-
       if (entries.length == 0) {
         // clear all arks
         clearAllArcs(m.arcInfluence, bn);
