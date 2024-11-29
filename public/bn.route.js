@@ -817,7 +817,45 @@ class BnDetail {
         });
         if (m.arcInfluence) {
           let delay = 0;
-          m.arcInfluence.forEach((arcEntry) => {
+          // console.log("arcInfluence:", m.arcInfluence);
+
+          function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs) {
+            return arcInfluence
+              .map((arcEntry) => {
+                // Calculate max diff for this arcEntry
+                const maxDiff = Math.max(
+                  ...Object.entries(arcEntry.targetBelief).map(
+                    ([targetNodeName, arcBeliefs]) => {
+                      const targetNode = document.querySelector(
+                        `div.node[data-name=${targetNodeName}]`
+                      );
+                      const targetStateElem =
+                        targetNode.querySelector(".state.istarget");
+                      const targetStateIdx = targetStateElem.dataset.index;
+
+                      return (
+                        nodeBeliefs[targetNodeName][targetStateIdx] -
+                        arcBeliefs[targetStateIdx]
+                      );
+                    }
+                  )
+                );
+
+                // Attach the maxDiff to arcEntry for sorting
+                return { ...arcEntry, maxDiff };
+              })
+              .sort((a, b) => b.maxDiff - a.maxDiff) // Sort by maxDiff in descending order
+              .map(({ maxDiff, ...arcEntry }) => arcEntry); // Remove the maxDiff property
+          }
+
+          const sortedArcInfluence = sortArcInfluenceByDiff(
+            m.arcInfluence,
+            m.nodeBeliefs
+          );
+          // console.log("sortedArcInfluence:", sortedArcInfluence);
+
+          sortedArcInfluence.forEach((arcEntry) => {
+            console.log("arcEntry:", arcEntry);
             let arc = document.querySelector(
               `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
             );
@@ -835,7 +873,7 @@ class BnDetail {
                   m.nodeBeliefs[targetNodeName][targetStateIdx] -
                   arcBeliefs[targetStateIdx];
 
-                console.log("diff:", diff);
+                // console.log("diff:", diff);
 
                 // let absDiff = Math.abs(diff);
                 // let arcSize = Math.max(3, (absDiff) * 15);
@@ -868,31 +906,9 @@ class BnDetail {
                       return {
                         body: bodyElem,
                         head: influeceArcHeadElems[index],
-                        color: arcColor,
                       };
                     }
                   );
-
-                  const colorOrder = [
-                    "--influence-idx0",
-                    "--influence-idx1",
-                    "--influence-idx2",
-                    "--influence-idx3",
-                    "--influence-idx4",
-                    "--influence-idx5",
-                    "--influence-idx6",
-                  ];
-                  console.log("colorOrder", colorOrder);
-
-                  combinedElems.sort((a, b) => {
-                    const aIndex = colorOrder.indexOf(a.color.trim());
-                    console.log(
-                      "indexOf(a.color.trim())",
-                      indexOf(a.color.trim())
-                    );
-                    const bIndex = colorOrder.indexOf(b.color.trim());
-                    return aIndex - bIndex;
-                  });
 
                   combinedElems.forEach((pair, index) => {
                     let bodyElem = pair.body;
