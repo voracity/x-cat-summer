@@ -2,6 +2,10 @@ var { n, toHtml } = require("htm");
 var { sitePath, ...siteUtils } = require("siteUtils");
 var { Net, Node } = require("../bni_smile");
 var fs = require("fs");
+var {
+  clearAllArcs,
+  sortArcInfluenceByDiff,
+} = require("../public/_/js/utils.js");
 
 function addJointChild(net, parentNames, tempNodeName = null) {
   let stateList = [];
@@ -726,20 +730,23 @@ class BnDetail {
       let listTargetNodes = {};
       let entries = Object.entries(m.influences);
 
+      // function clearAllArcs(arcInfluence, bn) {
+      //   if (arcInfluence) {
+      //     arcInfluence.forEach((arcEntry) => {
+      //       let arc = document.querySelector(
+      //         `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+      //       );
+      //       if (arc) {
+      //         arc.remove();
+      //         bn.drawArcs();
+      //       }
+      //     });
+      //   }
+      // }
+
       if (entries.length == 0) {
         // clear all arks
-        if (m.arcInfluence)
-          m.arcInfluence.forEach((arcEntry) => {
-            let arc = document.querySelector(
-              `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-            );
-            // arc.style.strokeWidth = 0;
-            // arc.style.stroke = "none";
-            if (arc) {
-              arc.remove();
-              bn.drawArcs();
-            }
-          });
+        clearAllArcs(m.arcInfluence, bn);
       } else {
         entries.forEach(([evidenceNodeName, value]) => {
           let targetBeliefs = value["targetBeliefs"];
@@ -819,34 +826,8 @@ class BnDetail {
           let delay = 0;
           // console.log("arcInfluence:", m.arcInfluence);
 
-          function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs) {
-            return arcInfluence
-              .map((arcEntry) => {
-                // Calculate max diff for this arcEntry
-                const maxDiff = Math.max(
-                  ...Object.entries(arcEntry.targetBelief).map(
-                    ([targetNodeName, arcBeliefs]) => {
-                      const targetNode = document.querySelector(
-                        `div.node[data-name=${targetNodeName}]`
-                      );
-                      const targetStateElem =
-                        targetNode.querySelector(".state.istarget");
-                      const targetStateIdx = targetStateElem.dataset.index;
-
-                      return (
-                        nodeBeliefs[targetNodeName][targetStateIdx] -
-                        arcBeliefs[targetStateIdx]
-                      );
-                    }
-                  )
-                );
-
-                // Attach the maxDiff to arcEntry for sorting
-                return { ...arcEntry, maxDiff };
-              })
-              .sort((a, b) => b.maxDiff - a.maxDiff) // Sort by maxDiff in descending order
-              .map(({ maxDiff, ...arcEntry }) => arcEntry); // Remove the maxDiff property
-          }
+          // clear all arks
+          clearAllArcs(m.arcInfluence, bn);
 
           const sortedArcInfluence = sortArcInfluenceByDiff(
             m.arcInfluence,
