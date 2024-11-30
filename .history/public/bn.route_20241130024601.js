@@ -963,23 +963,23 @@ module.exports = {
 
 
 					const Contribute_DESCRIPTIONS = {
-						"3": "greatly reduces",
-						"2": "moderately reduces",
-						"1": "slightly reduces",
+						"-3": "greatly reduces",
+						"-2": "moderately reduces",
+						"-1": "slightly reduces",
 						"0": "barely changes",
-						"-1": "slightly increases",
-						"-2": "moderately increases",
-						"-3": "greatly increases"
+						"1": "slightly increases",
+						"2": "moderately increases",
+						"3": "greatly increases"
 					};
 
 					const Contribute_DESCRIPTIONS_2 = {
-						"3": "reduces",
-						"2": "reduces",
-						"1": "reduces",
+						"-3": "reduces",
+						"-2": "reduces",
+						"-1": "reduces",
 						"0": "barely changes",
-						"-1": "increases",
-						"-2": "increases",
-						"-3": "increases"
+						"1": "increases",
+						"2": "increases",
+						"3": "increases"
 					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {
@@ -1090,14 +1090,52 @@ module.exports = {
 						return allPaths;
 					}
 
-					function getAttribute(nodeName) {
+					function getNodeSelectedAttribute(nodeName) {
 						let node = net.node(nodeName);
-						let state = node.states();
-						let stateNames = node._stateNames;
-						let NodeAttribute = stateNames[evidence[nodeName]];
-						return NodeAttribute
-	
+						let states = node.states();
+						let selectedStateIndex = node.finding();
+					
+						console.log(`节点: ${nodeName}`);
+						console.log(`选定状态索引:`, selectedStateIndex);
+						console.log(`状态名称数组:`, states);
+					
+						let stateName = "";
+					
+						if (selectedStateIndex !== null && selectedStateIndex !== undefined) {
+							// 处理 selectedStateIndex 的不同类型
+							if (Array.isArray(selectedStateIndex)) {
+								selectedStateIndex = selectedStateIndex[0];
+							} else if (typeof selectedStateIndex === 'object') {
+								selectedStateIndex = selectedStateIndex.value || selectedStateIndex.state;
+							}
+					
+							// 提取状态名称
+							if (states[selectedStateIndex] && typeof states[selectedStateIndex].name === 'function') {
+								stateName = states[selectedStateIndex].name(); // 调用方法获取名称
+							} else if (states[selectedStateIndex] && states[selectedStateIndex].name) {
+								stateName = states[selectedStateIndex].name; // 如果 name 是属性
+							} else {
+								// 如果 states[selectedStateIndex] 已经是字符串
+								stateName = states[selectedStateIndex];
+							}
+						} else {
+							// 如果没有设置证据，返回最可能的状态
+							let beliefs = node.beliefs();
+							let maxBelief = Math.max(...beliefs);
+							let mostProbableStateIndex = beliefs.indexOf(maxBelief);
+							if (states[mostProbableStateIndex] && typeof states[mostProbableStateIndex].name === 'function') {
+								stateName = states[mostProbableStateIndex].name(); // 调用方法获取名称
+							} else if (states[mostProbableStateIndex] && states[mostProbableStateIndex].name) {
+								stateName = states[mostProbableStateIndex].name; // 如果 name 是属性
+							} else {
+								stateName = states[mostProbableStateIndex];
+							}
+						}
+					
+						console.log(`获取的节点属性: ${stateName}`);
+						return stateName;
 					}
+					
 
 					function calculatePathContribution(path, edgeMap) {
 						let totalContribution = 0;
@@ -1131,10 +1169,9 @@ module.exports = {
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
 					}
+					
 					net.update();
-					console.log(net)
 
-					// 获取基准信念分布
 					let baselineBeliefs = {};
 					Object.keys(selectedStates).forEach(targetNodeName => {
 						baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
@@ -1206,7 +1243,7 @@ module.exports = {
 							for (let [nodeName,stateI] of Object.entries(evidence)) {
 								if (nodeName != nonActiveNodeName) {
 									console.log(nodeName, stateI);
-                                    net.node(nodeName).finding(Number(stateI));
+									net.node(nodeName).finding(Number(stateI));
 								}
 								// origNet.node(nodeName).finding(Number(stateI));
 							}
@@ -1214,7 +1251,6 @@ module.exports = {
 							
 							// console.time('update');
 							console.log("rerunning without", nonActiveNodeName)
-							
 							net.update();
 							let totalInfluencePercentage = 0;
 							// console.timeEnd('update');
@@ -1228,7 +1264,6 @@ module.exports = {
 										targetBeliefs: {}
 									};
 								}
-								
 
 								// Retrieve influence data for the current non-active node
 								let influenceData = bn.influences[nonActiveNodeName];
@@ -1237,9 +1272,7 @@ module.exports = {
 								Object.keys(selectedStates).forEach(targetNodeName => {
 									// Store the target beliefs after setting evidence
 									influenceData.targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
-									
 								});
-
 
 								// Iterate over each selected target node to calculate influences
 								Object.keys(selectedStates).forEach(targetNodeName => {
@@ -1273,8 +1306,6 @@ module.exports = {
 									const sentences = [];
 
 									console.log(`Paths from ${nonActiveNodeName} to ${targetNodeName}:`, allPaths.length);
-									console.log("selectStates",selectedStates)
-
 
 									// Separate paths into direct and indirect influences
 									allPaths.forEach(path => {
@@ -1301,7 +1332,7 @@ module.exports = {
 											const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
 
 											// Get selected attributes
-											let fromNodeAttribute = getAttribute(fromNode);
+											let fromNodeAttribute = getNodeSelectedAttribute(fromNode);
 
 											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${targetNodeName}.`;
 											sentences.push(sentence);
@@ -1319,9 +1350,8 @@ module.exports = {
 											let contributionPhrase = Contribute_DESCRIPTIONS[totalContribution.toString()];
 
 											// Get selected attributes
-											evidence[fromNode][0]
-											let fromNodeAttribute = getAttribute(fromNode);
-											let intermediateNodeAttribute = getAttribute(intermediateNode);
+											let fromNodeAttribute = getNodeSelectedAttribute(fromNode);
+											let intermediateNodeAttribute = getNodeSelectedAttribute(intermediateNode);
 
 											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${toNode}, given that ${intermediateNode} is ${intermediateNodeAttribute}.`;
 											sentences.push(sentence);
@@ -1333,10 +1363,7 @@ module.exports = {
 										// Map the total influence percentage to a scale
 										let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 										let overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
-										let node = net.node(targetNodeName);
-										let state = node.states();
-										let stateNames = node._stateNames;
-										let targetNodeAttribute = stateNames[targetStateIndex];
+										let targetNodeAttribute = getNodeSelectedAttribute(targetNodeName);
 
 										let overallSentence = `All findings combined ${overallDescription} the probability that ${targetNodeName} is ${targetNodeAttribute}.`;
 
@@ -1406,6 +1433,7 @@ module.exports = {
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
 					}
+					console.log({selectedStates});
 					
 					/// Update selected states if there are joint causes
 					console.log({roles});

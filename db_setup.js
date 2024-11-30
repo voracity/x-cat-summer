@@ -29,25 +29,16 @@ class DbVersioning {
 			}
 		
 			let addedStatement = statement.match(/^\s*ADDED\s+(.*)/);
-			/// START/STOP is for manually controlling statement execution. Best
-			/// to use ADDED <date-version>, unless in mid-development.
 			if (statement == "START") {
 				running = true;
-			}
-			else if (statement == "STOP") {
+			} else if (statement == "STOP") {
 				running = false;
-			}
-			else if (addedStatement) {
-				/// This is for versioning. Suggest putting ISO-ish date, but any string
-				/// higher than the previous string will do.
+			} else if (addedStatement) {
 				newVersion = addedStatement[1];
 				let row = null;
 				try {
 					row = await this.db.get("select version from dbversion");
-				}
-				catch (e) {
-					/// Table not defined, create it. (Well, maybe some other
-					/// error, but if there is, this will throw that error too.)
+				} catch (e) {
 					await this.db.run("create table dbversion (version text)");
 					await this.db.run("insert into dbversion (version) values ('')");
 					row = await this.db.get("select version from dbversion");
@@ -61,18 +52,25 @@ class DbVersioning {
 					console.log("Updating to", newVersion);
 					running = true;
 					bumpVersion = true;
-				}
-				else {
+				} else {
 					running = false;
 				}
 				prevVersion = newVersion;
-			}
-			else if (running) {
+			} else if (running) {
+				if (statement.startsWith("alter table bns add column visibility text")) {
+					// 检查列是否已经存在
+					const columns = await this.db.all("PRAGMA table_info(bns)");
+					const columnExists = columns.some(col => col.name === "visibility");
+					if (columnExists) {
+						console.log("Column 'visibility' already exists. Skipping.");
+						continue; // 跳过当前语句
+					}
+				}
+	
 				if (params) {
 					console.log(statement, params);
 					await this.db.run(statement, ...params);
-				}
-				else {
+				} else {
 					console.log(statement);
 					await this.db.run(statement);
 				}
@@ -81,7 +79,6 @@ class DbVersioning {
 		}
 				
 		if (bumpVersion) {
-			//console.log('newVerison:', newVersion);
 			await this.db.run("update dbversion set version = ?", newVersion);
 		}
 		

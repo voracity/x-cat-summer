@@ -963,23 +963,23 @@ module.exports = {
 
 
 					const Contribute_DESCRIPTIONS = {
-						"3": "greatly reduces",
-						"2": "moderately reduces",
-						"1": "slightly reduces",
+						"-3": "greatly reduces",
+						"-2": "moderately reduces",
+						"-1": "slightly reduces",
 						"0": "barely changes",
-						"-1": "slightly increases",
-						"-2": "moderately increases",
-						"-3": "greatly increases"
+						"1": "slightly increases",
+						"2": "moderately increases",
+						"3": "greatly increases"
 					};
 
 					const Contribute_DESCRIPTIONS_2 = {
-						"3": "reduces",
-						"2": "reduces",
-						"1": "reduces",
+						"-3": "reduces",
+						"-2": "reduces",
+						"-1": "reduces",
 						"0": "barely changes",
-						"-1": "increases",
-						"-2": "increases",
-						"-3": "increases"
+						"1": "increases",
+						"2": "increases",
+						"3": "increases"
 					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {
@@ -1090,13 +1090,16 @@ module.exports = {
 						return allPaths;
 					}
 
-					function getAttribute(nodeName) {
+					function getNodeSelectedAttribute(nodeName) {
 						let node = net.node(nodeName);
 						let state = node.states();
+						let states = node._states;
 						let stateNames = node._stateNames;
-						let NodeAttribute = stateNames[evidence[nodeName]];
-						return NodeAttribute
-	
+						console.log("evidence", evidence[nodeName]);
+
+
+
+						
 					}
 
 					function calculatePathContribution(path, edgeMap) {
@@ -1301,7 +1304,7 @@ module.exports = {
 											const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
 
 											// Get selected attributes
-											let fromNodeAttribute = getAttribute(fromNode);
+											let fromNodeAttribute = getNodeSelectedAttribute(fromNode);
 
 											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${targetNodeName}.`;
 											sentences.push(sentence);
@@ -1319,9 +1322,8 @@ module.exports = {
 											let contributionPhrase = Contribute_DESCRIPTIONS[totalContribution.toString()];
 
 											// Get selected attributes
-											evidence[fromNode][0]
-											let fromNodeAttribute = getAttribute(fromNode);
-											let intermediateNodeAttribute = getAttribute(intermediateNode);
+											let fromNodeAttribute = getNodeSelectedAttribute(fromNode);
+											let intermediateNodeAttribute = getNodeSelectedAttribute(intermediateNode);
 
 											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${toNode}, given that ${intermediateNode} is ${intermediateNodeAttribute}.`;
 											sentences.push(sentence);
