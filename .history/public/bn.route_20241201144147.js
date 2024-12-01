@@ -391,6 +391,7 @@ class BnDetail {
 			n('div.bnView',
 			),
 
+			// 在这里添加新的容器
 			n('div.influenceContainer',
 				{class: 'influenceContainer'},
 				n('h2', 'Influence Descriptions'),
@@ -962,23 +963,23 @@ module.exports = {
 
 
 					const Contribute_DESCRIPTIONS = {
-						"-3": "greatly reduces",
-						"-2": "moderately reduces",
-						"-1": "slightly reduces",
+						"3": "greatly reduces",
+						"2": "moderately reduces",
+						"1": "slightly reduces",
 						"0": "barely changes",
-						"1": "slightly increases",
-						"2": "moderately increases",
-						"3": "greatly increases"
+						"-1": "slightly increases",
+						"-2": "moderately increases",
+						"-3": "greatly increases"
 					};
 
 					const Contribute_DESCRIPTIONS_2 = {
-						"-3": "reduces",
-						"-2": "reduces",
-						"-1": "reduces",
+						"3": "reduces",
+						"2": "reduces",
+						"1": "reduces",
 						"0": "barely changes",
-						"1": "increases",
-						"2": "increases",
-						"3": "increases"
+						"-1": "increases",
+						"-2": "increases",
+						"-3": "increases"
 					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {

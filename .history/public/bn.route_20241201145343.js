@@ -391,6 +391,7 @@ class BnDetail {
 			n('div.bnView',
 			),
 
+			// 在这里添加新的容器
 			n('div.influenceContainer',
 				{class: 'influenceContainer'},
 				n('h2', 'Influence Descriptions'),
