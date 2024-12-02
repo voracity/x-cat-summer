@@ -984,6 +984,7 @@ module.exports = {
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
 						let scale = 0;
+						console.log("influencePercentage", influencePercentage);
 
 						if (absPercentage >= 0 && absPercentage <= 0.01) {
 							scale = 0;
@@ -1057,7 +1058,7 @@ module.exports = {
 								graph[rel.to] = [];
 							}
 							graph[rel.from].push(rel.to);
-							graph[rel.to].push(rel.from); 
+							graph[rel.to].push(rel.from); // 添加反向边
 						});
 						return graph;
 					}
@@ -1178,7 +1179,6 @@ module.exports = {
 						const edgeKey = `${rel.from}->${rel.to}`;
 						edgeMap[edgeKey] = rel.contribute;
 					});
-					
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
@@ -1240,7 +1240,6 @@ module.exports = {
 
 								// Retrieve influence data for the current non-active node
 								let influenceData = bn.influences[nonActiveNodeName];
-								console.log("influenceData", influenceData.targetBeliefs)
 
 								// Iterate over each selected target node
 								Object.keys(selectedStates).forEach(targetNodeName => {
@@ -1262,7 +1261,7 @@ module.exports = {
 									let newProb = newBelief[targetStateIndex];
 
 									// Calculate the influence percentage
-									let influencePercentage = (baselineProb - newProb) / baselineProb;
+									let influencePercentage = (newProb - baselineProb) / baselineProb;
 									influenceData.influencePercentage = influencePercentage;
 
 									// Add to total influence percentage
@@ -1271,7 +1270,6 @@ module.exports = {
 									// Map the influence percentage to a scale
 									let scale = mapInfluencePercentageToScale(influencePercentage);
 									let description = Contribute_DESCRIPTIONS[scale.toString()];
-									console.log("influencePercentage", influencePercentage);
 									console.log("description", description);
 
 									// Format the influence percentage

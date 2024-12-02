@@ -1057,7 +1057,7 @@ module.exports = {
 								graph[rel.to] = [];
 							}
 							graph[rel.from].push(rel.to);
-							graph[rel.to].push(rel.from); 
+							graph[rel.to].push(rel.from); // 添加反向边
 						});
 						return graph;
 					}
@@ -1123,6 +1123,7 @@ module.exports = {
 							} else {
 								console.warn(`No contribution found for edge between ${fromNode} and ${toNode}`);
 							}
+							console.log(`totalContribution ${totalContribution}`);
 						}
 					
 						// Limit totalContribution to [-3, 3]
@@ -1154,7 +1155,7 @@ module.exports = {
 					
 							// Map influence percentage to contribute value [-3, 3]
 							let contribute = mapInfluencePercentageToScale(influencePercentage);
-							
+							console.log(`relationships ${relationships[contribute]}`);
 					
 							// Add the relationship to the list
 							relationships.push({
@@ -1164,8 +1165,6 @@ module.exports = {
 							});
 						});
 					});
-
-					
 					
 
 
@@ -1178,7 +1177,6 @@ module.exports = {
 						const edgeKey = `${rel.from}->${rel.to}`;
 						edgeMap[edgeKey] = rel.contribute;
 					});
-					
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
@@ -1240,7 +1238,6 @@ module.exports = {
 
 								// Retrieve influence data for the current non-active node
 								let influenceData = bn.influences[nonActiveNodeName];
-								console.log("influenceData", influenceData.targetBeliefs)
 
 								// Iterate over each selected target node
 								Object.keys(selectedStates).forEach(targetNodeName => {
@@ -1262,7 +1259,7 @@ module.exports = {
 									let newProb = newBelief[targetStateIndex];
 
 									// Calculate the influence percentage
-									let influencePercentage = (baselineProb - newProb) / baselineProb;
+									let influencePercentage = (newProb - baselineProb) / baselineProb;
 									influenceData.influencePercentage = influencePercentage;
 
 									// Add to total influence percentage
@@ -1271,8 +1268,6 @@ module.exports = {
 									// Map the influence percentage to a scale
 									let scale = mapInfluencePercentageToScale(influencePercentage);
 									let description = Contribute_DESCRIPTIONS[scale.toString()];
-									console.log("influencePercentage", influencePercentage);
-									console.log("description", description);
 
 									// Format the influence percentage
 									let influencePercentFormatted = (Math.abs(influencePercentage) * 100).toFixed(1) + '%';

@@ -984,6 +984,7 @@ module.exports = {
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
 						let scale = 0;
+						console.log("influencePercentage", influencePercentage);
 
 						if (absPercentage >= 0 && absPercentage <= 0.01) {
 							scale = 0;

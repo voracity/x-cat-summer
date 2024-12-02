@@ -984,6 +984,7 @@ module.exports = {
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
 						let scale = 0;
+						console.log("influencePercentage", influencePercentage);
 
 						if (absPercentage >= 0 && absPercentage <= 0.01) {
 							scale = 0;
@@ -1178,7 +1179,7 @@ module.exports = {
 						const edgeKey = `${rel.from}->${rel.to}`;
 						edgeMap[edgeKey] = rel.contribute;
 					});
-					
+					console.log("edgeMap", edgeMap)
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
@@ -1240,7 +1241,6 @@ module.exports = {
 
 								// Retrieve influence data for the current non-active node
 								let influenceData = bn.influences[nonActiveNodeName];
-								console.log("influenceData", influenceData.targetBeliefs)
 
 								// Iterate over each selected target node
 								Object.keys(selectedStates).forEach(targetNodeName => {
