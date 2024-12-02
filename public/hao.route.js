@@ -1,24 +1,20 @@
-var {n} = require('htm');
+var {n,html} = require('htm');
 
 
 class Hao_page {
-    make() {
-        let targetNodeName = 'NODE'; 
-        let explanation = `
-            <p>Finding out <strong><span class="variable-name">${targetNodeName}</span></strong> 
-            was used contributes due to 2 connections: <br><br>
-            Overall, the finding <strong>greatly increases</strong> 
-            the probability of <strong><span class="variable-name">${targetNodeName}</span></strong> 
-            being in the target state.</p>
-        `;
-
-
-        let container = document.createElement('div');
-        container.innerHTML = explanation;
-        document.body.appendChild(container);
-    }
+	make() {
+        let text_home = `
+        <div style="display: flex; justify-content: center; align-items: center">
+            Hao's page
+        </div>
+    `;
+		this.root = n('div',
+			n('h1', html(text_home)),
+            n('h2','TODO:'),
+            n('p','W2-Fri')
+		);
+	}
 }
-
 
 module.exports = {
 	template: 'StandardPage',

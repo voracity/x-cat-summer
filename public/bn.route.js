@@ -3,6 +3,8 @@ var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
 
+
+// add joint child node based on parents Hao: I think this one is fine 
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
 	let stateIndexes = parentNames.map(_=>0);
@@ -20,68 +22,132 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
+// ** update marginalizeParentArc ** Hao
 
-function marginalizeParentArc(child, parentToRemove, reduce = false) {
-	function getRowIndex(parIndexes) {
-		let rowIndex = 0;
-		for (let i=0; i<parIndexes.length; i++) {
-			if (i!=0)  rowIndex *= pars[i].states().length;
-			rowIndex += parIndexes[i];
-		}
-		return rowIndex;
-	}
-	
-	function addWeightedVec(vec1, vec2, weight) {
-		return vec1.map((v,i) => v + vec2[i]*weight);
-	}
-
-	let net = child.net;
-	
-	/// The CPT (we'll modify in place)
-	let cpt = child.cpt();
-	
-	let pars = child.parents();
-	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
-	
-	let marginals = parentToRemove.beliefs();
-	
-	let parIndexes = pars.map(_=>0);
-	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
-	do {
-		let row = child.states().map(_=>0);
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			//console.log(parIndexes, rowI);
-			row = addWeightedVec(row, cpt[rowI], marginals[i]);
-		}
-		let marginalizedRow = row;
-		
-		/// Replace all the matching rows with the weighted combination
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			cpt[rowI] = marginalizedRow;
-		}
-	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-	
-	if (reduce) {
-		/// Resize the CPT (i.e. remove the redundant rows)
-		let parIndexes = pars.map(_=>0);
-		let newCpt = [];
-		do {
-			newCpt.push(cpt[getRowIndex(parIndexes)]);
-		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-		
-		return newCpt;
-	}
-	else {
-		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
-		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
-		return cpt;
-	}
+// update CPT
+function reduceCPT(parIndexes, getRowIndex, pars, cpt, toRemoveIndex) {
+    const newCpt = [];
+    do {
+        newCpt.push(cpt[getRowIndex(parIndexes)]);
+    } while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+    return newCpt;
 }
 
+function marginalizeParentArc(child, parentToRemove, reduce = false){
+	const net = child.net;
+	let cpt = child.cpt();
+	const pars = child.parents();
+	const toRemoveIndex = pars.findIndex(p => p.name() === parentToRemove.name());
+	const marginals = parentToRemove.beliefs();
+
+    const getRowIndex = (parIndexes) => {
+        return parIndexes.reduce((rowIndex, stateIndex, i) => {
+            return rowIndex * (i !== 0 ? pars[i].states().length : 1) + stateIndex;
+        }, 0);
+    };
+
+	const addWeightedVec = (vec1, vec2, weight) => {
+        return vec1.map((v, i) => v + vec2[i] * weight);
+    };
+
+	const computeMarginalizedRow = (parIndexes) => {
+        let row = child.states().map(() => 0);
+        for (let i = 0; i < marginals.length; i++) {
+            parIndexes[toRemoveIndex] = i;
+            const rowIndex = getRowIndex(parIndexes);
+            row = addWeightedVec(row, cpt[rowIndex], marginals[i]);
+        }
+        return row;
+    };
+
+	const updateMatchingRows = (parIndexes, marginalizedRow) => {
+        for (let i = 0; i < marginals.length; i++) {
+            parIndexes[toRemoveIndex] = i;
+            const rowIndex = getRowIndex(parIndexes);
+            cpt[rowIndex] = marginalizedRow;
+        }
+	};
+
+	// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
+	const parIndexes = pars.map(() => 0);
+	do {
+		const marginalizedRow = computeMarginalizedRow(parIndexes);
+		updateMatchingRows(parIndexes, marginalizedRow);
+	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+
+	//
+	if (reduce) {
+		return reduceCPT(parIndexes, getRowIndex, pars, cpt, toRemoveIndex);
+	} else {
+		return cpt;
+	}
+
+};
+
+// Steven
+// function marginalizeParentArc(child, parentToRemove, reduce = false) {
+// 	function getRowIndex(parIndexes) {
+// 		let rowIndex = 0;
+// 		for (let i=0; i<parIndexes.length; i++) {
+// 			if (i!=0)  rowIndex *= pars[i].states().length;
+// 			rowIndex += parIndexes[i];
+// 		}
+// 		return rowIndex;
+// 	}
+	
+// 	function addWeightedVec(vec1, vec2, weight) {
+// 		return vec1.map((v,i) => v + vec2[i]*weight);
+// 	}
+
+// 	// let net = child.net;
+	
+// 	// /// The CPT (we'll modify in place)
+// 	// let cpt = child.cpt();
+	
+// 	// let pars = child.parents();
+// 	// let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
+	
+// 	// let marginals = parentToRemove.beliefs();
+	
+// 	// let parIndexes = pars.map(_=>0);
+// 	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
+// 	do {
+// 		let row = child.states().map(_=>0);
+// 		for (let i=0; i<marginals.length; i++) {
+// 			parIndexes[toRemoveIndex] = i;
+// 			let rowI = getRowIndex(parIndexes);
+// 			//console.log(parIndexes, rowI);
+// 			row = addWeightedVec(row, cpt[rowI], marginals[i]);
+// 		}
+// 		let marginalizedRow = row;
+		
+// 		/// Replace all the matching rows with the weighted combination
+// 		for (let i=0; i<marginals.length; i++) {
+// 			parIndexes[toRemoveIndex] = i;
+// 			let rowI = getRowIndex(parIndexes);
+// 			cpt[rowI] = marginalizedRow;
+// 		}
+// 	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+	
+// 	if (reduce) {
+// 		/// Resize the CPT (i.e. remove the redundant rows)
+// 		let parIndexes = pars.map(_=>0);
+// 		let newCpt = [];
+// 		do {
+// 			newCpt.push(cpt[getRowIndex(parIndexes)]);
+// 		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+		
+// 		return newCpt;
+// 	}
+// 	else {
+// 		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
+// 		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
+// 		return cpt;
+// 	}
+// }
+
+
+// Hao: doubt whats this for, not be used 
 function pick(obj, keys) {
 	let newObj = {};
 	for (let key of keys) {
@@ -92,6 +158,8 @@ function pick(obj, keys) {
 	return newObj;
 }
 
+
+// Hao: is this part for calculation?
 var measurePlugins = {
 	do: {
 		calculate(nets, roles, selectedStates) {
@@ -335,6 +403,8 @@ var measurePlugins = {
 	},
 };
 
+
+// Hao: jump to here, doubt var measurePlugins
 class BnDetail {
 	constructor(drawOptions = {}) {
 		
