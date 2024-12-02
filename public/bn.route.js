@@ -595,15 +595,7 @@ class BnDetail {
 			let entries = Object.entries(m.influences)
 
 			if (entries.length == 0) {
-
-				
-				// clear all arks
-				if (m.arcInfluence)
-					m.arcInfluence.forEach(arcEntry => {
-						let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
-						arc.style.strokeWidth = 0;
-						arc.style.stroke = 'none'
-					})
+				clearAllArcs(m.arcInfluence, bn);
 			} else {
 				entries.forEach(([evidenceNodeName, value]) => {
 					let targetBeliefs = value['targetBeliefs'];
@@ -664,37 +656,110 @@ class BnDetail {
 
 				})
 				if (m.arcInfluence) {
-					m.arcInfluence.forEach(arcEntry => {
-						let arc = document.querySelector(`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`);
-	
-						Object.entries(arcEntry.targetBelief).forEach(([targetNodeName, arcBeliefs]) => {
-							let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)
-							let targetStateElem = targetNode.querySelector(".state.istarget");
-							let targetStateIdx = targetStateElem.dataset.index;
-	
-							let diff = m.nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
-							
-							
-							// let absDiff = Math.abs(diff);
-							// let arcSize = Math.max(3, (absDiff) * 15);
-							
-							// Changed to fixed arc size
-							let arcSize = 8; 
-							let headSize = 2; 
-							let arcColor = this.getColor(diff)
-	
-							console.log(arcEntry.child, arcEntry.parent, diff, arcSize, arcColor)
-							// we know the first child is the colour arc
-							let influeceArcElems = arc.querySelectorAll('[data-influencearc=true]')
-							influeceArcElems.forEach(elem=> {
+          let delay = 0;
+          // console.log("arcInfluence:", m.arcInfluence);
 
-								elem.style.strokeWidth = arcSize;
-								elem.style.stroke = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
-							})
-							
-						})
-					})
-				}
+          clearAllArcs(m.arcInfluence, bn);
+
+          const sortedArcInfluence = sortArcInfluenceByDiff(
+            m.arcInfluence,
+            m.nodeBeliefs
+          );
+          // console.log("sortedArcInfluence:", sortedArcInfluence);
+
+          sortedArcInfluence.forEach((arcEntry) => {
+            // console.log("arcEntry:", arcEntry);
+            let arc = document.querySelector(
+              `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+            );
+
+            Object.entries(arcEntry.targetBelief).forEach(
+              ([targetNodeName, arcBeliefs]) => {
+                let targetNode = this.bnView.querySelector(
+                  `div.node[data-name=${targetNodeName}]`
+                );
+                let targetStateElem =
+                  targetNode.querySelector(".state.istarget");
+                let targetStateIdx = targetStateElem.dataset.index;
+
+                let diff =
+                  m.nodeBeliefs[targetNodeName][targetStateIdx] -
+                  arcBeliefs[targetStateIdx];
+
+                // console.log("diff:", diff);
+
+                // let absDiff = Math.abs(diff);
+                // let arcSize = Math.max(3, (absDiff) * 15);
+
+                // Changed to fixed arc size
+                let arcSize = 8;
+                let headSize = 2;
+                let arcColor = this.getColor(diff);
+
+                console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcColor);
+                // we know the first child is the colour arc
+                // coloring order of arrows
+                setTimeout(() => {
+                  let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+                  let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
+
+                  let combinedElems = Array.from(influeceArcBodyElems).map(
+                    (bodyElem, index) => {
+                      return {
+                        body: bodyElem,
+                        head: influeceArcHeadElems[index],
+                      };
+                    }
+                  );
+
+                  combinedElems.forEach((pair, index) => {
+                    let bodyElem = pair.body;
+                    let headElem = pair.head;
+
+                    let bodyColor = getComputedStyle(
+                      document.documentElement
+                    ).getPropertyValue(`--${arcColor}`);
+                    bodyElem.style.stroke = bodyColor;
+                    bodyElem.style.strokeWidth = arcSize;
+
+                    let bodyLength = bodyElem.getTotalLength();
+                    bodyElem.style.strokeDasharray = bodyLength;
+                    bodyElem.style.strokeDashoffset = bodyLength;
+                    bodyElem.style.transition = "none";
+
+                    bodyElem.getBoundingClientRect();
+
+                    bodyElem.style.transition =
+                      "stroke-dashoffset 1s ease-in-out";
+
+                    setTimeout(() => {
+                      bodyElem.style.strokeDashoffset = "0";
+
+                      setTimeout(() => {
+                        let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcColor}`);
+                        headElem.style.stroke = headColor;
+                        headElem.style.strokeWidth = arcSize;
+
+                        let headLength = headElem.getTotalLength();
+                        headElem.style.strokeDasharray = headLength;
+                        headElem.style.strokeDashoffset = headLength;
+                        headElem.style.transition = "none";
+
+                        headElem.getBoundingClientRect();
+
+                        headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
+
+                        setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
+                      }, 1000);
+                    }, index * 1200); // delay between arrows
+                  });
+                }, delay);
+
+                delay += 500;
+              }
+            );
+          });
+        }
 			}
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];

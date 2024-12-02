@@ -172,8 +172,11 @@ var draw = {
 					])
 				]))
 					.css({left: svgX-sx, top: svgY-sy, position: "absolute"});
-				path.setAttribute("data-influencearc", true);
-				arrow.setAttribute("data-influencearc", true);
+        // Assign 'body' to the arrow body path
+        path.setAttribute("data-influencearc", "body");
+
+        // Assign 'head' to the arrowhead
+        arrow.setAttribute("data-influencearc", "head");
 			}
 		}
 		/// Store opts for next time, if updating

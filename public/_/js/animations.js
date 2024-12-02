@@ -97,7 +97,7 @@ class AnimationQueue extends AnimationStep {
     }
 }
 
-new AnimationQueue([
-    new FlashNode(.,,,)
-    new ArcAnimate(...),
-])
+// new AnimationQueue([
+//     new FlashNode(.,,,)
+//     new ArcAnimate(...),
+// ])
