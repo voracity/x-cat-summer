@@ -1047,73 +1047,49 @@ module.exports = {
 						return maxInfluence;
 					}
 
-					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-						// Create a new network instance to avoid altering the main network
-						let tempNet = new Net(bnKey);
-						tempNet.compile();
-					
-						// Ensure the network is initialized correctly
-						if (!tempNet || typeof tempNet.node !== 'function') {
-							console.error("Network instance not initialized correctly.");
-							return 0;
-						}
-					
-						// Get the parent and target nodes
-						let nonActiveNode = tempNet.node(nonActiveNodeName);
-						if (!nonActiveNode) {
-							console.error(`Node ${nonActiveNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						let targetNode = tempNet.node(targetNodeName);
-						if (!targetNode) {
-							console.error(`Target node ${targetNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						// Get the state index for the parent node
-						let nonActiveNodeNameStateIndex = evidence[nonActiveNodeName];
-						if (nonActiveNodeNameStateIndex === null || nonActiveNodeNameStateIndex === undefined) {
-							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
-							return 0;
-						}
-					
-						// Get the state index for the target node
-						let targetStateIndex = selectedStates[targetNodeName];
-						if (targetStateIndex === null || targetStateIndex === undefined) {
-							console.error(`State index for target node ${targetNodeName} is undefined.`);
-							return 0;
-						}
-					
-						// Update the network without any findings to get baseline beliefs
-						tempNet.update();
-						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-					
-						// Set the parent node to the specific state
-						try {
-							nonActiveNode.finding(nonActiveNodeNameStateIndex);
-						} catch (error) {
-							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
-							return 0;
-						}
-					
-						tempNet.update();
-					
-						// Get the target node's belief after setting the parent's state
-						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
-					
-						// Calculate the influence percentage
-						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
-					
-						// Return the influence percentage
-						return influencePercentage; 
+				function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
+					// Create a new network instance to avoid altering the main network
+					let tempNet = new Net(bnKey);
+				
+					// Get the parent and target nodes
+					let nonActiveNodeNameStateIndex = evidence[nonActiveNodeName];
+					let targetStateIndex = selectedStates[targetNodeName];
+					let nonActiveNode = tempNet.node(nonActiveNodeName);
+					let targetNode = tempNet.node(targetNodeName);
+				
+					// Check if the parent's state is defined
+					if (nonActiveNodeNameStateIndex === null || nonActiveNodeNameStateIndex === undefined) {
+						console.warn(`State for node ${nonActiveNodeName} is not defined. Skipping state setting.`);
+						return 0; 
 					}
-					
+				
+					// Check if the target's state is defined
+					if (targetStateIndex === null || targetStateIndex === undefined) {
+						console.warn(`State for target node ${targetNodeName} is not defined. Skipping influence calculation.`);
+						return 0; 
+					}
+				
+					// Update the network without any findings to get baseline beliefs
+					tempNet.update();
+					let baselineBelief = targetNode.beliefs()[targetStateIndex];
+				
+					// Set the parent node to the specific state
+					nonActiveNode.finding(nonActiveNodeNameStateIndex);
+					tempNet.update();
+				
+					// Get the target node's belief after setting the parent's state
+					let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
+				
+					// Calculate the influence percentage
+					let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
+				
+					// Return the influence percentage as a decimal
+					return influencePercentage; 
+				}
 					
 					
 
 					function calculatePathContribution(path) {
-						let totalInfluence = 0;
 						for (let i = 0; i < path.length - 1; i++) {
 							const fromNode = path[i];
 							const toNode = path[i + 1];
@@ -1267,139 +1243,150 @@ module.exports = {
 						if (Object.keys(evidence).length == 0) {
 							return bn;
 						}
+						//disable one by one with the remaining all active
 						bn.influences = {};
-						let totalInfluencePercentage = 0; // Accumulates influence percentages from all findings
-						const sentences = []; // Collects sentences from all findings
-
-						// Ensure only one selected target node
-						const targetNames = Object.keys(selectedStates);
-						if (targetNames.length !== 1) {
-							throw new Error("Only one selected state is allowed.");
-						}
-						const targetNodeName = targetNames[0];
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
-							// Handle error appropriately
-						}
-						const targetStateIndex = targetStateIndexArray[0];
-
-						// Get the baseline beliefs with all evidence applied
-						let netWithAllEvidence = new Net(bnKey);
-						netWithAllEvidence.compile();
-						for (let [nodeName, stateI] of Object.entries(evidence)) {
-							netWithAllEvidence.node(nodeName).finding(Number(stateI));
-						}
-						netWithAllEvidence.update();
-						const baselineBelief = netWithAllEvidence.node(targetNodeName).beliefs();
-						const baselineProb = baselineBelief[targetStateIndex];
-
-						// Now, loop over each nonActiveNodeName
 						for (let nonActiveNodeName of Object.keys(evidence)) {
-							// Create a new network instance excluding the current non-active node's evidence
-							let netWithoutOneEvidence = new Net(bnKey);
-							netWithoutOneEvidence.compile();
-
-							// Set evidence for all nodes except the current nonActiveNodeName
-							for (let [nodeName, stateI] of Object.entries(evidence)) {
+							net = new Net(bnKey);
+							for (let [nodeName,stateI] of Object.entries(evidence)) {
 								if (nodeName != nonActiveNodeName) {
-									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
+									console.log(nodeName, stateI);
+                                    net.node(nodeName).finding(Number(stateI));
 								}
+								// origNet.node(nodeName).finding(Number(stateI));
 							}
-
-							// Update the network to reflect the new evidence
-							netWithoutOneEvidence.update();
-
-							// Initialize influence data for the current non-active node
-							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
-
-							// Retrieve influence data for the current non-active node
-							let influenceData = bn.influences[nonActiveNodeName];
-
-							// Store the target beliefs after setting evidence
-							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
-							influenceData.targetBeliefs[targetNodeName] = newBelief;
-
-							let newProb = newBelief[targetStateIndex];
-
-							// Calculate the influence percentage
-							let influencePercentage = (baselineProb - newProb) / baselineProb;
-							influenceData.influencePercentage = influencePercentage;
-
-							// Accumulate total influence percentage
-							totalInfluencePercentage += influencePercentage;
-
-							// Map the influence percentage to a scale
-							let scale = mapInfluencePercentageToScale(influencePercentage);
-							let description = Contribute_DESCRIPTIONS[scale.toString()];
-
-							// Format the influence percentage
-							let influencePercentFormatted = (Math.abs(influencePercentage) * 100).toFixed(1) + '%';
-
-							// Find all paths between the target node and the current non-active node
-							const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
-							let totalInfluence = 0;
-
-							// Initialize sentences array for the current non-active node
-							let currentSentences = [];
-
-							// Iterate over each path to calculate contributions and generate sentences
-							for (const path of allPaths) {
-								// Calculate influence along the path
-								let contribute = calculatePathContribution(path);
-
-								// Map the influence to a descriptive phrase
-								const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
-
-								// Generate sentence based on path length
-								let sentence;
-								if (path.length === 2) {
-									// Direct influence
-									let fromNode = path[0];
-									let toNode = path[1];
-									let fromNodeAttribute = getAttribute(fromNode);
-									sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${toNode}.`;
-								} else {
-									// Indirect influence
-									const fromNode = path[0];
-									const toNode = path[path.length - 1];
-									const intermediateNodes = path.slice(1, -1).map(getAttribute).join(', ');
-									let fromNodeAttribute = getAttribute(fromNode);
-									sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${toNode}, via ${intermediateNodes}.`;
+							// reset one particular evidence to see its influence
+							
+							// console.time('update');
+							console.log("rerunning without", nonActiveNodeName)
+							
+							net.update();
+							let totalInfluencePercentage = 0;
+							// console.timeEnd('update');
+							bn.influences[nonActiveNodeName]= {targetBeliefs : {}};
+							// Iterate over each non-active node (evidence node)
+							// Iterate over each non-active node (evidence node)
+							Object.keys(evidence).forEach(nonActiveNodeName => {
+								// Initialize influence data for the current non-active node if not already initialized
+								if (!bn.influences[nonActiveNodeName]) {
+									bn.influences[nonActiveNodeName] = {
+										targetBeliefs: {}
+									};
 								}
-								currentSentences.push(sentence);
+								
 
-								// Accumulate total influence from all paths
-								totalInfluence += contribute;
-							}
+								// Retrieve influence data for the current non-active node
+								let influenceData = bn.influences[nonActiveNodeName];
+								console.log("influenceData", influenceData.targetBeliefs)
 
-							// Add current sentences to the main sentences array
-							sentences.push(...currentSentences);
+								// Iterate over each selected target node
+								Object.keys(selectedStates).forEach(targetNodeName => {
+									// Store the target beliefs after setting evidence
+									influenceData.targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
+									
+								});
 
-							// We can also store the individual explanations if needed
-							influenceData.explanation = currentSentences.join('\n');
+
+								// Iterate over each selected target node to calculate influences
+								Object.keys(selectedStates).forEach(targetNodeName => {
+									// Get the baseline beliefs and new beliefs after evidence
+									let baselineBelief = baselineBeliefs[targetNodeName];
+									let newBelief = influenceData.targetBeliefs[targetNodeName];
+
+									// Get the index of the target state
+									let targetStateIndex = selectedStates[targetNodeName][0];
+									let baselineProb = baselineBelief[targetStateIndex];
+									let newProb = newBelief[targetStateIndex];
+
+									// Calculate the influence percentage
+									let influencePercentage = (baselineProb - newProb) / baselineProb;
+									influenceData.influencePercentage = influencePercentage;
+
+									// Add to total influence percentage
+									totalInfluencePercentage += influencePercentage;
+
+									// Map the influence percentage to a scale
+									let scale = mapInfluencePercentageToScale(influencePercentage);
+									let description = Contribute_DESCRIPTIONS[scale.toString()];
+									console.log("influencePercentage", influencePercentage);
+
+									// Format the influence percentage
+									let influencePercentFormatted = (Math.abs(influencePercentage) * 100).toFixed(1) + '%';
+
+									// Find all paths between the target node and the non-active node
+									const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
+									const directPaths = [];
+									const indirectPaths = [];
+									const sentences = [];
+
+									console.log(`Paths from ${nonActiveNodeName} to ${targetNodeName}:`, allPaths.length);
+									console.log("selectStates",selectedStates)
+
+
+									// Separate paths into direct and indirect influences
+									allPaths.forEach(path => {
+										if (path.length === 2) {
+											directPaths.push(path);
+										} else {
+											indirectPaths.push(path);
+										}
+									});
+
+									// Generate sentences for direct influences
+									if (directPaths.length > 0) {
+										directPaths.forEach(path => {
+											let contribute = calculatePathContribution(path);
+											const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
+
+											// Get selected attributes
+											let fromNodeAttribute = getAttribute(fromNode);
+
+											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${targetNodeName}.`;
+											sentences.push(sentence);
+										});
+									}
+
+									// Generate sentences for indirect influences
+									if (indirectPaths.length > 0) {
+										indirectPaths.forEach(path => {
+											const fromNode = path[0];
+											const toNode = path[path.length - 1];
+											const intermediateNode = path[1]; // Adjust if multiple intermediate nodes
+
+											let totalContribution = calculatePathContribution(path);
+											let contributionPhrase = Contribute_DESCRIPTIONS[totalContribution.toString()];
+
+											// Get selected attributes
+											evidence[fromNode][0]
+											let fromNodeAttribute = getAttribute(fromNode);
+											let intermediateNodeAttribute = getAttribute(intermediateNode);
+
+											let sentence = `Finding out ${fromNode} is ${fromNodeAttribute} ${contributionPhrase} the probability of ${toNode}, given that ${intermediateNode} is ${intermediateNodeAttribute}.`;
+											sentences.push(sentence);
+										});
+									}
+
+									// After processing all findings, generate the overall influence sentence
+									if (Object.keys(evidence).length - 1 === Object.keys(evidence).indexOf(nonActiveNodeName)) {
+										// Map the total influence percentage to a scale
+										let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
+										let overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
+										let node = net.node(targetNodeName);
+										let state = node.states();
+										let stateNames = node._stateNames;
+										let targetNodeAttribute = stateNames[targetStateIndex];
+
+										let overallSentence = `All findings combined ${overallDescription} the probability that ${targetNodeName} is ${targetNodeAttribute}.`;
+
+										// Combine overall influence sentence and individual contributions
+										let explanation = `${overallSentence}\n\nThe contribution of each finding is:\n\n`;
+										explanation += sentences.join('\n');
+
+										// Update the influence data explanation
+										influenceData.explanation = explanation;
+									}
+								});
+							});
 						}
-
-						// After processing all non-active nodes, generate the overall influence sentence
-						let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
-						const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
-						let node = netWithAllEvidence.node(targetNodeName);
-						let state = node.states();
-						let stateNames = node._stateNames;
-						const targetNodeAttribute = stateNames[targetStateIndex];
-
-						// Generate the overall influence sentence
-						let overallSentence = `All findings combined ${overallDescription} the probability that ${targetNodeName} is ${targetNodeAttribute}.`;
-						
-
-						// Combine overall influence sentence and individual contributions
-						let explanation = `${overallSentence}\n\nThe contribution of each finding is:\n\n`;
-						explanation += sentences.join('\n');
-						console.log(explanation);
-
-						// Store the explanation in 'bn' object
-						bn.explanation = explanation;
-						
 
 						// calculate arc importances
 

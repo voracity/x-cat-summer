@@ -1398,7 +1398,7 @@ module.exports = {
 						console.log(explanation);
 
 						// Store the explanation in 'bn' object
-						bn.explanation = explanation;
+						influenceData.explanation = explanation;
 						
 
 						// calculate arc importances

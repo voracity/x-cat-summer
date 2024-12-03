@@ -1390,7 +1390,7 @@ module.exports = {
 
 						// Generate the overall influence sentence
 						let overallSentence = `All findings combined ${overallDescription} the probability that ${targetNodeName} is ${targetNodeAttribute}.`;
-						
+						console.log("overallSentence",overallSentence)
 
 						// Combine overall influence sentence and individual contributions
 						let explanation = `${overallSentence}\n\nThe contribution of each finding is:\n\n`;
