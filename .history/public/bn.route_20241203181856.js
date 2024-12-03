@@ -583,20 +583,12 @@ class BnDetail {
 			
 		} 
 		if (m.influences) {
+		
 			let influenceListEl = this.root.querySelector('.influenceList');
 			influenceListEl.innerHTML = '';
 		
-			// First, display the overall explanation if it exists
-			if (m.influences['overall']) {
-				let overallExplanation = m.influences['overall'].explanation;
-				let listItem = n('li', overallExplanation);
-				influenceListEl.appendChild(listItem);
-			}
 		
-			// Now, iterate over the other influences and display them
 			for (let [nodeName, influenceData] of Object.entries(m.influences)) {
-				if (nodeName === 'overall') continue; // Skip the 'overall' key as it's already displayed
-		
 				let explanation = influenceData.explanation;
 				let listItem = n('li', explanation);
 				influenceListEl.appendChild(listItem);
@@ -1273,8 +1265,8 @@ module.exports = {
 							return bn;
 						}
 						bn.influences = {};
-						let totalInfluencePercentage = 0; 
-						const sentences = []; 
+						let totalInfluencePercentage = 0; // Accumulates influence percentages from all findings
+						const sentences = []; // Collects sentences from all findings
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1285,7 +1277,7 @@ module.exports = {
 						let targetStateIndexArray = selectedStates[targetNodeName];
 						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
 							console.error(`No selected states for target node ${targetNodeName}`);
-							
+							// Handle error appropriately
 						}
 						const targetStateIndex = targetStateIndexArray[0];
 
@@ -1300,25 +1292,28 @@ module.exports = {
 						const baselineProb = baselineBelief[targetStateIndex];
 
 						// Declare influenceData outside the loop
-						let influenceData; 
+						let influenceData; // This makes influenceData accessible after the loop
 
 						// Now, loop over each nonActiveNodeName
 						for (let nonActiveNodeName of Object.keys(evidence)) {
+							// Create a new network instance excluding the current non-active node's evidence
 							let netWithoutOneEvidence = new Net(bnKey);
-							netWithoutOneEvidence.compile();					
+							netWithoutOneEvidence.compile();
+
+							// Set evidence for all nodes except the current nonActiveNodeName
 							for (let [nodeName, stateI] of Object.entries(evidence)) {
 								if (nodeName != nonActiveNodeName) {
 									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
 								}
 							}
 
-						
+							// Update the network to reflect the new evidence
 							netWithoutOneEvidence.update();
 
-							
+							// Initialize influence data for the current non-active node
 							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
 
-							
+							// Retrieve influence data for the current non-active node
 							influenceData = bn.influences[nonActiveNodeName];
 
 							// Store the target beliefs after setting evidence
@@ -1337,10 +1332,15 @@ module.exports = {
 							// Map the influence percentage to a scale
 							let scale = mapInfluencePercentageToScale(influencePercentage);
 							let description = Contribute_DESCRIPTIONS[scale.toString()];
-							
+
+							// Format the influence percentage
+							let influencePercentFormatted = (Math.abs(influencePercentage) * 100).toFixed(1) + '%';
+
+							// Find all paths between the target node and the current non-active node
 							const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
 							let totalInfluence = 0;
 
+							// Initialize sentences array for the current non-active node
 							let currentSentences = [];
 
 							// Iterate over each path to calculate contributions and generate sentences
@@ -1348,7 +1348,7 @@ module.exports = {
 								// Calculate influence along the path
 								let contribute = calculatePathContribution(path);
 
-								
+								// Map the influence to a descriptive phrase
 								const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
 
 								// Generate sentence based on path length
@@ -1373,10 +1373,10 @@ module.exports = {
 								totalInfluence += contribute;
 							}
 
-						
+							// Add current sentences to the main sentences array
 							sentences.push(...currentSentences);
 
-							
+							// Store the individual explanations if needed
 							influenceData.explanation = currentSentences.join('\n');
 						}
 
@@ -1384,7 +1384,6 @@ module.exports = {
 						let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 						const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 						let node = netWithAllEvidence.node(targetNodeName);
-						let state = node.states();
 						let stateNames = node._stateNames;
 						const targetNodeAttribute = stateNames[targetStateIndex];
 
@@ -1393,15 +1392,15 @@ module.exports = {
 
 						// Combine overall influence sentence and individual contributions
 						let explanation = `${overallSentence}\n\nThe contribution of each finding is:\n\n`;
-						bn.overallExplanation = explanation;
+						explanation += sentences.join('\n');
+						console.log(explanation);
 
 						// Store the explanation in 'influenceData' object
-						bn.influences['overall'] = {
-							explanation: explanation
-						};
+						influenceData.explanation = explanation;
 						
 
 						// calculate arc importances
+
 						let arcs = []
 						// reset network
 						net = new Net(bnKey);
