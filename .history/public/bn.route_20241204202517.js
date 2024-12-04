@@ -1080,34 +1080,26 @@ module.exports = {
 						}
 					
 						// Get the state index for the parent node
-						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
-						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
+						let nonActiveNodeNameStateIndex = evidence[nonActiveNodeName];
+						if (nonActiveNodeNameStateIndex === null || nonActiveNodeNameStateIndex === undefined) {
 							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
 							return 0;
 						}
 					
 						// Get the state index for the target node
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
+						let targetStateIndex = selectedStates[targetNodeName];
+						if (targetStateIndex === null || targetStateIndex === undefined) {
+							console.error(`State index for target node ${targetNodeName} is undefined.`);
 							return 0;
 						}
-						let targetStateIndex = targetStateIndexArray[0];
 					
-						// Set evidence for all nodes except the nonActiveNodeName
-						for (let [nodeName, stateI] of Object.entries(evidence)) {
-							if (nodeName != nonActiveNodeName) {
-								tempNet.node(nodeName).finding(Number(stateI));
-							}
-						}
-					
-						// Update the network to get the baseline belief
+						// Update the network without any findings to get baseline beliefs
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
 					
-						// Set the nonActiveNode to the specific state
+						// Set the parent node to the specific state
 						try {
-							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
+							nonActiveNode.finding(nonActiveNodeNameStateIndex);
 						} catch (error) {
 							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
 							return 0;
@@ -1115,7 +1107,7 @@ module.exports = {
 					
 						tempNet.update();
 					
-						// Get the target node's belief after setting the nonActiveNode's state
+						// Get the target node's belief after setting the parent's state
 						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
 					
 						// Calculate the influence percentage
@@ -1124,7 +1116,6 @@ module.exports = {
 						// Return the influence percentage
 						return influencePercentage; 
 					}
-					
 					
 					
 					
