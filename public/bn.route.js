@@ -589,6 +589,7 @@ class BnDetail {
 
 		
 		if (m.influences) {
+			console.log(m.influences)
 			let asFrame = true;
 			console.log("updating influences");
 			let listTargetNodes = {}
