@@ -22,7 +22,7 @@ function getQs(searchStr) {
 	return params;
 }
 
-function clearAllArcs(arcInfluence, bn) {
+function reset(arcInfluence, bn, bnView) {
   if (arcInfluence) {
     arcInfluence.forEach((arcEntry) => {
       let arc = document.querySelector(
@@ -33,33 +33,35 @@ function clearAllArcs(arcInfluence, bn) {
         bn.drawArcs();
       }
     });
+    bnView.querySelectorAll(`div.node`).forEach(node => {						
+      node.style.opacity = 1
+    });
   }
 }
 
-function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs) {
+function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, getColor) {
   return arcInfluence
     .map((arcEntry) => {
-      // Calculate max diff for this arcEntry
-      const maxDiff = Math.max(
-        ...Object.entries(arcEntry.targetBelief).map(
-          ([targetNodeName, arcBeliefs]) => {
-            const targetNode = document.querySelector(
-              `div.node[data-name=${targetNodeName}]`
-            );
-            const targetStateElem = targetNode.querySelector(".state.istarget");
-            const targetStateIdx = targetStateElem.dataset.index;
+      // Calculate max diff for this arcEntry 
+      const diffs = Object.entries(arcEntry.targetBelief).map(
+        ([targetNodeName, arcBeliefs]) => {
+          const targetNode = document.querySelector(
+            `div.node[data-name=${targetNodeName}]`
+          );
+          const targetStateElem = targetNode.querySelector(".state.istarget");
+          const targetStateIdx = targetStateElem.dataset.index;
 
-            return (
-              nodeBeliefs[targetNodeName][targetStateIdx] -
-              arcBeliefs[targetStateIdx]
-            );
-          }
-        )
+          // Calculate diff for this target
+          return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
+        }
       );
 
-      // Attach the maxDiff to arcEntry for sorting
-      return { ...arcEntry, maxDiff };
+      // max to ensures the arc represents its strongest influence across all targets.
+      const maxDiff = Math.max(...diffs);
+      const color = getColor(maxDiff);
+      
+      return { ...arcEntry, maxDiff, color };      
     })
     .sort((a, b) => b.maxDiff - a.maxDiff) // Sort by maxDiff in descending order
-    .map(({ maxDiff, ...arcEntry }) => arcEntry); // Remove the maxDiff property
+    .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
 }
