@@ -1371,57 +1371,61 @@ module.exports = {
 								const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
 								
 								
-								// yang(format) 12.5
+								// Hao(format)
 
-								let sentence;
+								// 获取路径的起始和结束节点
 								const fromNode = path[0];
 								const toNode = path[path.length - 1];
 								let fromNodeAttribute = getAttribute(fromNode);
 
-								// Initialize a flag to check if there are adjacent non-active nodes
-								let hasAdjacentNonActiveNode = false;
+								// 初始化变量
+								let isAdjacentNonActiveNode = false;
 
+								// 检查起始节点是否有邻近的非活动节点
 								if (path.length === 2) {
+									// 获取起始节点的邻居节点
 									const neighbors = graph[fromNode] || [];
-									// Iterate over the neighbors
+
+									// 检查是否存在邻近的非活动节点，且不在当前路径中
 									for (const neighbor of neighbors) {
 										if (nonActiveNodes.includes(neighbor) && !path.includes(neighbor)) {
-											hasAdjacentNonActiveNode = true;
-											break; 
+											isAdjacentNonActiveNode = true;
+											break;
 										}
 									}
 								}
 
-								if (path.length === 2 && !hasAdjacentNonActiveNode) {
-									// Direct influence
-									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+								// 根据条件生成句子
+								let sentence;
+								if (path.length === 2 && !isAdjacentNonActiveNode) {
+									// 直接影响
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is 
 									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
 									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>.</li>`;
 								} else {
-									// Indirect influence
+									// 间接影响
+									// 获取中间节点（不包括起始和结束节点）
 									let intermediateNodes = path.slice(1, -1).map(node => {
 										let nodeAttribute = getAttribute(node);
 										return `<span style="font-weight:900; font-size:18px">${node}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
 									});
 
-									// If there are adjacent non-active nodes, include them
-									if (hasAdjacentNonActiveNode) {
+									// 添加邻近的非活动节点
+									if (isAdjacentNonActiveNode) {
 										const neighbors = graph[fromNode] || [];
-										const adjacentNonActiveNodes = neighbors.filter(neighbor =>
+										const adjacentNonActiveNodes = neighbors.filter(neighbor => 
 											nonActiveNodes.includes(neighbor) && !path.includes(neighbor)
 										).map(neighbor => {
 											let nodeAttribute = getAttribute(neighbor);
 											return `<span style="font-weight:900; font-size:18px">${neighbor}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
 										});
 
-										// Add them to intermediateNodes
 										intermediateNodes = intermediateNodes.concat(adjacentNonActiveNodes);
 									}
 
-									// Join intermediate nodes into a string
 									const intermediateNodesStr = intermediateNodes.join(', ');
 
-									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is 
 									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
 									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>`;
 
@@ -1434,14 +1438,18 @@ module.exports = {
 
 								currentSentences.push(sentence);
 
+								// 累积总的影响
 								totalInfluence += contribute;
 							}
 
+							// 添加当前的句子到主句子数组
 							sentences.push(...currentSentences);
 
+							// 更新影响数据的解释
 							influenceData.explanation = currentSentences.join('\n');
 						}
 
+						// After processing all non-active nodes, generate the overall influence sentence
 						let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 						const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 						let node = netWithAllEvidence.node(targetNodeName);

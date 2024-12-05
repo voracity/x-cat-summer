@@ -1353,80 +1353,51 @@ module.exports = {
 							let description = Contribute_DESCRIPTIONS[scale.toString()];
 							const observedNodes = new Set(Object.keys(evidence));
 							
-							const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName,observedNodes);
+							const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName, observedNodes);
 							let totalInfluence = 0;
 
 							let currentSentences = [];
+
 							const nonActiveNodes = Object.keys(evidence);
 
-							// Iterate over each path to calculate contributions and generate sentences
 							for (const path of allPaths) {
 								// Calculate influence along the path
 								let contribute = calculatePathContribution(path);
 								let scale = mapInfluencePercentageToScale(contribute);
 
-                                console.log(`Contribution for path ${path.join(' -> ')}: ${contribute}, scale: ${scale}`);
+								console.log(`Contribution for path ${path.join(' -> ')}: ${contribute}, scale: ${scale}`);
 
-								
-								const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
-								
-								
-								// yang(format) 12.5
+								const contributionPhrase = Contribute_DESCRIPTIONS[scale.toString()];
 
-								let sentence;
+								// Prepare variables for sentence construction
 								const fromNode = path[0];
 								const toNode = path[path.length - 1];
 								let fromNodeAttribute = getAttribute(fromNode);
 
-								// Initialize a flag to check if there are adjacent non-active nodes
-								let hasAdjacentNonActiveNode = false;
+								// Check if toNode is a non-active node
+								const isToNodeNonActive = nonActiveNodes.includes(toNode);
 
-								if (path.length === 2) {
-									const neighbors = graph[fromNode] || [];
-									// Iterate over the neighbors
-									for (const neighbor of neighbors) {
-										if (nonActiveNodes.includes(neighbor) && !path.includes(neighbor)) {
-											hasAdjacentNonActiveNode = true;
-											break; 
-										}
-									}
-								}
-
-								if (path.length === 2 && !hasAdjacentNonActiveNode) {
+								// Generate sentence based on path length and toNode's status
+								let sentence;
+								if (path.length === 2 && !isToNodeNonActive) {
 									// Direct influence
-									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is 
 									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
 									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>.</li>`;
 								} else {
 									// Indirect influence
-									let intermediateNodes = path.slice(1, -1).map(node => {
+									// Get intermediate nodes (excluding fromNode and toNode)
+									const intermediateNodes = path.slice(1, -1).map(node => {
 										let nodeAttribute = getAttribute(node);
 										return `<span style="font-weight:900; font-size:18px">${node}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
-									});
+									}).join(', ');
 
-									// If there are adjacent non-active nodes, include them
-									if (hasAdjacentNonActiveNode) {
-										const neighbors = graph[fromNode] || [];
-										const adjacentNonActiveNodes = neighbors.filter(neighbor =>
-											nonActiveNodes.includes(neighbor) && !path.includes(neighbor)
-										).map(neighbor => {
-											let nodeAttribute = getAttribute(neighbor);
-											return `<span style="font-weight:900; font-size:18px">${neighbor}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
-										});
-
-										// Add them to intermediateNodes
-										intermediateNodes = intermediateNodes.concat(adjacentNonActiveNodes);
-									}
-
-									// Join intermediate nodes into a string
-									const intermediateNodesStr = intermediateNodes.join(', ');
-
-									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is 
 									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
 									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>`;
 
-									if (intermediateNodesStr) {
-										sentence += `, given that ${intermediateNodesStr}`;
+									if (intermediateNodes) {
+										sentence += `, given that ${intermediateNodes}`;
 									}
 
 									sentence += `.</li>`;
@@ -1434,14 +1405,18 @@ module.exports = {
 
 								currentSentences.push(sentence);
 
+								// Accumulate total influence from all paths
 								totalInfluence += contribute;
 							}
 
+							// Add current sentences to the main sentences array
 							sentences.push(...currentSentences);
 
+							// Update influence data explanation
 							influenceData.explanation = currentSentences.join('\n');
 						}
 
+						// After processing all non-active nodes, generate the overall influence sentence
 						let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 						const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 						let node = netWithAllEvidence.node(targetNodeName);
