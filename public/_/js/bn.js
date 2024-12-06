@@ -262,15 +262,23 @@ class Node {
 	setEvidence(stateIndex, o = {}) {
 		let nodeName = this.nodeName;
 		let evidence = {};
+		let nodeEl = this.el();		
+    let allStateElem = nodeEl.querySelectorAll(".state");
+
+    allStateElem.forEach((elem) => {
+      elem.style.backgroundColor = "";
+    });
+    nodeEl.style.boxShadow = "";
+
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
 			//delete bn.evidence[nodeName];
 			evidence[nodeName] = null;
-			this.el().classList.remove('hasEvidence');
-			let influenceBars = this.el().querySelectorAll("span.barchange");
+			nodeEl.classList.remove('hasEvidence');
+			let influenceBars = nodeEl.querySelectorAll("span.barchange");
 			Array.from(influenceBars).forEach(elem => {
 				elem.style.width = "0%";
 			})
-			let stateElem = this.el().querySelector(`div[data-index="${stateIndex}"]`);
+			let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
 			if (!stateElem.classList.contains('istarget'))
 				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=>
 					Array.from(elem.classList).forEach(classname=> {
@@ -283,6 +291,22 @@ class Node {
 			//bn.evidence[nodeName] = state.dataset.index;
 			evidence[nodeName] = stateIndex;
 			this.el().classList.add('hasEvidence');
+			// Flashing Node when activated
+      let flashes = 2;
+      let flashDuration = 200;
+      let flash = (count) => {
+        if (count > 0) {
+          nodeEl.style.boxShadow =
+            count % 2 === 0 ? "0px 0px 12px rgba(255,0,0,0.9)" : "";
+          setTimeout(() => flash(count - 1), flashDuration);
+        } else {
+          nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
+        }
+      };
+
+      flash(flashes * 2);
+
+      nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
 		}
 		if (o.update)  bn.update(evidence);
 	}
