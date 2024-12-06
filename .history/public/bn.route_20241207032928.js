@@ -981,6 +981,15 @@ module.exports = {
 						"3": "greatly increases"
 					};
 
+					const Contribute_DESCRIPTIONS_2 = {
+						"-3": "reduces",
+						"-2": "reduces",
+						"-1": "reduces",
+						"0": "barely changes",
+						"1": "increases",
+						"2": "increases",
+						"3": "increases"
+					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -1202,6 +1211,8 @@ module.exports = {
 					
 					function filterPathsByDirectConnection(allPaths) {
 						let pathGroups = {};
+					
+						// Group paths by their (fromNode, toNode) key
 						for (let path of allPaths) {
 							if (path.length < 2) {
 								continue;
@@ -1220,7 +1231,7 @@ module.exports = {
 						// Find the shortest path for each group
 						for (let key in pathGroups) {
 							let paths = pathGroups[key];
-							
+							// Sort paths by length and pick the shortest one
 							paths.sort((a, b) => a.length - b.length);
 							filteredPaths.push(paths[0]);
 						}
@@ -1369,7 +1380,7 @@ module.exports = {
 							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
 						
 							// ignoring more complex  paths 
-							allPaths = filterPathsByDirectConnection(allPaths);
+							// allPaths = filterPathsByDirectConnection(allPaths);
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("allPaths", allPaths);

@@ -981,6 +981,15 @@ module.exports = {
 						"3": "greatly increases"
 					};
 
+					const Contribute_DESCRIPTIONS_2 = {
+						"-3": "reduces",
+						"-2": "reduces",
+						"-1": "reduces",
+						"0": "barely changes",
+						"1": "increases",
+						"2": "increases",
+						"3": "increases"
+					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -1216,13 +1225,14 @@ module.exports = {
 						}
 					
 						let filteredPaths = [];
-					
-						// Find the shortest path for each group
 						for (let key in pathGroups) {
 							let paths = pathGroups[key];
-							
-							paths.sort((a, b) => a.length - b.length);
-							filteredPaths.push(paths[0]);
+							let directPath = paths.find(p => p.length === 2);
+							if (directPath) {
+								filteredPaths.push(directPath);
+							} else {
+								filteredPaths.push(...paths);
+							}
 						}
 					
 						return filteredPaths;
@@ -1368,7 +1378,7 @@ module.exports = {
 							// Find all paths between the current nonActiveNode and the target node in the network.
 							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
 						
-							// ignoring more complex  paths 
+							// ignoring more complex indirect paths for the same (fromNode, targetNode) pair.
 							allPaths = filterPathsByDirectConnection(allPaths);
 						
 							const nonActiveNodes = Object.keys(evidence);

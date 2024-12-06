@@ -3,7 +3,6 @@ var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
 const { Console } = require('console');
-const { ALL } = require('dns');
 
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
@@ -981,6 +980,15 @@ module.exports = {
 						"3": "greatly increases"
 					};
 
+					const Contribute_DESCRIPTIONS_2 = {
+						"-3": "reduces",
+						"-2": "reduces",
+						"-1": "reduces",
+						"0": "barely changes",
+						"1": "increases",
+						"2": "increases",
+						"3": "increases"
+					};
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -990,9 +998,9 @@ module.exports = {
 							scale = 0;
 						} else if (absPercentage > 0.01 && absPercentage <= 0.15) {
 							scale = 1;
-						} else if (absPercentage > 0.15 && absPercentage <= 0.3) {
+						} else if (absPercentage > 0.15 && absPercentage <= 0.30) {
 							scale = 2;
-						} else if (absPercentage > 0.3) {
+						} else if (absPercentage > 0.30 && absPercentage <= 1.00) {
 							scale = 3;
 						}
 
@@ -1156,10 +1164,14 @@ module.exports = {
 						return graph;
 					}
 
-					function findAllPaths(graph, startNode, endNode) {
+					function findAllPaths(graph, startNode, endNode, observedNodes) {
 						const allPaths = [];
 					
 						function dfs(currentNode, endNode, path, visited) {
+							// 如果当前节点未被观测到，无法通过此节点传递影响，返回
+							if (!observedNodes.has(currentNode) && currentNode !== startNode && currentNode !== endNode) {
+								return;
+							}
 					
 							visited.add(currentNode);
 							path.push(currentNode);
@@ -1198,35 +1210,7 @@ module.exports = {
 						console.log(stateNames)
 						return NodeAttribute
 	
-					}
-					
-					function filterPathsByDirectConnection(allPaths) {
-						let pathGroups = {};
-						for (let path of allPaths) {
-							if (path.length < 2) {
-								continue;
-							}
-							let fromNode = path[0];
-							let toNode = path[path.length - 1];
-							let key = `${fromNode}|${toNode}`;
-							if (!pathGroups[key]) {
-								pathGroups[key] = [];
-							}
-							pathGroups[key].push(path);
-						}
-					
-						let filteredPaths = [];
-					
-						// Find the shortest path for each group
-						for (let key in pathGroups) {
-							let paths = pathGroups[key];
-							
-							paths.sort((a, b) => a.length - b.length);
-							filteredPaths.push(paths[0]);
-						}
-					
-						return filteredPaths;
-					}
+					}					
 
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
@@ -1303,7 +1287,8 @@ module.exports = {
 							return bn;
 						}
 						bn.influences = {};
-
+						let totalInfluencePercentage = 0; 
+						const sentences = []; 
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1328,146 +1313,163 @@ module.exports = {
 						const baselineBelief = netWithAllEvidence.node(targetNodeName).beliefs();
 						const baselineProb = baselineBelief[targetStateIndex];
 
-						let sentences = [];
-						let totalInfluencePercentage = 0; 
+						// Declare influenceData outside the loop
+						let influenceData; 
 
+						// Now, loop over each nonActiveNodeName
 						for (let nonActiveNodeName of Object.keys(evidence)) {
-							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
-							let nodeSentences = [];
-						
-							// Create a new network instance to represent the scenario where we remove one piece of evidence.
 							let netWithoutOneEvidence = new Net(bnKey);
 							netWithoutOneEvidence.compile();					
-						
-							// Set all evidence except the one corresponding to the current nonActiveNodeName.
 							for (let [nodeName, stateI] of Object.entries(evidence)) {
 								if (nodeName != nonActiveNodeName) {
 									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
 								}
 							}
+
 						
-							// Update the network to propagate the changes in evidence and compute new beliefs.
 							netWithoutOneEvidence.update();
-						
-							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
-							let influenceData = bn.influences[nonActiveNodeName];
+
 							
+							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
+
+							
+							influenceData = bn.influences[nonActiveNodeName];
+
+							// Store the target beliefs after setting evidence
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
-						
-							// Calculate the new probability of the selected target state and determine the influence percentage.
+
 							let newProb = newBelief[targetStateIndex];
+
+							// Calculate the influence percentage
 							let influencePercentage = (baselineProb - newProb) / baselineProb;
 							influenceData.influencePercentage = influencePercentage;
+
+							// Accumulate total influence percentage
 							totalInfluencePercentage += influencePercentage;
-						
-							// Map the influence percentage to a descriptive phrase (e.g., "slightly increases", "greatly reduces").
+
+							// Map the influence percentage to a scale
 							let scale = mapInfluencePercentageToScale(influencePercentage);
 							let description = Contribute_DESCRIPTIONS[scale.toString()];
-						
-							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
-						
-							// ignoring more complex  paths 
-							allPaths = filterPathsByDirectConnection(allPaths);
-						
+							const observedNodes = new Set(Object.keys(evidence));
+							
+							const allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName,observedNodes);
+							let totalInfluence = 0;
+
+							let currentSentences = [];
 							const nonActiveNodes = Object.keys(evidence);
-							console.log("allPaths", allPaths);
-						
-							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
+
+							// Iterate over each path to calculate contributions and generate sentences
 							for (const path of allPaths) {
-								let pathScale = calculatePathContribution(path);
-								const contributionPhrase = Contribute_DESCRIPTIONS[pathScale.toString()];
-						
-								// Identify the fromNode (start) and toNode (target) from the path.
-								const fromNode = path[0];     
-								const toNode = path[path.length - 1];  
+								// Calculate influence along the path
+								let contribute = calculatePathContribution(path);
+								let scale = mapInfluencePercentageToScale(contribute);
+
+                                console.log(`Contribution for path ${path.join(' -> ')}: ${contribute}, scale: ${scale}`);
+
+								
+								const contributionPhrase = Contribute_DESCRIPTIONS[contribute.toString()];
+								
+								
+								// yang(format) 12.5
+
+								let sentence;
+								const fromNode = path[0];
+								const toNode = path[path.length - 1];
 								let fromNodeAttribute = getAttribute(fromNode);
-						
-								// Retrieve the target node attribute (e.g., selected state name).
-								let node = netWithAllEvidence.node(targetNodeName);
-								let state = node.states();
-								let stateNames = node._stateNames;
-								const targetNodeAttribute = stateNames[targetStateIndex];
-						
-								// Identify any intermediate nonActiveNodes (excluding the start and end of the path).
-								let intermediateNodes = path.slice(1, -1)
-									.filter(node => nonActiveNodes.includes(node))
-									.map(node => {
+
+								// Initialize a flag to check if there are adjacent non-active nodes
+								let hasAdjacentNonActiveNode = false;
+
+								if (path.length === 2) {
+									const neighbors = graph[fromNode] || [];
+									// Iterate over the neighbors
+									for (const neighbor of neighbors) {
+										if (nonActiveNodes.includes(neighbor) && !path.includes(neighbor)) {
+											hasAdjacentNonActiveNode = true;
+											break; 
+										}
+									}
+								}
+
+								if (path.length === 2 && !hasAdjacentNonActiveNode) {
+									// Direct influence
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
+									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>.</li>`;
+								} else {
+									// Indirect influence
+									let intermediateNodes = path.slice(1, -1).map(node => {
 										let nodeAttribute = getAttribute(node);
 										return `<span style="font-weight:900; font-size:18px">${node}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
 									});
-						
-								let isDirectPath = (path.length === 2);
-								let sentence;
-						
-								// construct an appropriate sentence describing the influence.
-								if (isDirectPath && intermediateNodes.length === 0) {
-									// Direct path with no intermediate node.
-									const neighbors = graph[fromNode] || [];
-									let adjacentNonActiveNodes = neighbors.filter(n => nonActiveNodes.includes(n) && n !== toNode);
-						
-									if (adjacentNonActiveNodes.length > 0) {
-										// we consider it as an indirect influence scenario.
-										let intermediateNodesStr = adjacentNonActiveNodes.map(node => {
-											let nodeAttribute = getAttribute(node);
-											return `<span style="font-weight:900; font-size:18px">${node}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
-										}).join(', ');
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</li>`;
-									} else {
-										// No adjacent nonActiveNodes, this is a straightforward direct influence sentence.
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>.</li>`;
+
+									// If there are adjacent non-active nodes, include them
+									if (hasAdjacentNonActiveNode) {
+										const neighbors = graph[fromNode] || [];
+										const adjacentNonActiveNodes = neighbors.filter(neighbor =>
+											nonActiveNodes.includes(neighbor) && !path.includes(neighbor)
+										).map(neighbor => {
+											let nodeAttribute = getAttribute(neighbor);
+											return `<span style="font-weight:900; font-size:18px">${neighbor}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
+										});
+
+										// Add them to intermediateNodes
+										intermediateNodes = intermediateNodes.concat(adjacentNonActiveNodes);
 									}
-								} else {
-									// Indirect path or a path with intermediate nodes.
-									if (intermediateNodes.length === 0) {
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>.</li>`;
-									} else {
-										const intermediateNodesStr = intermediateNodes.join(', ');
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</li>`;
+
+									// Join intermediate nodes into a string
+									const intermediateNodesStr = intermediateNodes.join(', ');
+
+									sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is
+									<span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">
+									${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span>`;
+
+									if (intermediateNodesStr) {
+										sentence += `, given that ${intermediateNodesStr}`;
 									}
+
+									sentence += `.</li>`;
 								}
-						
-								// Add the constructed sentence to nodeSentences for this nonActiveNode.
-								nodeSentences.push(sentence);
+
+								currentSentences.push(sentence);
+
+								totalInfluence += contribute;
 							}
-							
-							nodeSentences = [...new Set(nodeSentences)];
-							
-							influenceData.explanation = nodeSentences.join('\n');
-						
-							sentences.push(...nodeSentences);
+
+							sentences.push(...currentSentences);
+
+							influenceData.explanation = currentSentences.join('\n');
 						}
+
+						let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
+						const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
+						let node = netWithAllEvidence.node(targetNodeName);
+						let state = node.states();
+						let stateNames = node._stateNames;
+						const targetNodeAttribute = stateNames[targetStateIndex];
+
 						
-						// After processing all nonActiveNodes, remove duplicates from the global sentences array.
-						sentences = [...new Set(sentences)];
-						
-						
-						// If there are multiple sentences, we generate an overall summary sentence.
-						if (sentences.length > 1) {
-							let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
-							const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
-							let node = netWithAllEvidence.node(targetNodeName);
-							let state = node.states();
-							let stateNames = node._stateNames;
-							const targetNodeAttribute = stateNames[targetStateIndex];
-						
-							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							let overallSentence = `
-							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
-									combined
-									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
-									the probability that 
-									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
-									is 
-									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
-								`;
-						
-							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
-							bn.influences['overall'] = {
-								explanation: explanation
-							};
-						}
+						let start = '<span style = "font-size:18px; font-weight: 900">Summary: what all the findings contribute</span><br>'
+
+						// Generate the overall influence sentence
+						let overallSentence = `
+						${start} <br><span style="font-weight: 900; font-size: 18px;">All findings</span> 
+										combined
+										<span style=" font-size: 18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+										the probability that 
+										<span style="font-weight: 900; font-size: 18px;">${targetNodeName}</span> 
+										is 
+										<span style="font-style: italic; font-size: 18px;">${targetNodeAttribute}.</span><br>
+									`;
+
+						// Combine overall influence sentence and individual contributions
+						let explanation = `${overallSentence}<br>The <span style = "text-decoration:underline">contribution</span> of each finding is:`;
+
+						// Store the explanation in 'influenceData' object
+						bn.influences['overall'] = {
+							explanation: explanation
+						};
 						
 
 						// calculate arc importances
