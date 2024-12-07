@@ -1,41 +1,41 @@
 :root {	
-	--influence-idx0:rgb(71, 110, 0);
-	--influence-idx1:rgb(141, 220, 0);
-	--influence-idx2:rgb(223,255,165);
-	--influence-idx3:rgb(255, 235, 235);
-	--influence-idx4:rgb(215,227,255);
-	--influence-idx5:rgb(95, 145, 255);
-	--influence-idx6:rgb(0, 56, 180);
+	--influence-idx0: rgb(12, 100, 0);
+	--influence-idx1: rgb(0, 200, 24);
+	--influence-idx2: rgb(145, 255, 171);
+	--influence-idx3: rgb(255, 204, 204);
+	--influence-idx4: rgb(185, 223, 255);
+	--influence-idx5: rgb(85, 138, 255);
+	--influence-idx6: rgb(0, 11, 160);
 
 	--probability-present: rgb(255,255,128);
 }
 
 .influence-idx0 {
-	background-color: rgb(71, 110, 0);
+	background-color: var(--influence-idx0);
 	color: white;
 }
 .influence-idx1 {
-	background-color: rgb(141, 220, 0);
+	background-color: var(--influence-idx1);
 	color: black;
 }
 .influence-idx2 {
-	background-color:rgb(223,255,165);
+	background-color:var(--influence-idx2);
 	color: black;
 }
 .influence-idx3 {
-	background-color: rgb(255, 235, 235);
+	background-color: var(--influence-idx3);
 	color: black;
 }
 .influence-idx4 {
-	background-color: rgb(215,227,255);
+	background-color: var(--influence-idx4);
 	color: black;
 }
 .influence-idx5 {
-	background-color: rgb(95, 145, 255);
+	background-color: var(--influence-idx5);
 	color: black;
 }
 .influence-idx6 {
-	background-color: rgb(0, 56, 180);
+	background-color: var(--influence-idx6);
 	color: white;
 }
 .frame {
@@ -45,25 +45,24 @@
 	top:-1px;
 	background-color:transparent;
 }
-.influence-idx0-box{
-	box-shadow:  0px 0px 3px 3px rgb(71, 110, 0);
+.influence-idx0-box {
+  box-shadow: 0px 0px 3px 3px var(--influence-idx0);
 }
-
 .influence-idx1-box {
-	box-shadow:  0px 0px 3px 3px rgb(141, 220, 0);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx1);
 }
 .influence-idx2-box {
-	box-shadow:  0px 0px 3px 3px rgb(223,255,165);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx2);
 }
 .influence-idx3-box {
-	box-shadow:  0px 0px 3px 3px rgb(255, 235, 235);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx3);
 }
 .influence-idx4-box {
-	box-shadow:  0px 0px 3px 3px rgb(215,227,255);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx4);
 }
 .influence-idx5-box {
-	box-shadow:  0px 0px 3px 3px rgb(95, 145, 255);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx5);
 }
 .influence-idx6-box {
-	box-shadow:  0px 0px 3px 3px rgb(0, 56, 180);
+  box-shadow: 0px 0px 3px 3px var(--influence-idx6);
 }
