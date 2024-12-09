@@ -1354,12 +1354,13 @@ module.exports = {
 						// Check the path step by step, excluding the start and end nodes
 						for (let i = 1; i < path.length - 1; i++) {
 							const current = path[i];
+							// Check if the current node is in the evidence (activated)
 							if (!evidence.hasOwnProperty(current)) {
 								return false;
 							}
 						}
 					
-						
+						// If all intermediate nodes are active, return true
 						return true;
 					}
 					
@@ -1419,7 +1420,7 @@ module.exports = {
 						let evidence = JSON.parse(req.query.evidence);
 
 						// the selected state is our Target
-						
+						// and we want to monitor its change when we en/disable evidence 
 
 						if (req.query.selectedStates) {
 							selectedStates = JSON.parse(req.query.selectedStates);

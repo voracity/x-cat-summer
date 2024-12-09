@@ -1351,15 +1351,42 @@ module.exports = {
 							return relationships.find(rel => rel.from === from && rel.to === to);
 						}
 					
-						// Check the path step by step, excluding the start and end nodes
-						for (let i = 1; i < path.length - 1; i++) {
+						// Check the path step by step
+						for (let i = 0; i < path.length - 1; i++) {
 							const current = path[i];
-							if (!evidence.hasOwnProperty(current)) {
+							const next = path[i + 1];
+					
+							// Find the relationship (current -> next or next -> current)
+							let relationship = findRelationship(current, next) || findRelationship(next, current);
+					
+							if (!relationship) {
+								// If there's no direct relationship, path is inactive
 								return false;
+							}
+					
+							// Check the type of relationship and condition rules
+							if (relationship.from === current && relationship.to === next) {
+								// Case: A -> B (forward link)
+								if (!evidence.hasOwnProperty(current)) {
+									// If current is not conditioned (not in evidence), this part is inactive
+									return false;
+								}
+							} else if (relationship.from === next && relationship.to === current) {
+								// Case: A <- B (backward link)
+								if (!evidence.hasOwnProperty(next)) {
+									// If next is not conditioned (not in evidence), this part is inactive
+									return false;
+								}
+							} else if (relationship.from === current && relationship.to === next) {
+								// Case: V-structure (A -> B <- C)
+								if (!evidence.hasOwnProperty(next)) {
+									// Middle node must be conditioned (in evidence) or have a conditioned descendant
+									return false;
+								}
 							}
 						}
 					
-						
+						// If all parts of the path are active
 						return true;
 					}
 					
@@ -1419,7 +1446,7 @@ module.exports = {
 						let evidence = JSON.parse(req.query.evidence);
 
 						// the selected state is our Target
-						
+						// and we want to monitor its change when we en/disable evidence 
 
 						if (req.query.selectedStates) {
 							selectedStates = JSON.parse(req.query.selectedStates);
