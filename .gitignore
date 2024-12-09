@@ -4,3 +4,5 @@ package-lock.json
 public/bns
 *.sqlite
 public/minh.route.js
+.idx
+.vscode
