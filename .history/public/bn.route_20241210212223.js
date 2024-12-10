@@ -1207,73 +1207,80 @@ module.exports = {
 					}
 
 					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-						// Create a new network instance to avoid altering the main network
+						console.log('\n=== Starting calculateIndirectInfluence ===');
+						console.log(`Calculating influence from ${nonActiveNodeName} to ${targetNodeName}`);
+						
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
-					
-						// Ensure the network is initialized correctly
+						
 						if (!tempNet || typeof tempNet.node !== 'function') {
 							console.error("Network instance not initialized correctly.");
 							return 0;
 						}
-					
-						// Get the parent and target nodes
+						
 						let nonActiveNode = tempNet.node(nonActiveNodeName);
 						if (!nonActiveNode) {
 							console.error(`Node ${nonActiveNodeName} not found in the network.`);
 							return 0;
 						}
-					
+						
 						let targetNode = tempNet.node(targetNodeName);
 						if (!targetNode) {
 							console.error(`Target node ${targetNodeName} not found in the network.`);
 							return 0;
 						}
-					
-						// Get the state index for the parent node
+						
 						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
+						console.log(`State index for ${nonActiveNodeName}: ${nonActiveNodeStateIndex}`);
+						
 						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
 							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
 							return 0;
 						}
-					
-						// Get the state index for the target node
+						
 						let targetStateIndexArray = selectedStates[targetNodeName];
 						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
 							console.error(`No selected states for target node ${targetNodeName}`);
 							return 0;
 						}
 						let targetStateIndex = targetStateIndexArray[0];
-					
-						// Set evidence for all nodes except the nonActiveNodeName
+						console.log(`Target state index for ${targetNodeName}: ${targetStateIndex}`);
+						
+						console.log('\nSetting evidence for other nodes:');
 						for (let [nodeName, stateI] of Object.entries(evidence)) {
 							if (nodeName != nonActiveNodeName) {
+								console.log(`Setting ${nodeName} to state ${stateI}`);
 								tempNet.node(nodeName).finding(Number(stateI));
 							}
 						}
-					
-						// Update the network to get the baseline belief
+						
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-					
-						// Set the nonActiveNode to the specific state
+						console.log(`\nBaseline belief for ${targetNodeName} state ${targetStateIndex}: ${baselineBelief}`);
+						console.log(`All baseline beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
 						try {
+							console.log(`\nSetting ${nonActiveNodeName} to state ${nonActiveNodeStateIndex}`);
 							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
 						} catch (error) {
 							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
 							return 0;
 						}
-					
+						
 						tempNet.update();
-					
-						// Get the target node's belief after setting the nonActiveNode's state
+						
 						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
-					
-						// Calculate the influence percentage
+						console.log(`\nBelief after setting ${nonActiveNodeName}:`, targetNode.beliefs());
+						console.log(`Belief for target state ${targetStateIndex}: ${beliefGivenParentState}`);
+						
 						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
-					
-						// Return the influence percentage
-						return influencePercentage; 
+						console.log(`\nInfluence calculation:
+						- Baseline belief: ${baselineBelief}
+						- New belief: ${beliefGivenParentState}
+						- Change: ${beliefGivenParentState - baselineBelief}
+						- Percentage change: ${influencePercentage}`);
+						
+						return influencePercentage;
 					}
 					
 					

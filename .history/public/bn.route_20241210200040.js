@@ -1176,13 +1176,13 @@ module.exports = {
 						tempNet.update();
 						let baselineBelief = childNode.beliefs();
 
-						// Initialize variables to track maximum influence
+						
 						let maxInfluence = 0;
 
 						// Iterate over all states of the parent node
 						let parentStates = parentNode.states();
 						for (let parentStateIndex = 0; parentStateIndex < parentStates.length; parentStateIndex++) {
-							// Set parent node to a specific state
+							
 							parentNode.finding(parentStateIndex);
 							tempNet.update();
 							let beliefGivenParentState = childNode.beliefs();
@@ -1206,8 +1206,8 @@ module.exports = {
 						return maxInfluence;
 					}
 
-					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-						// Create a new network instance to avoid altering the main network
+					function calculateDirectInfluence(fromNodeName, toNodeName, evidence) {
+						
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
 					
@@ -1217,86 +1217,69 @@ module.exports = {
 							return 0;
 						}
 					
-						// Get the parent and target nodes
-						let nonActiveNode = tempNet.node(nonActiveNodeName);
-						if (!nonActiveNode) {
-							console.error(`Node ${nonActiveNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						let targetNode = tempNet.node(targetNodeName);
-						if (!targetNode) {
-							console.error(`Target node ${targetNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						// Get the state index for the parent node
-						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
-						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
-							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
-							return 0;
-						}
-					
-						// Get the state index for the target node
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
-							return 0;
-						}
-						let targetStateIndex = targetStateIndexArray[0];
-					
-						// Set evidence for all nodes except the nonActiveNodeName
+						// Set evidence for all nodes except the fromNodeName
 						for (let [nodeName, stateI] of Object.entries(evidence)) {
-							if (nodeName != nonActiveNodeName) {
+							if (nodeName !== fromNodeName) {
 								tempNet.node(nodeName).finding(Number(stateI));
 							}
 						}
 					
 						// Update the network to get the baseline belief
 						tempNet.update();
-						let baselineBelief = targetNode.beliefs()[targetStateIndex];
 					
-						// Set the nonActiveNode to the specific state
+						let fromNode = tempNet.node(fromNodeName);
+						let toNode = tempNet.node(toNodeName);
+					
+						// Get the state index for the fromNode
+						let fromNodeStateIndex = evidence[fromNodeName];
+						if (fromNodeStateIndex === null || fromNodeStateIndex === undefined) {
+							console.error(`State index for node ${fromNodeName} is undefined.`);
+							return 0;
+						}
+					
+						// Get the baseline belief of the toNode
+						let baselineBelief = toNode.beliefs();
+						console.log(`Baseline belief for ${toNodeName}:`, baselineBelief);
+					
+						// Set the fromNode to the specific state
 						try {
-							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
+							fromNode.finding(Number(fromNodeStateIndex));
 						} catch (error) {
-							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
+							console.error(`Error setting finding for node ${fromNodeName}:`, error);
 							return 0;
 						}
 					
 						tempNet.update();
 					
-						// Get the target node's belief after setting the nonActiveNode's state
-						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
+						// Get the toNode's belief after setting the fromNode's state
+						let beliefGivenParentState = toNode.beliefs();
+						console.log(`Belief given parent state for ${toNodeName}:`, beliefGivenParentState);
 					
 						// Calculate the influence percentage
-						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
-					
-						// Return the influence percentage
-						return influencePercentage; 
-					}
-					
-					
-					
-					
-
-					function calculatePathContribution(path) {
-						let totalInfluence = 0;
-						for (let i = 0; i < path.length - 1; i++) {
-							const fromNode = path[i];
-							const toNode = path[i + 1];
-							const influence = calculateIndirectInfluence(fromNode, toNode);
-					
-							totalInfluence += influence;
+						let influencePercentage = 0;
+						for (let j = 0; j < baselineBelief.length; j++) {
+							influencePercentage += (beliefGivenParentState[j] - baselineBelief[j]) / baselineBelief[j];
 						}
-						console.log(`totalInfluence for path ${path.join(' -> ')}:`, totalInfluence);
 					
-						// Map the total influence to the scale
-						let scale = mapInfluencePercentageToScale(totalInfluence);
+						
+						console.log(`Direct influence from ${fromNodeName} to ${toNodeName}: ${influencePercentage}`);
 					
-						return scale;
+						
+						return influencePercentage;
 					}
-		
+					
+					function calculatePathContribution(path, evidence) {
+						// Only calculate the influence for the direct connection from the first to the second node in the path
+						if (path.length === 2) {
+							let influence = calculateDirectInfluence(path[0], path[1], evidence);
+							let scale = mapInfluencePercentageToScale(influence);
+							console.log(`Path ${path.join(' -> ')}: Influence = ${influence}, Scale = ${scale}`);
+							return scale;
+						} else {
+							console.log(`Path ${path.join(' -> ')} is not direct and will be ignored.`);
+							return 0;
+						}
+					}
 					
 
 					// Build the undirectedGraph
@@ -1547,7 +1530,7 @@ module.exports = {
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {
-								let pathScale = calculatePathContribution(path);
+								let pathScale = calculatePathContribution(path, evidence);
 								const contributionPhrase = Contribute_DESCRIPTIONS[pathScale.toString()];
 						
 								// Identify the fromNode (start) and toNode (target) from the path.

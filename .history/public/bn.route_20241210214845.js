@@ -1207,73 +1207,57 @@ module.exports = {
 					}
 
 					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-						// Create a new network instance to avoid altering the main network
+						console.log('\n=== Starting calculateIndirectInfluence ===');
+						
+						// Create fresh network instance
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
-					
-						// Ensure the network is initialized correctly
-						if (!tempNet || typeof tempNet.node !== 'function') {
-							console.error("Network instance not initialized correctly.");
-							return 0;
-						}
-					
-						// Get the parent and target nodes
-						let nonActiveNode = tempNet.node(nonActiveNodeName);
-						if (!nonActiveNode) {
-							console.error(`Node ${nonActiveNodeName} not found in the network.`);
-							return 0;
-						}
-					
+						
 						let targetNode = tempNet.node(targetNodeName);
-						if (!targetNode) {
-							console.error(`Target node ${targetNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						// Get the state index for the parent node
-						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
-						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
-							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
-							return 0;
-						}
-					
-						// Get the state index for the target node
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
-							return 0;
-						}
-						let targetStateIndex = targetStateIndexArray[0];
-					
-						// Set evidence for all nodes except the nonActiveNodeName
+						let targetStateIndex = selectedStates[targetNodeName][0];
+						
+						// First get true baseline beliefs without any evidence
+						console.log('\nTrue baseline beliefs (no evidence):');
+						tempNet.update();
+						console.log(`All baseline beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
+						// Then set all evidence except the nonActiveNode and target node
+						console.log('\nSetting initial evidence:');
 						for (let [nodeName, stateI] of Object.entries(evidence)) {
-							if (nodeName != nonActiveNodeName) {
+							if (nodeName !== nonActiveNodeName && nodeName !== targetNodeName) {
+								console.log(`Setting ${nodeName} to state ${stateI}`);
 								tempNet.node(nodeName).finding(Number(stateI));
 							}
 						}
-					
-						// Update the network to get the baseline belief
+						
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-					
-						// Set the nonActiveNode to the specific state
+						console.log('\nBeliefs after setting initial evidence:');
+						console.log(`All beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
+						// Finally set the nonActiveNode
 						try {
-							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
+							let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
+							console.log(`\nSetting ${nonActiveNodeName} to state ${nonActiveNodeStateIndex}`);
+							tempNet.node(nonActiveNodeName).finding(Number(nonActiveNodeStateIndex));
 						} catch (error) {
 							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
 							return 0;
 						}
-					
+						
 						tempNet.update();
-					
-						// Get the target node's belief after setting the nonActiveNode's state
 						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
-					
-						// Calculate the influence percentage
+						console.log('\nFinal beliefs after setting all evidence:');
+						console.log(`All beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
 						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
-					
-						// Return the influence percentage
-						return influencePercentage; 
+						console.log(`\nInfluence calculation:
+						- Initial baseline: ${baselineBelief}
+						- Final belief: ${beliefGivenParentState}
+						- Absolute change: ${beliefGivenParentState - baselineBelief}
+						- Percentage change: ${influencePercentage}`);
+						
+						return influencePercentage;
 					}
 					
 					
