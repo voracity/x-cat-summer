@@ -3,22 +3,22 @@ var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
 
-// function addJointChild(net, parentNames, tempNodeName = null) {
-// 	let stateList = [];
-// 	let stateIndexes = parentNames.map(_=>0);
-// 	do {
-// 		stateList.push('s'+stateIndexes.join('_'));
-// 	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
-// 	/// XXX: Add support to bni_smile for deterministic nodes
-// 	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
-// 	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-// 	net
-// 		.addNode(tempNodeName, null, stateList)
-// 		.addParents(parentNames)
-// 		/// Essentially, create an identity matrix for now (later, replace with det node)
-// 		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-// 	return tempNodeName;
-// }
+function addJointChild(net, parentNames, tempNodeName = null) {
+	let stateList = [];
+	let stateIndexes = parentNames.map(_=>0);
+	do {
+		stateList.push('s'+stateIndexes.join('_'));
+	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
+	/// XXX: Add support to bni_smile for deterministic nodes
+	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
+	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	net
+		.addNode(tempNodeName, null, stateList)
+		.addParents(parentNames)
+		/// Essentially, create an identity matrix for now (later, replace with det node)
+		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	return tempNodeName;
+}
 
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
@@ -699,206 +699,193 @@ class BnDetail {
 					})
 
 				})
-					// ARCS
-					if (m.arcInfluence) {
-						let delay = 0;
-						// console.log("arcInfluence:", m.arcInfluence);
+				// ARCS
+				if (m.arcInfluence) {
+          let delay = 0;
+          // console.log("arcInfluence:", m.arcInfluence);
+
+					this.bnView.querySelectorAll(`div.node`).forEach(node => {						
+						node.style.opacity = 1
+					})
+
+          reset(m.arcInfluence, bn, this.bnView);
+
+          const sortedArcInfluence = sortArcInfluenceByDiff(
+            m.arcInfluence,
+            m.nodeBeliefs,
+						this.getColor
+          );
+
+					console.log('importantMiddleNodes', importantMiddleNodes)	
+					console.log('evidenceNodeLabels', evidenceNodeLabels)
+					console.log('targetNodeLabel', targetNodeLabel)
 					
-						this.bnView.querySelectorAll(`div.node`).forEach((node) => {
-						node.style.opacity = 1;
-						});
-					
-						reset(m.arcInfluence, bn, this.bnView);
-					
-						const sortedArcInfluence = sortArcInfluenceByDiff(
-						m.arcInfluence,
-						m.nodeBeliefs,
-						this.getColor,
-						);
-					
-						console.log("importantMiddleNodes", importantMiddleNodes);
-						console.log("evidenceNodeLabels", evidenceNodeLabels);
-						console.log("targetNodeLabel", targetNodeLabel);
-					
-						console.log("sortedArcInfluence:", sortedArcInfluence);
-					
-						sortedArcInfluence.forEach((arcEntry) => {
-						console.log("arcEntry:", arcEntry);
-						let arc = document.querySelector(
-							`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-						);
-						// console.log('arcEntry[child]', arcEntry.child)
+          console.log("sortedArcInfluence:", sortedArcInfluence);
+
+          sortedArcInfluence.forEach((arcEntry) => {
+            console.log("arcEntry:", arcEntry);
+            let arc = document.querySelector(
+              `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+            );
+						// console.log('arcEntry[child]', arcEntry.child)						
 						// console.log('arcEntry[parent]', arcEntry.parent)
-					
-						if (
-							evidenceNodeLabels.has(arcEntry.child) &&
-							arcEntry.color != "influence-idx3" &&
-							arcEntry.child != targetNodeLabel
-						) {
-							importantMiddleNodes.add(arcEntry.parent);
+													
+
+						if (evidenceNodeLabels.has(arcEntry.child) && arcEntry.color != "influence-idx3" && arcEntry.child != targetNodeLabel) {
+							importantMiddleNodes.add(arcEntry.parent)
 						}
-					
-						if (
-							evidenceNodeLabels.has(arcEntry.parent) &&
-							arcEntry.color != "influence-idx3" &&
-							arcEntry.parent != targetNodeLabel
-						) {
-							importantMiddleNodes.add(arcEntry.child);
+
+						if (evidenceNodeLabels.has(arcEntry.parent) && arcEntry.color != "influence-idx3" && arcEntry.parent != targetNodeLabel) {
+							importantMiddleNodes.add(arcEntry.child)
 						}
-					
+
 						// if (importantMiddleNodes.has(arcEntry.child) && importantMiddleNodes.has(arcEntry.parent)) {
 						// 	importantArcs.add(arcEntry)
 						// }
-					
+
 						// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 						// we know the first child is the colour arc
 						// coloring order of arrows
 						setTimeout(() => {
 							let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
 							let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-					
+
 							let combinedElems = Array.from(influeceArcBodyElems).map(
-							(bodyElem, index) => {
-								return {
-								body: bodyElem,
-								head: influeceArcHeadElems[index],
-								};
-							},
+								(bodyElem, index) => {
+									return {
+										body: bodyElem,
+										head: influeceArcHeadElems[index],
+									};
+								}
 							);
-					
+
 							combinedElems.forEach((pair, index) => {
-							let bodyElem = pair.body;
-							let headElem = pair.head;
-					
-							let bodyColor = getComputedStyle(
-								document.documentElement,
-							).getPropertyValue(`--${arcEntry.color}`);
-							bodyElem.style.stroke = bodyColor;
-							bodyElem.style.strokeWidth = arcSize;
-					
-							let bodyLength = bodyElem.getTotalLength();
-							bodyElem.style.strokeDasharray = bodyLength;
-							bodyElem.style.strokeDashoffset = bodyLength;
-							bodyElem.style.transition = "none";
-					
-							bodyElem.getBoundingClientRect();
-					
-							bodyElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-					
-							bodyElem.style.strokeDashoffset = "0";
-					
-							setTimeout(() => {
-								let headColor = getComputedStyle(
-								document.documentElement,
+								let bodyElem = pair.body;
+								let headElem = pair.head;
+
+								let bodyColor = getComputedStyle(
+									document.documentElement
 								).getPropertyValue(`--${arcEntry.color}`);
-								headElem.style.stroke = headColor;
-								headElem.style.strokeWidth = arcSize;
-					
-								let headLength = headElem.getTotalLength();
-								headElem.style.strokeDasharray = headLength;
-								headElem.style.strokeDashoffset = headLength;
-								headElem.style.transition = "none";
-					
-								headElem.getBoundingClientRect();
-					
-								headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-					
+								bodyElem.style.stroke = bodyColor;
+								bodyElem.style.strokeWidth = arcSize;
+
+								let bodyLength = bodyElem.getTotalLength();
+								bodyElem.style.strokeDasharray = bodyLength;
+								bodyElem.style.strokeDashoffset = bodyLength;
+								bodyElem.style.transition = "none";
+
+								bodyElem.getBoundingClientRect();
+
+								bodyElem.style.transition =
+									"stroke-dashoffset 1s ease-in-out";
+								
+								bodyElem.style.strokeDashoffset = "0";
+
 								setTimeout(() => {
-								headElem.style.strokeDashoffset = "0";
-								}, 0);
-							}, 1000);
+									let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
+									headElem.style.stroke = headColor;
+									headElem.style.strokeWidth = arcSize;
+
+									let headLength = headElem.getTotalLength();
+									headElem.style.strokeDasharray = headLength;
+									headElem.style.strokeDashoffset = headLength;
+									headElem.style.transition = "none";
+
+									headElem.getBoundingClientRect();
+
+									headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
+
+									setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
+								}, 1000);
 							});
 						}, delay);
-					
+
 						delay += 500;
-						});
-						console.log("-------------------------------------------");
-						console.log("importantMiddleNodes", importantMiddleNodes);
-						console.log("evidenceNodeLabels", evidenceNodeLabels);
-						console.log("targetNodeLabel", targetNodeLabel);
-						let mergedSetNodes = new Set([
-						...importantMiddleNodes,
-						...evidenceNodeLabels,
-						targetNodeLabel,
-						]);
-						console.log("mergedSetNodes", mergedSetNodes);
-						console.log("importantArcs", importantArcs);
-					
-						// this.bnView.querySelectorAll(`div.node`).forEach(node => {
-						// 	let nodeName = node.getAttribute('data-name')
-						// 	if (!mergedSetNodes.has(nodeName)) {
-						// 		node.style.opacity = 0.5
-						// }})
-					
-						// importantArcs.forEach((arcEntry) => {
-						//   console.log("arcEntry:", arcEntry);
-						//   let arc = document.querySelector(
-						//     `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-						//   );
-						// 	// console.log('arcEntry[child]', arcEntry.child)
-						// 	// console.log('arcEntry[parent]', arcEntry.parent)
-					
-						// 	// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-						// 	// we know the first child is the colour arc
-						// 	// coloring order of arrows
-						// 	setTimeout(() => {
-						// 		let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-						// 		let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-					
-						// 		let combinedElems = Array.from(influeceArcBodyElems).map(
-						// 			(bodyElem, index) => {
-						// 				return {
-						// 					body: bodyElem,
-						// 					head: influeceArcHeadElems[index],
-						// 				};
-						// 			}
-						// 		);
-					
-						// 		combinedElems.forEach((pair, _) => {
-						// 			let bodyElem = pair.body;
-						// 			let headElem = pair.head;
-					
-						// 			let bodyColor = getComputedStyle(
-						// 				document.documentElement
-						// 			).getPropertyValue(`--${arcEntry.color}`);
-						// 			bodyElem.style.stroke = bodyColor;
-						// 			bodyElem.style.strokeWidth = arcSize;
-					
-						// 			let bodyLength = bodyElem.getTotalLength();
-						// 			bodyElem.style.strokeDasharray = bodyLength;
-						// 			bodyElem.style.strokeDashoffset = bodyLength;
-						// 			bodyElem.style.transition = "none";
-					
-						// 			bodyElem.getBoundingClientRect();
-					
-						// 			bodyElem.style.transition =
-						// 				"stroke-dashoffset 1s ease-in-out";
-					
-						// 			bodyElem.style.strokeDashoffset = "0";
-					
-						// 			setTimeout(() => {
-						// 				let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
-						// 				headElem.style.stroke = headColor;
-						// 				headElem.style.strokeWidth = arcSize;
-					
-						// 				let headLength = headElem.getTotalLength();
-						// 				headElem.style.strokeDasharray = headLength;
-						// 				headElem.style.strokeDashoffset = headLength;
-						// 				headElem.style.transition = "none";
-					
-						// 				headElem.getBoundingClientRect();
-					
-						// 				headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-					
-						// 				setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
-						// 			}, 1000);
-						// 		});
-						// 	}, delay);
-					
-						// 	delay += 500;
-						// });
 					}
-				}
+				);
+					console.log('-------------------------------------------')
+					console.log('importantMiddleNodes', importantMiddleNodes)	
+					console.log('evidenceNodeLabels', evidenceNodeLabels)
+					console.log('targetNodeLabel', targetNodeLabel)
+					let mergedSetNodes = new Set([...importantMiddleNodes, ...evidenceNodeLabels, targetNodeLabel])
+					console.log('mergedSetNodes', mergedSetNodes)
+					console.log('importantArcs', importantArcs)
+
+					// this.bnView.querySelectorAll(`div.node`).forEach(node => {
+					// 	let nodeName = node.getAttribute('data-name')
+					// 	if (!mergedSetNodes.has(nodeName)) {
+					// 		node.style.opacity = 0.5
+					// }})
+					
+					// importantArcs.forEach((arcEntry) => {
+          //   console.log("arcEntry:", arcEntry);
+          //   let arc = document.querySelector(
+          //     `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+          //   );
+					// 	// console.log('arcEntry[child]', arcEntry.child)						
+					// 	// console.log('arcEntry[parent]', arcEntry.parent)													
+
+					// 	// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
+					// 	// we know the first child is the colour arc
+					// 	// coloring order of arrows
+					// 	setTimeout(() => {
+					// 		let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+					// 		let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
+
+					// 		let combinedElems = Array.from(influeceArcBodyElems).map(
+					// 			(bodyElem, index) => {
+					// 				return {
+					// 					body: bodyElem,
+					// 					head: influeceArcHeadElems[index],
+					// 				};
+					// 			}
+					// 		);
+
+					// 		combinedElems.forEach((pair, _) => {
+					// 			let bodyElem = pair.body;
+					// 			let headElem = pair.head;
+
+					// 			let bodyColor = getComputedStyle(
+					// 				document.documentElement
+					// 			).getPropertyValue(`--${arcEntry.color}`);
+					// 			bodyElem.style.stroke = bodyColor;
+					// 			bodyElem.style.strokeWidth = arcSize;
+
+					// 			let bodyLength = bodyElem.getTotalLength();
+					// 			bodyElem.style.strokeDasharray = bodyLength;
+					// 			bodyElem.style.strokeDashoffset = bodyLength;
+					// 			bodyElem.style.transition = "none";
+
+					// 			bodyElem.getBoundingClientRect();
+
+					// 			bodyElem.style.transition =
+					// 				"stroke-dashoffset 1s ease-in-out";
+								
+					// 			bodyElem.style.strokeDashoffset = "0";
+
+					// 			setTimeout(() => {
+					// 				let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
+					// 				headElem.style.stroke = headColor;
+					// 				headElem.style.strokeWidth = arcSize;
+
+					// 				let headLength = headElem.getTotalLength();
+					// 				headElem.style.strokeDasharray = headLength;
+					// 				headElem.style.strokeDashoffset = headLength;
+					// 				headElem.style.transition = "none";
+
+					// 				headElem.getBoundingClientRect();
+
+					// 				headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
+
+					// 				setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
+					// 			}, 1000);
+					// 		});
+					// 	}, delay);
+
+					// 	delay += 500;
+					// });
+        }
+			}
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
@@ -1139,7 +1126,10 @@ module.exports = {
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
 					}
+
 					
+
+
 					const Contribute_DESCRIPTIONS = {
 						"-3": "greatly reduces",
 						"-2": "moderately reduces",
@@ -1149,6 +1139,7 @@ module.exports = {
 						"2": "moderately increases",
 						"3": "greatly increases"
 					};
+
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -1216,74 +1207,62 @@ module.exports = {
 					}
 
 					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-						// Create a new network instance to avoid altering the main network
+						console.log('\n=== Starting calculateIndirectInfluence ===');
+						
+						// Create fresh network instance
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
-					
-						// Ensure the network is initialized correctly
-						if (!tempNet || typeof tempNet.node !== 'function') {
-							console.error("Network instance not initialized correctly.");
-							return 0;
-						}
-					
-						// Get the parent and target nodes
-						let nonActiveNode = tempNet.node(nonActiveNodeName);
-						if (!nonActiveNode) {
-							console.error(`Node ${nonActiveNodeName} not found in the network.`);
-							return 0;
-						}
-					
+						
 						let targetNode = tempNet.node(targetNodeName);
-						if (!targetNode) {
-							console.error(`Target node ${targetNodeName} not found in the network.`);
-							return 0;
-						}
-					
-						// Get the state index for the parent node
-						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
-						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
-							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
-							return 0;
-						}
-					
-						// Get the state index for the target node
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
-							return 0;
-						}
-						let targetStateIndex = targetStateIndexArray[0];
-					
-						// Set evidence for all nodes except the nonActiveNodeName
+						let targetStateIndex = selectedStates[targetNodeName][0];
+						
+						// First get true baseline beliefs without any evidence
+						console.log('\nTrue baseline beliefs (no evidence):');
+						tempNet.update();
+						console.log(`All baseline beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
+						// Then set all evidence except the nonActiveNode and target node
+						console.log('\nSetting initial evidence:');
 						for (let [nodeName, stateI] of Object.entries(evidence)) {
-							if (nodeName != nonActiveNodeName) {
+							if (nodeName !== nonActiveNodeName && nodeName !== targetNodeName) {
+								console.log(`Setting ${nodeName} to state ${stateI}`);
 								tempNet.node(nodeName).finding(Number(stateI));
 							}
 						}
-					
-						// Update the network to get the baseline belief
+						
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-					
-						// Set the nonActiveNode to the specific state
+						console.log('\nBeliefs after setting initial evidence:');
+						console.log(`All beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
+						// Finally set the nonActiveNode
 						try {
-							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
+							let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
+							console.log(`\nSetting ${nonActiveNodeName} to state ${nonActiveNodeStateIndex}`);
+							tempNet.node(nonActiveNodeName).finding(Number(nonActiveNodeStateIndex));
 						} catch (error) {
 							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
 							return 0;
 						}
-					
+						
 						tempNet.update();
-					
-						// Get the target node's belief after setting the nonActiveNode's state
 						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
-					
-						// Calculate the influence percentage
+						console.log('\nFinal beliefs after setting all evidence:');
+						console.log(`All beliefs for ${targetNodeName}:`, targetNode.beliefs());
+						
 						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
+						console.log(`\nInfluence calculation:
+						- Initial baseline: ${baselineBelief}
+						- Final belief: ${beliefGivenParentState}
+						- Absolute change: ${beliefGivenParentState - baselineBelief}
+						- Percentage change: ${influencePercentage}`);
+						
+						return influencePercentage;
+					}
 					
-						// Return the influence percentage
-						return influencePercentage; 
-					}																				
+					
+					
+					
 
 					function calculatePathContribution(path) {
 						let totalInfluence = 0;
@@ -1300,7 +1279,9 @@ module.exports = {
 						let scale = mapInfluencePercentageToScale(totalInfluence);
 					
 						return scale;
-					}							
+					}
+		
+					
 
 					// Build the undirectedGraph
 					function buildUndirectedGraph(relationships) {
@@ -1412,7 +1393,8 @@ module.exports = {
 						baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
 					});
 
-					let relationships = [];					
+					let relationships = [];
+					
 
 					net.nodes().forEach(node => {
 						// Get all parents of the node
