@@ -15,6 +15,7 @@ class StandardPage {
 				n('script', {src: sitePath('/_/js/components.js')}),
 				n('script', {src: sitePath('/_/js/htm.js')}),
 				n('script', {src: sitePath('/_/js/utils.js')}),
+				n('script', {src: sitePath('/_/js/verbals.js')}),
 				n('script', {src: sitePath('/_/js/menu/menu.js')}),
 				n('script', {src: sitePath('/_/js/cat.js')}),
 			),

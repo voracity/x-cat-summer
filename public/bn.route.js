@@ -3,22 +3,22 @@ var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
 
-function addJointChild(net, parentNames, tempNodeName = null) {
-	let stateList = [];
-	let stateIndexes = parentNames.map(_=>0);
-	do {
-		stateList.push('s'+stateIndexes.join('_'));
-	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
-	/// XXX: Add support to bni_smile for deterministic nodes
-	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
-	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	net
-		.addNode(tempNodeName, null, stateList)
-		.addParents(parentNames)
-		/// Essentially, create an identity matrix for now (later, replace with det node)
-		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	return tempNodeName;
-}
+// function addJointChild(net, parentNames, tempNodeName = null) {
+// 	let stateList = [];
+// 	let stateIndexes = parentNames.map(_=>0);
+// 	do {
+// 		stateList.push('s'+stateIndexes.join('_'));
+// 	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
+// 	/// XXX: Add support to bni_smile for deterministic nodes
+// 	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
+// 	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+// 	net
+// 		.addNode(tempNodeName, null, stateList)
+// 		.addParents(parentNames)
+// 		/// Essentially, create an identity matrix for now (later, replace with det node)
+// 		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+// 	return tempNodeName;
+// }
 
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
@@ -1139,10 +1139,7 @@ module.exports = {
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
 					}
-
 					
-
-
 					const Contribute_DESCRIPTIONS = {
 						"-3": "greatly reduces",
 						"-2": "moderately reduces",
@@ -1152,7 +1149,6 @@ module.exports = {
 						"2": "moderately increases",
 						"3": "greatly increases"
 					};
-
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -1287,11 +1283,7 @@ module.exports = {
 					
 						// Return the influence percentage
 						return influencePercentage; 
-					}
-					
-					
-					
-					
+					}																				
 
 					function calculatePathContribution(path) {
 						let totalInfluence = 0;
@@ -1308,9 +1300,7 @@ module.exports = {
 						let scale = mapInfluencePercentageToScale(totalInfluence);
 					
 						return scale;
-					}
-		
-					
+					}							
 
 					// Build the undirectedGraph
 					function buildUndirectedGraph(relationships) {
@@ -1411,8 +1401,7 @@ module.exports = {
 						baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
 					});
 
-					let relationships = [];
-					
+					let relationships = [];					
 
 					net.nodes().forEach(node => {
 						// Get all parents of the node
