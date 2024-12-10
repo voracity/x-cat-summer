@@ -1239,7 +1239,6 @@ module.exports = {
 					
 						// Get the baseline belief of the toNode
 						let baselineBelief = toNode.beliefs();
-						console.log(`Baseline belief for ${toNodeName}:`, baselineBelief);
 					
 						// Set the fromNode to the specific state
 						try {
@@ -1253,7 +1252,6 @@ module.exports = {
 					
 						// Get the toNode's belief after setting the fromNode's state
 						let beliefGivenParentState = toNode.beliefs();
-						console.log(`Belief given parent state for ${toNodeName}:`, beliefGivenParentState);
 					
 						// Calculate the influence percentage
 						let influencePercentage = 0;
