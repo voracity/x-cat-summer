@@ -382,11 +382,35 @@ class Node {
 		let { left, bottom } = this.el().querySelector("a.menu").getBoundingClientRect();
 		menu.popup({ left, top: bottom });
 	}
+		// 添加一个静态方法，用于实现闪烁效果
+	static flashNode(nodeElement) {
+		let flashes = 2; // 闪烁次数
+		let flashDuration = 200; // 每次闪烁的持续时间（毫秒）
+		let count = flashes * 2;
+
+		function toggleFlash() {
+			if (count > 0) {
+				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px 3px rgba(0, 255, 255, 0.9)' : '';
+				count--;
+				setTimeout(toggleFlash, flashDuration);
+			}
+		}
+
+		toggleFlash(); // 启动闪烁
+	}
 
 	static guiSetupEvents() {
 		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
 			event.stopPropagation();
+			let target_node = event.target.closest('.node h3');
+			let targte_node_shining =  event.target.closest('.node');
+
+			if (target_node){
+				Node.flashNode(targte_node_shining); // 调用闪烁方法
+			}
+				
+			
 			let menuButton = event.target.closest("a.menu");
 			if (menuButton) {
 				refs.Node(event.target).guiPopupMenu();
@@ -424,6 +448,8 @@ class Node {
 				nextFrame();
 			}
 		});
+
+
 
 		document.querySelectorAll("a.setMove").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
