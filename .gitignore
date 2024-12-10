@@ -4,5 +4,7 @@ package-lock.json
 public/bns
 *.sqlite
 public/minh.route.js
+public/Yang.js
+public/hao_formatupdate.js
 .idx
 .vscode
