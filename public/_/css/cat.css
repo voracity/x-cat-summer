@@ -66,6 +66,9 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .bnView { position: relative; }
 .node { position: absolute; border: solid 1px black; padding: 4px; z-index: 10; background: #fff7e9; user-select: none; }
 .node h3 { margin: 0; font-size: 10pt; border-bottom: solid 1px black; margin: -4px -4px 0 -4px; padding: 1px 4px; cursor: grab; }
+.node h3:hover {
+    cursor: pointer;
+}
 .node.moving h3, .node.moving { cursor: grabbing; }
 .node.moving { box-shadow: 3px 3px 4px #4444; margin: -2px 0 0 -2px; }
 
@@ -362,3 +365,25 @@ p {
 	padding: initial;
 	border: initial;
 	}  */
+
+.drag{
+	cursor: grabbing;
+}
+	
+.play-button {
+	width: 15px;
+	height: 15px;
+	background-color: black;
+	clip-path: polygon(25% 0%, 100% 50%, 25% 100%);
+	cursor: pointer;
+	transition: transform 0.2s;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.play-button:hover {
+	transform: scale(1.1);
+}
+
+.play-button:active {
+	transform: scale(0.9);
+}

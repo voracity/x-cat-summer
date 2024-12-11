@@ -473,7 +473,7 @@ class BnDetail {
 						"div.controls",
 						n("a.setCause", { href: "javascript:void(0)" }, "C"),
 						n("a.setEffect", { href: "javascript:void(0)" }, "E"),
-						n("a.setMove", { href: "javascript:void(0)" }, "M")
+						// n("a.setMove", { href: "javascript:void(0)" }, "M")
 						//n('a.menu', {href: 'javascript:void(0)'}, '\u22EF'),
 					),
 					n("h3", node.name),

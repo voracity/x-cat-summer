@@ -382,10 +382,10 @@ class Node {
 		let { left, bottom } = this.el().querySelector("a.menu").getBoundingClientRect();
 		menu.popup({ left, top: bottom });
 	}
-		// 添加一个静态方法，用于实现闪烁效果
+
 	static flashNode(nodeElement) {
-		let flashes = 2; // 闪烁次数
-		let flashDuration = 200; // 每次闪烁的持续时间（毫秒）
+		let flashes = 2; 
+		let flashDuration = 200;
 		let count = flashes * 2;
 
 		function toggleFlash() {
@@ -396,18 +396,53 @@ class Node {
 			}
 		}
 
-		toggleFlash(); // 启动闪烁
+		toggleFlash(); 
 	}
 
 	static guiSetupEvents() {
+
 		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
 			event.stopPropagation();
 			let target_node = event.target.closest('.node h3');
 			let targte_node_shining =  event.target.closest('.node');
 
+			document.querySelectorAll(".node h3").forEach((nodeHeader) => {
+				nodeHeader.addEventListener("mouseenter", () => {
+					nodeHeader.style.cursor = "pointer"; 
+				});
+			
+				nodeHeader.addEventListener("mouseleave", () => {
+					nodeHeader.style.cursor = "default"; 
+				});
+			});
+
+
+	
 			if (target_node){
-				Node.flashNode(targte_node_shining); // 调用闪烁方法
+				
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+				const existingButton = target_node.querySelector(".play-button");
+				if (existingButton) {
+					existingButton.remove();
+				}
+						
+				const playButton = document.createElement("button");
+				playButton.textContent = "▶";
+				playButton.className = "play-button";
+
+				playButton.addEventListener("click", () => {
+					console.log('Button play');
+					// add backend here
+				});
+
+				target_node.style.position = "relative"; 
+				playButton.style.position = "absolute";
+				playButton.style.left = "-25px"; 
+				playButton.style.top = "50%"; 
+				playButton.style.transform = "translateY(-50%)";
+				target_node.appendChild(playButton);
+				Node.flashNode(targte_node_shining);
 			}
 				
 			
@@ -450,13 +485,12 @@ class Node {
 		});
 
 
-
-		document.querySelectorAll("a.setMove").forEach((setMoveEl) => {
+		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
 				console.log("Mousedown triggered");
-
 				let target = event.target.closest(".node");
 				console.log(target);
+				
 
 				if (target) {
 					let targetNode = target.closest(".node");
@@ -464,8 +498,7 @@ class Node {
 					event.preventDefault();
 					console.log("start dragging");
 					console.log(targetNode.classList);
-					targetNode.classList.add("moving");
-					targetNode.closest(".bnView").classList.add("hasMoving");
+
 
 					// define init pos
 					let origX = event.clientX,
@@ -480,6 +513,7 @@ class Node {
 							let deltaX = event.clientX - origX,
 								deltaY = event.clientY - origY;
 							//onsole.log(origLeft, deltaX);
+							target.style.cursor = 'grabbing';
 							targetNode.style.left = origLeft + deltaX + "px";
 							targetNode.style.top = origTop + deltaY + "px";
 							/// Update with something more efficient
@@ -489,12 +523,12 @@ class Node {
 					document.addEventListener(
 						"mouseup",
 						(mu = (event) => {
-							targetNode.classList.remove("moving");
-							target.closest(".bnView").classList.remove("hasMoving");
+							target.closest(".bnView").classList.remove("grabbing");
 							/// Update with something more efficient
+							draw.updateArrows(document.querySelector(".bnView"));
 							document.removeEventListener("mousemove", mm);
 							document.removeEventListener("mouseup", mu);
-							draw.updateArrows(document.querySelector(".bnView"));
+
 						})
 					);
 				}
