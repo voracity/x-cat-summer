@@ -1290,6 +1290,8 @@ module.exports = {
 						return scale;
 					}
 		
+					
+
 					// Build the undirectedGraph
 					function buildUndirectedGraph(relationships) {
 						const graph = {};
