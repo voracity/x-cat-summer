@@ -1209,80 +1209,85 @@ module.exports = {
 					function calculateIndirectInfluence(path) {
 						console.log(`\nCalculating influence along path ${path.join(' -> ')}`);
 						
-						// Create a temporary network instance to avoid altering the main network
+						// 创建临时网络实例
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
 					
-						// Check if all nodes in the path exist
+						// 检查路径节点是否有效
 						for (let nodeName of path) {
 							if (!tempNet.node(nodeName)) {
-								console.error(`Node ${nodeName} does not exist`);
+								console.error(`节点 ${nodeName} 不存在`);
 								return 0;
 							}
 						}
 					
-						// Get the target node and its state index
+						// 获取目标节点和其状态索引
 						let targetNodeName = path[path.length - 1];
 						let targetNode = tempNet.node(targetNodeName);
 						let targetStateIndexArray = selectedStates[targetNodeName];
 						if (!targetStateIndexArray || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
+							console.error(`目标节点 ${targetNodeName} 没有选定状态`);
 							return 0;
 						}
 						let targetStateIndex = targetStateIndexArray[0];
-						console.log(`Target state index for node ${targetNodeName} is ${targetStateIndex}`);
+						console.log(`目标节点 ${targetNodeName} 的目标状态索引为 ${targetStateIndex}`);
 					
-						// Clear all evidence
+						// 清除所有证据
 						tempNet.retractFindings();
-						console.log("Cleared all evidence");
+						console.log("已清除所有证据");
 					
-						// Set evidence for all nodes in the path except the first one (baseline scenario)
+						// **在基线情况下，设置路径上除第一个节点外的所有节点的证据**
+						// 假设路径为 [A, B, C]，计算 A 对 C 的影响，需要在基线情况下设置 B 的状态
 						for (let i = 1; i < path.length - 1; i++) {
 							let nodeName = path[i];
 							let nodeStateIndex = evidence[nodeName];
 							if (nodeStateIndex !== undefined) {
 								tempNet.node(nodeName).finding(Number(nodeStateIndex));
-								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
+								console.log(`在基线情况下，已设置节点 ${nodeName} 的状态为 ${nodeStateIndex}`);
 							}
 						}
 					
-						// Get the baseline belief
+						// 获取基线信念
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`Baseline belief: ${baselineBelief}`);
+						console.log(`基线信念：${baselineBelief}`);
 					
-						// Set the state for the first node in the path
+						// **设置路径上第一个节点的状态**
 						let firstNodeName = path[0];
 						let firstNodeStateIndex = evidence[firstNodeName];
 						if (firstNodeStateIndex === undefined) {
-							console.error(`State index for node ${firstNodeName} is undefined`);
+							console.error(`节点 ${firstNodeName} 的状态索引未定义`);
 							return 0;
 						}
 						tempNet.node(firstNodeName).finding(Number(firstNodeStateIndex));
-						console.log(`Set node ${firstNodeName} to state ${firstNodeStateIndex}`);
+						console.log(`已设置节点 ${firstNodeName} 的状态为 ${firstNodeStateIndex}`);
 					
-						// Update the network and get the new belief
+						// 更新网络，获取新的信念
 						tempNet.update();
 						let newBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`After setting ${firstNodeName}, new belief for ${targetNodeName} is ${newBelief}`);
+						console.log(`设置 ${firstNodeName} 状态后，${targetNodeName} 的新信念：${newBelief}`);
 					
-						// Calculate the influence percentage
+						// 计算影响百分比
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief);
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
+							influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+							console.log(`影响百分比：（${newBelief} - ${baselineBelief}） / ${baselineBelief} = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
-							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
+							console.log(`基线信念为 0，影响百分比为 ${influencePercentage}`);
 						}
 					
-						// Return the influence percentage
+						// 返回影响百分比
 						return influencePercentage;
 					}
 					
+					
+					
+					
+
 					function calculatePathContribution(path) {
 						let totalInfluence = calculateIndirectInfluence(path);
-						console.log(`Total influence for path ${path.join(' -> ')}:`, totalInfluence);
+						console.log(`totalInfluence for path ${path.join(' -> ')}:`, totalInfluence);
 					
 						// Map the total influence to the scale
 						let scale = mapInfluencePercentageToScale(totalInfluence);
@@ -1609,7 +1614,7 @@ module.exports = {
 						
 						
 						// If there are multiple sentences, we generate an overall summary sentence.
-						
+						if (sentences.length > 1) {
 							let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 							const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 							let node = netWithAllEvidence.node(targetNodeName);
@@ -1618,25 +1623,21 @@ module.exports = {
 							const targetNodeAttribute = stateNames[targetStateIndex];
 						
 							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							if (sentences.length > 1) {
-								overallSentence = `
-								${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
-								combined
-								<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
-								the probability that 
-								<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
-								is 
-								<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
+							let overallSentence = `
+							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
+									combined
+									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+									the probability that 
+									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
+									is 
+									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
 								`;
-							} else {
-								overallSentence = start;			
-							}
 						
 							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
 							bn.influences['overall'] = {
 								explanation: explanation
 							};
-						
+						}
 						
 
 						// calculate arc importances

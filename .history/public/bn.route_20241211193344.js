@@ -1269,8 +1269,8 @@ module.exports = {
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief);
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
+							influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) / ${baselineBelief} = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
 							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);

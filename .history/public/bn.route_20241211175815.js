@@ -1206,83 +1206,90 @@ module.exports = {
 						return maxInfluence;
 					}
 
-					function calculateIndirectInfluence(path) {
-						console.log(`\nCalculating influence along path ${path.join(' -> ')}`);
-						
-						// Create a temporary network instance to avoid altering the main network
+					function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
+						// Create a new network instance to avoid altering the main network
 						let tempNet = new Net(bnKey);
 						tempNet.compile();
 					
-						// Check if all nodes in the path exist
-						for (let nodeName of path) {
-							if (!tempNet.node(nodeName)) {
-								console.error(`Node ${nodeName} does not exist`);
-								return 0;
-							}
+						// Ensure the network is initialized correctly
+						if (!tempNet || typeof tempNet.node !== 'function') {
+							console.error("Network instance not initialized correctly.");
+							return 0;
 						}
 					
-						// Get the target node and its state index
-						let targetNodeName = path[path.length - 1];
+						// Get the parent and target nodes
+						let nonActiveNode = tempNet.node(nonActiveNodeName);
+						if (!nonActiveNode) {
+							console.error(`Node ${nonActiveNodeName} not found in the network.`);
+							return 0;
+						}
+					
 						let targetNode = tempNet.node(targetNodeName);
+						if (!targetNode) {
+							console.error(`Target node ${targetNodeName} not found in the network.`);
+							return 0;
+						}
+					
+						// Get the state index for the parent node
+						let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
+						if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
+							console.error(`State index for node ${nonActiveNodeName} is undefined.`);
+							return 0;
+						}
+					
+						// Get the state index for the target node
 						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || targetStateIndexArray.length === 0) {
+						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
 							console.error(`No selected states for target node ${targetNodeName}`);
 							return 0;
 						}
 						let targetStateIndex = targetStateIndexArray[0];
-						console.log(`Target state index for node ${targetNodeName} is ${targetStateIndex}`);
 					
-						// Clear all evidence
-						tempNet.retractFindings();
-						console.log("Cleared all evidence");
-					
-						// Set evidence for all nodes in the path except the first one (baseline scenario)
-						for (let i = 1; i < path.length - 1; i++) {
-							let nodeName = path[i];
-							let nodeStateIndex = evidence[nodeName];
-							if (nodeStateIndex !== undefined) {
-								tempNet.node(nodeName).finding(Number(nodeStateIndex));
-								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
+						// Set evidence for all nodes except the nonActiveNodeName
+						for (let [nodeName, stateI] of Object.entries(evidence)) {
+							if (nodeName != nonActiveNodeName) {
+								tempNet.node(nodeName).finding(Number(stateI));
 							}
 						}
 					
-						// Get the baseline belief
+						// Update the network to get the baseline belief
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`Baseline belief: ${baselineBelief}`);
 					
-						// Set the state for the first node in the path
-						let firstNodeName = path[0];
-						let firstNodeStateIndex = evidence[firstNodeName];
-						if (firstNodeStateIndex === undefined) {
-							console.error(`State index for node ${firstNodeName} is undefined`);
+						// Set the nonActiveNode to the specific state
+						try {
+							nonActiveNode.finding(Number(nonActiveNodeStateIndex));
+						} catch (error) {
+							console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
 							return 0;
 						}
-						tempNet.node(firstNodeName).finding(Number(firstNodeStateIndex));
-						console.log(`Set node ${firstNodeName} to state ${firstNodeStateIndex}`);
 					
-						// Update the network and get the new belief
 						tempNet.update();
-						let newBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`After setting ${firstNodeName}, new belief for ${targetNodeName} is ${newBelief}`);
+					
+						// Get the target node's belief after setting the nonActiveNode's state
+						let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
 					
 						// Calculate the influence percentage
-						let influencePercentage;
-						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief);
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
-						} else {
-							influencePercentage = newBelief !== 0 ? Infinity : 0;
-							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
-						}
+						let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
 					
 						// Return the influence percentage
-						return influencePercentage;
+						return influencePercentage; 
 					}
 					
+					
+					
+					
+
 					function calculatePathContribution(path) {
-						let totalInfluence = calculateIndirectInfluence(path);
-						console.log(`Total influence for path ${path.join(' -> ')}:`, totalInfluence);
+						let totalInfluence = 0;
+						for (let i = 0; i < path.length - 1; i++) {
+							const fromNode = path[i];
+							const toNode = path[i + 1];
+							const influence = calculateIndirectInfluence(fromNode, toNode);
+					
+							totalInfluence += influence;
+						}
+						console.log(`totalInfluence for path ${path.join(' -> ')}:`, totalInfluence);
 					
 						// Map the total influence to the scale
 						let scale = mapInfluencePercentageToScale(totalInfluence);
@@ -1425,7 +1432,7 @@ module.exports = {
 					});
 
 					console.log("relationships",relationships)
-					
+					console.log('m.arcInfluence', m.arcInfluence)
 
 
 					const graph = buildUndirectedGraph(relationships);
@@ -1609,7 +1616,7 @@ module.exports = {
 						
 						
 						// If there are multiple sentences, we generate an overall summary sentence.
-						
+						if (sentences.length > 1) {
 							let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 							const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 							let node = netWithAllEvidence.node(targetNodeName);
@@ -1618,25 +1625,21 @@ module.exports = {
 							const targetNodeAttribute = stateNames[targetStateIndex];
 						
 							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							if (sentences.length > 1) {
-								overallSentence = `
-								${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
-								combined
-								<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
-								the probability that 
-								<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
-								is 
-								<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
+							let overallSentence = `
+							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
+									combined
+									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+									the probability that 
+									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
+									is 
+									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
 								`;
-							} else {
-								overallSentence = start;			
-							}
 						
 							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
 							bn.influences['overall'] = {
 								explanation: explanation
 							};
-						
+						}
 						
 
 						// calculate arc importances

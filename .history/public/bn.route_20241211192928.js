@@ -1237,6 +1237,8 @@ module.exports = {
 						console.log("Cleared all evidence");
 					
 						// Set evidence for all nodes in the path except the first one (baseline scenario)
+						// For example, in path [A, B, C], to calculate the influence of A on C,
+						// we set evidence for B in the baseline scenario
 						for (let i = 1; i < path.length - 1; i++) {
 							let nodeName = path[i];
 							let nodeStateIndex = evidence[nodeName];
@@ -1269,8 +1271,8 @@ module.exports = {
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief);
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
+							influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) / ${baselineBelief} = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
 							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
@@ -1618,18 +1620,19 @@ module.exports = {
 							const targetNodeAttribute = stateNames[targetStateIndex];
 						
 							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							if (sentences.length > 1) {
-								overallSentence = `
-								${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
-								combined
-								<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
-								the probability that 
-								<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
-								is 
-								<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
+							if (sentences.length > 1){
+							let overallSentence = `
+							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
+									combined
+									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+									the probability that 
+									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
+									is 
+									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
 								`;
-							} else {
-								overallSentence = start;			
+							}
+							else{
+								overallSentence = start			
 							}
 						
 							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
