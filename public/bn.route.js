@@ -110,11 +110,17 @@ function generateDetailContent(nonActiveNodeName, targetNodeName, allPaths, edge
     // Direct paths
     if (directPaths.length > 0) {
         directPaths.forEach((path) => {
-            const contributionScale = edgeMap[`${path[0]}->${path[1]}`];
-            const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale.toString()] || "has no significant effect on";
+            const edgeKey = `${path[0]}->${path[1]}`;
+            const contributionScale = edgeMap[edgeKey];
+            const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale?.toString()] || "has no significant effect on";
+
+            // Check if the contributionScale is undefined or invalid
+            if (contributionScale === undefined) {
+                console.warn(`Warning: Contribution scale undefined for edge ${edgeKey}`);
+                return; // Skip processing this path
+            }
 
             detailSentences.push(
-				
                 `<div style="font-size: 18px; margin-left: 20px;"><br>• By direct connection, it <span style="font-weight: bold;">${contributionPhrase}</span> the probability of <span style="font-weight: bold;">${path[1]}</span>.</div><br>`
             );
         });
@@ -411,6 +417,9 @@ class BnDetail {
 			if (this.drawOptions[key] == undefined)
 				this.drawOptions[key] = DEFAULT_OPTS[key]
 		})
+
+		// State to track toggling between detail and summary
+        this.nodeToggleState = {};
 	}
 	make(root) {
 		this.root = root || n('div.bnDetail',
@@ -497,13 +506,32 @@ class BnDetail {
 				const nodeElement = targetNode.closest('.node');
 				const nodeName = nodeElement.getAttribute('data-name');
 		
-				// Retrieve and display details dynamically
+				// Retrieve detail and summary content
 				const detailContent = bn.influences[nodeName]?.detail || 'No details available.';
-				const influenceList = this.root.querySelector('.influenceList');
-				const detailHtml = `<li>${detailContent}</li>`;
-				influenceList.innerHTML = detailHtml;
+				const overallExplanation = bn.influences['overall']?.explanation || '';
+				const summaryContent = `
+					<p>${overallExplanation}</p>
+					${Object.entries(bn.influences)
+						.filter(([key]) => key !== 'overall')
+						.map(([_, influenceData]) => `<p>${influenceData.explanation}</p>`)
+						.join('')}
+				`;
+		
+				// Check and toggle view state
+				if (!nodeElement.toggleState || nodeElement.toggleState === 'summary') {
+					// Show detail view
+					nodeElement.toggleState = 'detail';
+					const influenceList = this.root.querySelector('.influenceList');
+					influenceList.innerHTML = `<li>${detailContent}</li>`;
+				} else {
+					// Show summary view
+					nodeElement.toggleState = 'summary';
+					const influenceList = this.root.querySelector('.influenceList');
+					influenceList.innerHTML = summaryContent;
+				}
 			}
 		});
+		
 	}
 	
 	toHtml() { return this.root.outerHTML; }
@@ -1780,7 +1808,6 @@ module.exports = {
 							};
 						}
 						
-
 						// calculate arc importances
 						let arcs = []
 						// reset network
