@@ -263,12 +263,12 @@ class Node {
 		let nodeName = this.nodeName;
 		let evidence = {};
 		let nodeEl = this.el();		
-    let allStateElem = nodeEl.querySelectorAll(".state");
+    	let allStateElem = nodeEl.querySelectorAll(".state");
 
-    allStateElem.forEach((elem) => {
-      elem.style.backgroundColor = "";
-    });
-    nodeEl.style.boxShadow = "";
+		allStateElem.forEach((elem) => {
+		elem.style.backgroundColor = "";
+		});
+		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
 			//delete bn.evidence[nodeName];

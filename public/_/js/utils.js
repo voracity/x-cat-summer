@@ -65,23 +65,6 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, getColor) {
     .sort((a, b) => b.maxDiff - a.maxDiff) // Sort by maxDiff in descending order
     .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
 }
-
-function addJointChild(net, parentNames, tempNodeName = null) {
-	let stateList = [];
-	let stateIndexes = parentNames.map(_=>0);
-	do {
-		stateList.push('s'+stateIndexes.join('_'));
-	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
-	/// XXX: Add support to bni_smile for deterministic nodes
-	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
-	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	net
-		.addNode(tempNodeName, null, stateList)
-		.addParents(parentNames)
-		/// Essentially, create an identity matrix for now (later, replace with det node)
-		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	return tempNodeName;
-}
 // ---------------------------------------
 
 // Verbal
