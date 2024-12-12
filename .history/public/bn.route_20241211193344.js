@@ -416,9 +416,9 @@ class BnDetail {
 						n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
 						n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
 						n("tr", n("td", "barely changes", {class:`influence-idx3`})),
-						n("tr", n("td", "slightly reduces", {class:`influence-idx4`})),
-						n("tr", n("td", "moderately reduces", {class:`influence-idx5`})),
-						n("tr", n("td", "greatly reduces", {class:`influence-idx6`})),
+						n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
+						n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
+						n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
 					),
 					n("div", {style:"text-align:center; padding:3px;"}, "probability of"),
 					n("div", n("div", {class:"target"}, "target state"))
@@ -701,150 +701,137 @@ class BnDetail {
 				})
 				// ARCS
 				if (m.arcInfluence) {
-					let delay = 0;
-					// console.log("arcInfluence:", m.arcInfluence);
-				
-					this.bnView.querySelectorAll(`div.node`).forEach((node) => {
-					node.style.opacity = 1;
-					});
-				
-					reset(m.arcInfluence, bn, this.bnView);
-				
-					const sortedArcInfluence = sortArcInfluenceByDiff(
-					m.arcInfluence,
-					m.nodeBeliefs,
-					this.getColor,
-					);
-				
-					console.log("importantMiddleNodes", importantMiddleNodes);
-					console.log("evidenceNodeLabels", evidenceNodeLabels);
-					console.log("targetNodeLabel", targetNodeLabel);
-				
-					console.log("sortedArcInfluence:", sortedArcInfluence);
-				
-					sortedArcInfluence.forEach((arcEntry) => {
-					console.log("arcEntry:", arcEntry);
-					let arc = document.querySelector(
-						`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-					);
-					// console.log('arcEntry[child]', arcEntry.child)
-					// console.log('arcEntry[parent]', arcEntry.parent)
-				
-					if (
-						evidenceNodeLabels.has(arcEntry.child) &&
-						arcEntry.color != "influence-idx3" &&
-						arcEntry.child != targetNodeLabel
-					) {
-						importantMiddleNodes.add(arcEntry.parent);
-					}
-				
-					if (
-						evidenceNodeLabels.has(arcEntry.parent) &&
-						arcEntry.color != "influence-idx3" &&
-						arcEntry.parent != targetNodeLabel
-					) {
-						importantMiddleNodes.add(arcEntry.child);
-					}
-				
-					// if (importantMiddleNodes.has(arcEntry.child) && importantMiddleNodes.has(arcEntry.parent)) {
-					// 	importantArcs.add(arcEntry)
-					// }
-				
-					// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-					// we know the first child is the colour arc
-					// coloring order of arrows
-					setTimeout(() => {
-						let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-						let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-				
-						let combinedElems = Array.from(influeceArcBodyElems).map(
-						(bodyElem, index) => {
-							return {
-							body: bodyElem,
-							head: influeceArcHeadElems[index],
-							};
-						},
-						);
-				
-						combinedElems.forEach((pair, index) => {
-						let bodyElem = pair.body;
-						let headElem = pair.head;
-				
-						let bodyColor = getComputedStyle(
-							document.documentElement,
-						).getPropertyValue(`--${arcEntry.color}`);
-						bodyElem.style.stroke = bodyColor;
-						bodyElem.style.strokeWidth = arcSize;
-				
-						let bodyLength = bodyElem.getTotalLength();
-						bodyElem.style.strokeDasharray = bodyLength;
-						bodyElem.style.strokeDashoffset = bodyLength;
-						bodyElem.style.transition = "none";
-				
-						bodyElem.getBoundingClientRect();
-				
-						bodyElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-				
-						bodyElem.style.strokeDashoffset = "0";
-				
+          let delay = 0;
+          // console.log("arcInfluence:", m.arcInfluence);
+
+					this.bnView.querySelectorAll(`div.node`).forEach(node => {						
+						node.style.opacity = 1
+					})
+
+          reset(m.arcInfluence, bn, this.bnView);
+
+          const sortedArcInfluence = sortArcInfluenceByDiff(
+            m.arcInfluence,
+            m.nodeBeliefs,
+						this.getColor
+          );
+
+					console.log('importantMiddleNodes', importantMiddleNodes)	
+					console.log('evidenceNodeLabels', evidenceNodeLabels)
+					console.log('targetNodeLabel', targetNodeLabel)
+					
+          console.log("sortedArcInfluence:", sortedArcInfluence);
+
+          sortedArcInfluence.forEach((arcEntry) => {
+            console.log("arcEntry:", arcEntry);
+            let arc = document.querySelector(
+              `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+            );
+						// console.log('arcEntry[child]', arcEntry.child)						
+						// console.log('arcEntry[parent]', arcEntry.parent)
+													
+
+						if (evidenceNodeLabels.has(arcEntry.child) && arcEntry.color != "influence-idx3" && arcEntry.child != targetNodeLabel) {
+							importantMiddleNodes.add(arcEntry.parent)
+						}
+
+						if (evidenceNodeLabels.has(arcEntry.parent) && arcEntry.color != "influence-idx3" && arcEntry.parent != targetNodeLabel) {
+							importantMiddleNodes.add(arcEntry.child)
+						}
+
+						// if (importantMiddleNodes.has(arcEntry.child) && importantMiddleNodes.has(arcEntry.parent)) {
+						// 	importantArcs.add(arcEntry)
+						// }
+
+						// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
+						// we know the first child is the colour arc
+						// coloring order of arrows
 						setTimeout(() => {
-							let headColor = getComputedStyle(
-							document.documentElement,
-							).getPropertyValue(`--${arcEntry.color}`);
-							headElem.style.stroke = headColor;
-							headElem.style.strokeWidth = arcSize;
-				
-							let headLength = headElem.getTotalLength();
-							headElem.style.strokeDasharray = headLength;
-							headElem.style.strokeDashoffset = headLength;
-							headElem.style.transition = "none";
-				
-							headElem.getBoundingClientRect();
-				
-							headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-				
-							setTimeout(() => {
-							headElem.style.strokeDashoffset = "0";
-							}, 0);
-						}, 1000);
-						});
-					}, delay);
-				
-					delay += 500;
-					});
-					console.log("-------------------------------------------");
-					console.log("importantMiddleNodes", importantMiddleNodes);
-					console.log("evidenceNodeLabels", evidenceNodeLabels);
-					console.log("targetNodeLabel", targetNodeLabel);
-					let mergedSetNodes = new Set([
-					...importantMiddleNodes,
-					...evidenceNodeLabels,
-					targetNodeLabel,
-					]);
-					console.log("mergedSetNodes", mergedSetNodes);
-					console.log("importantArcs", importantArcs);
-				
+							let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+							let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
+
+							let combinedElems = Array.from(influeceArcBodyElems).map(
+								(bodyElem, index) => {
+									return {
+										body: bodyElem,
+										head: influeceArcHeadElems[index],
+									};
+								}
+							);
+
+							combinedElems.forEach((pair, index) => {
+								let bodyElem = pair.body;
+								let headElem = pair.head;
+
+								let bodyColor = getComputedStyle(
+									document.documentElement
+								).getPropertyValue(`--${arcEntry.color}`);
+								bodyElem.style.stroke = bodyColor;
+								bodyElem.style.strokeWidth = arcSize;
+
+								let bodyLength = bodyElem.getTotalLength();
+								bodyElem.style.strokeDasharray = bodyLength;
+								bodyElem.style.strokeDashoffset = bodyLength;
+								bodyElem.style.transition = "none";
+
+								bodyElem.getBoundingClientRect();
+
+								bodyElem.style.transition =
+									"stroke-dashoffset 1s ease-in-out";
+								
+								bodyElem.style.strokeDashoffset = "0";
+
+								setTimeout(() => {
+									let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
+									headElem.style.stroke = headColor;
+									headElem.style.strokeWidth = arcSize;
+
+									let headLength = headElem.getTotalLength();
+									headElem.style.strokeDasharray = headLength;
+									headElem.style.strokeDashoffset = headLength;
+									headElem.style.transition = "none";
+
+									headElem.getBoundingClientRect();
+
+									headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
+
+									setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
+								}, 1000);
+							});
+						}, delay);
+
+						delay += 500;
+					}
+				);
+					console.log('-------------------------------------------')
+					console.log('importantMiddleNodes', importantMiddleNodes)	
+					console.log('evidenceNodeLabels', evidenceNodeLabels)
+					console.log('targetNodeLabel', targetNodeLabel)
+					let mergedSetNodes = new Set([...importantMiddleNodes, ...evidenceNodeLabels, targetNodeLabel])
+					console.log('mergedSetNodes', mergedSetNodes)
+					console.log('importantArcs', importantArcs)
+
 					// this.bnView.querySelectorAll(`div.node`).forEach(node => {
 					// 	let nodeName = node.getAttribute('data-name')
 					// 	if (!mergedSetNodes.has(nodeName)) {
 					// 		node.style.opacity = 0.5
 					// }})
-				
+					
 					// importantArcs.forEach((arcEntry) => {
-					//   console.log("arcEntry:", arcEntry);
-					//   let arc = document.querySelector(
-					//     `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-					//   );
-					// 	// console.log('arcEntry[child]', arcEntry.child)
-					// 	// console.log('arcEntry[parent]', arcEntry.parent)
-				
+          //   console.log("arcEntry:", arcEntry);
+          //   let arc = document.querySelector(
+          //     `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+          //   );
+					// 	// console.log('arcEntry[child]', arcEntry.child)						
+					// 	// console.log('arcEntry[parent]', arcEntry.parent)													
+
 					// 	// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 					// 	// we know the first child is the colour arc
 					// 	// coloring order of arrows
 					// 	setTimeout(() => {
 					// 		let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
 					// 		let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-				
+
 					// 		let combinedElems = Array.from(influeceArcBodyElems).map(
 					// 			(bodyElem, index) => {
 					// 				return {
@@ -853,51 +840,51 @@ class BnDetail {
 					// 				};
 					// 			}
 					// 		);
-				
+
 					// 		combinedElems.forEach((pair, _) => {
 					// 			let bodyElem = pair.body;
 					// 			let headElem = pair.head;
-				
+
 					// 			let bodyColor = getComputedStyle(
 					// 				document.documentElement
 					// 			).getPropertyValue(`--${arcEntry.color}`);
 					// 			bodyElem.style.stroke = bodyColor;
 					// 			bodyElem.style.strokeWidth = arcSize;
-				
+
 					// 			let bodyLength = bodyElem.getTotalLength();
 					// 			bodyElem.style.strokeDasharray = bodyLength;
 					// 			bodyElem.style.strokeDashoffset = bodyLength;
 					// 			bodyElem.style.transition = "none";
-				
+
 					// 			bodyElem.getBoundingClientRect();
-				
+
 					// 			bodyElem.style.transition =
 					// 				"stroke-dashoffset 1s ease-in-out";
-				
+								
 					// 			bodyElem.style.strokeDashoffset = "0";
-				
+
 					// 			setTimeout(() => {
 					// 				let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
 					// 				headElem.style.stroke = headColor;
 					// 				headElem.style.strokeWidth = arcSize;
-				
+
 					// 				let headLength = headElem.getTotalLength();
 					// 				headElem.style.strokeDasharray = headLength;
 					// 				headElem.style.strokeDashoffset = headLength;
 					// 				headElem.style.transition = "none";
-				
+
 					// 				headElem.getBoundingClientRect();
-				
+
 					// 				headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-				
+
 					// 				setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
 					// 			}, 1000);
 					// 		});
 					// 	}, delay);
-				
+
 					// 	delay += 500;
 					// });
-				}
+        }
 			}
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];
@@ -1113,8 +1100,7 @@ module.exports = {
 						for (let nodeName of nodeNames) {
 							if (role == 'cause') {
 								let orig = net.node(nodeName).cpt1d().slice();
-								// console.log('---------------------------- Cause role ----------------------------')
-								console.log('orig', orig);
+								console.log(orig);
 								backupCpts[nodeName] = orig;
 								let numStates = net.node(nodeName).states().length;
 								net.node(nodeName).cpt1d(Array.from({length: orig.length}, _=> 1/numStates));
@@ -1133,7 +1119,6 @@ module.exports = {
 					let evidence = {};
 					if (req.query.evidence) {
 						evidence = JSON.parse(req.query.evidence);
-						// console.log('evidence:', evidence)
 					}
 
 					// Initialize 'selectedStates' variable
@@ -1141,7 +1126,10 @@ module.exports = {
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
 					}
+
 					
+
+
 					const Contribute_DESCRIPTIONS = {
 						"-3": "greatly reduces",
 						"-2": "moderately reduces",
@@ -1151,6 +1139,7 @@ module.exports = {
 						"2": "moderately increases",
 						"3": "greatly increases"
 					};
+
 
 					function mapInfluencePercentageToScale(influencePercentage) {
 						const absPercentage = Math.abs(influencePercentage);
@@ -1248,22 +1237,12 @@ module.exports = {
 						console.log("Cleared all evidence");
 					
 						// Set evidence for all nodes in the path except the first one (baseline scenario)
-						for (let i = 1; i < path.length; i++) {
+						for (let i = 1; i < path.length - 1; i++) {
 							let nodeName = path[i];
 							let nodeStateIndex = evidence[nodeName];
 							if (nodeStateIndex !== undefined) {
 								tempNet.node(nodeName).finding(Number(nodeStateIndex));
 								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
-							}
-						}
-					
-						// Also set evidence for all neighbors of the first node in the path
-						let firstNodeName = path[0];
-						let neighbors = getNeighbors(firstNodeName, relationships);
-						for (let neighbor of neighbors) {
-							if (neighbor !== path[1] && evidence.hasOwnProperty(neighbor)) {
-								tempNet.node(neighbor).finding(Number(evidence[neighbor]));
-								console.log(`Set neighbor node ${neighbor} to state ${evidence[neighbor]}`);
 							}
 						}
 					
@@ -1273,6 +1252,7 @@ module.exports = {
 						console.log(`Baseline belief: ${baselineBelief}`);
 					
 						// Set the state for the first node in the path
+						let firstNodeName = path[0];
 						let firstNodeStateIndex = evidence[firstNodeName];
 						if (firstNodeStateIndex === undefined) {
 							console.error(`State index for node ${firstNodeName} is undefined`);
@@ -1289,8 +1269,8 @@ module.exports = {
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief) ;
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
+							influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) / ${baselineBelief} = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
 							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
@@ -1298,19 +1278,6 @@ module.exports = {
 					
 						// Return the influence percentage
 						return influencePercentage;
-					}
-					
-					// Helper function to get all neighbors of a node
-					function getNeighbors(node, relationships) {
-						const neighbors = [];
-						for (let rel of relationships) {
-							if (rel.from === node) {
-								neighbors.push(rel.to);
-							} else if (rel.to === node) {
-								neighbors.push(rel.from);
-							}
-						}
-						return neighbors;
 					}
 					
 					function calculatePathContribution(path) {
@@ -1323,6 +1290,8 @@ module.exports = {
 						return scale;
 					}
 		
+					
+
 					// Build the undirectedGraph
 					function buildUndirectedGraph(relationships) {
 						const graph = {};
@@ -1336,24 +1305,23 @@ module.exports = {
 							graph[rel.from].push(rel.to);
 							graph[rel.to].push(rel.from); 
 						});
-						console.log('graph:', graph)
 						return graph;
 					}
 
-					// function filterShortestPaths(paths) {
-					// 	const filteredPaths = [];
-					// 	const visitedNodes = new Set();
+					function filterShortestPaths(paths) {
+						const filteredPaths = [];
+						const visitedNodes = new Set();
 					
-					// 	paths.forEach(path => {
-					// 		const toNode = path[path.length - 1];
-					// 		if (!visitedNodes.has(toNode)) {
-					// 			filteredPaths.push(path);
-					// 			visitedNodes.add(toNode);
-					// 		}
-					// 	});
+						paths.forEach(path => {
+							const toNode = path[path.length - 1];
+							if (!visitedNodes.has(toNode)) {
+								filteredPaths.push(path);
+								visitedNodes.add(toNode);
+							}
+						});
 					
-					// 	return filteredPaths;
-					// }
+						return filteredPaths;
+					}
 					
 
 					function findAllPaths(graph, startNode, endNode) {
@@ -1379,7 +1347,6 @@ module.exports = {
 						}
 					
 						dfs(startNode, endNode, [], new Set());
-						console.log('allPaths:', allPaths)
 					
 						return allPaths;
 					}
@@ -1402,57 +1369,20 @@ module.exports = {
 					}
 					
 					function isActivePath(path, relationships, evidence) {
-						// Helper function to check if a node is a collider
-						function isCollider(node, prevNode, nextNode) {
-							const incomingToNode = relationships.filter(rel => rel.to === node);
-							return incomingToNode.some(rel => rel.from === prevNode) && incomingToNode.some(rel => rel.from === nextNode);
-						}
-					
-						// Helper function to get all descendants of a node
-						function getDescendants(node) {
-							const descendants = [];
-							const stack = [node];
-					
-							while (stack.length > 0) {
-								const current = stack.pop();
-								const children = relationships.filter(rel => rel.from === current).map(rel => rel.to);
-					
-								for (const child of children) {
-									if (!descendants.includes(child)) {
-										descendants.push(child);
-										stack.push(child);
-									}
-								}
-							}
-					
-							return descendants;
-						}
-					
-						// Helper function to check if a node has a descendant in the evidence
-						function hasDescendantInEvidence(node) {
-							const descendants = getDescendants(node);
-							return descendants.some(descendant => evidence.hasOwnProperty(descendant));
+						// Helper function to find the relationship between two nodes
+						function findRelationship(from, to) {
+							return relationships.find(rel => rel.from === from && rel.to === to);
 						}
 					
 						// Check the path step by step, excluding the start and end nodes
 						for (let i = 1; i < path.length - 1; i++) {
 							const current = path[i];
-							const prevNode = path[i - 1];
-							const nextNode = path[i + 1];
-					
-							if (isCollider(current, prevNode, nextNode)) {
-								// If the current node is a collider, it must be in the evidence or have a descendant in the evidence
-								if (!evidence.hasOwnProperty(current) && !hasDescendantInEvidence(current)) {
-									return false;
-								}
-							} else {
-								// If the current node is not a collider, it must not be in the evidence
-								if (evidence.hasOwnProperty(current)) {
-									return false;
-								}
+							if (!evidence.hasOwnProperty(current)) {
+								return false;
 							}
 						}
 					
+						
 						return true;
 					}
 					
@@ -1472,7 +1402,8 @@ module.exports = {
 						baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
 					});
 
-					let relationships = [];					
+					let relationships = [];
+					
 
 					net.nodes().forEach(node => {
 						// Get all parents of the node
@@ -1560,7 +1491,6 @@ module.exports = {
 						netWithAllEvidence.update();
 						const baselineBelief = netWithAllEvidence.node(targetNodeName).beliefs();
 						const baselineProb = baselineBelief[targetStateIndex];
-						console.log('baselineProb:', baselineProb)
 
 						let sentences = [];
 						let totalInfluencePercentage = 0; 
@@ -1588,16 +1518,12 @@ module.exports = {
 							
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
-							console.log('influenceData:', influenceData)
 						
 							// Calculate the new probability of the selected target state and determine the influence percentage.
 							let newProb = newBelief[targetStateIndex];
-							console.log('newProb:', newProb)
 							let influencePercentage = (baselineProb - newProb) / baselineProb;
 							influenceData.influencePercentage = influencePercentage;
-							console.log('influenceData after:', influenceData)
 							totalInfluencePercentage += influencePercentage;
-							console.log('influencePercentage:', influencePercentage)
 						
 							// Map the influence percentage to a descriptive phrase (e.g., "slightly increases", "greatly reduces").
 							let scale = mapInfluencePercentageToScale(influencePercentage);
@@ -1608,10 +1534,10 @@ module.exports = {
 						
 							// filterActivePaths
 							let ActivePaths = filterActivePaths(allPaths,relationships,evidence);
-							// ActivePaths = filterShortestPaths(ActivePaths);
+							ActivePaths = filterShortestPaths(ActivePaths);
 						
 							const nonActiveNodes = Object.keys(evidence);
-							console.log("ActivePaths: ", ActivePaths);
+							console.log("ActivePaths", ActivePaths);
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {
@@ -1683,7 +1609,7 @@ module.exports = {
 						
 						
 						// If there are multiple sentences, we generate an overall summary sentence.
-						if (sentences.length > 1) {
+						
 							let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 							const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 							let node = netWithAllEvidence.node(targetNodeName);
@@ -1692,21 +1618,25 @@ module.exports = {
 							const targetNodeAttribute = stateNames[targetStateIndex];
 						
 							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							let overallSentence = `
-							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
-									combined
-									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
-									the probability that 
-									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
-									is 
-									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
+							if (sentences.length > 1) {
+								overallSentence = `
+								${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
+								combined
+								<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+								the probability that 
+								<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
+								is 
+								<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
 								`;
+							} else {
+								overallSentence = start;			
+							}
 						
 							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
 							bn.influences['overall'] = {
 								explanation: explanation
 							};
-						}
+						
 						
 
 						// calculate arc importances
@@ -1742,10 +1672,9 @@ module.exports = {
 									entry.targetBelief[targetNodeName] = netWithnewCPT.node(targetNodeName).beliefs()
 								})
 								
-								arcs.push(entry)								
+								arcs.push(entry)
 							})
 						})
-						console.log('arcs', arcs)
 						bn.arcInfluence = arcs;
 
 						return bn;
