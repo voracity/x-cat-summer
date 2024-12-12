@@ -20,69 +20,6 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
-function generateDetailContent(nonActiveNodeName, targetNodeName, allPaths, edgeMap, description, getAttribute) {
-    let detailSentences = [];
-    const directPaths = allPaths.filter((path) => path.length === 2);
-    const indirectPaths = allPaths.filter((path) => path.length > 2);
-
-    // Mapping for contribution descriptions
-    const Contribute_DESCRIPTIONS = {
-        "-3": "greatly reduces",
-        "-2": "moderately reduces",
-        "-1": "slightly reduces",
-        "0": "barely changes",
-        "1": "slightly increases",
-        "2": "moderately increases",
-        "3": "greatly increases"
-    };
-
-    // Header with consistent styling
-    let detailHeader = `<div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-        Detail: How finding out <span style="font-weight: bold;">${nonActiveNodeName}</span> contributes:
-    </div>`;
-
-	detailSentences.push(
-        `<span style="font-size:16px;">Finding out <strong>${nonActiveNodeName}</strong> contributes due to the following connections:</span>`
-    );
-
-    // Direct paths
-    if (directPaths.length > 0) {
-        directPaths.forEach((path) => {
-            const contributionScale = edgeMap[`${path[0]}->${path[1]}`];
-            const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale.toString()] || "has no significant effect on";
-
-            detailSentences.push(
-                `<div style="font-size: 18px; margin-left: 20px;"><br>• By direct connection, it <span style="font-weight: bold;">${contributionPhrase}</span> the probability of <span style="font-weight: bold;">${path[1]}</span>.</div><br>`
-            );
-        });
-    }
-
-    // Indirect paths
-    if (indirectPaths.length > 0) {
-        indirectPaths.forEach((path) => {
-            const fromNode = path[0];
-            const toNode = path[path.length - 1];
-            const intermediateNodes = path
-                .slice(1, -1)
-                .map((node) => `<span style="font-weight: bold;">${node}</span> is <span style="font-style: italic;">${getAttribute(node)}</span>`)
-                .join(", ");
-
-            if (intermediateNodes) {
-                detailSentences.push(
-                    `<div style="font-size: 18px; margin-left: 20px;">• It <span style="font-weight: bold;">${description}</span> the probability that ${intermediateNodes}, which in turn <span style="font-weight: bold;">${description}</span> the probability of <span style="font-weight: bold;">${toNode}</span>.</div><br>`
-                );
-            }
-        });
-    }
-
-	// Overall conclusion
-    detailSentences.push(
-        `<span style="font-size:16px;">Overall, the finding <strong>${description}</strong> the probability of <strong>${targetNodeName}</strong>.</span>`
-    );
-
-    return `<div>${detailHeader}${detailSentences.join("\n")}</div>`;
-}
-
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
 	function getRowIndex(parIndexes) {
@@ -143,6 +80,70 @@ function marginalizeParentArc(child, parentToRemove, reduce = false) {
 		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
 		return cpt;
 	}
+}
+
+function generateDetailContent(nonActiveNodeName, targetNodeName, allPaths, edgeMap, description, getAttribute) {
+    let detailSentences = [];
+    const directPaths = allPaths.filter((path) => path.length === 2);
+    const indirectPaths = allPaths.filter((path) => path.length > 2);
+
+    // Mapping for contribution descriptions
+    const Contribute_DESCRIPTIONS = {
+        "-3": "greatly reduces",
+        "-2": "moderately reduces",
+        "-1": "slightly reduces",
+        "0": "barely changes",
+        "1": "slightly increases",
+        "2": "moderately increases",
+        "3": "greatly increases"
+    };
+
+    // Header with consistent styling
+    let detailHeader = `<div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
+        Detail: How finding out <span style="font-weight: bold;">${nonActiveNodeName}</span> contributes:
+    </div>`;
+
+	detailSentences.push(
+        `<span style="font-size:16px;">Finding out <strong>${nonActiveNodeName}</strong> contributes due to the following connections:</span>`
+    );
+
+    // Direct paths
+    if (directPaths.length > 0) {
+        directPaths.forEach((path) => {
+            const contributionScale = edgeMap[`${path[0]}->${path[1]}`];
+            const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale.toString()] || "has no significant effect on";
+
+            detailSentences.push(
+				
+                `<div style="font-size: 18px; margin-left: 20px;"><br>• By direct connection, it <span style="font-weight: bold;">${contributionPhrase}</span> the probability of <span style="font-weight: bold;">${path[1]}</span>.</div><br>`
+            );
+        });
+    }
+
+    // Indirect paths
+    if (indirectPaths.length > 0) {
+        indirectPaths.forEach((path) => {
+            const fromNode = path[0];
+            const toNode = path[path.length - 1];
+            const intermediateNodes = path
+                .slice(1, -1)
+                .map((node) => `<span style="font-weight: bold;">${node}</span> is <span style="font-style: italic;">${getAttribute(node)}</span>`)
+                .join(", ");
+
+            if (intermediateNodes) {
+                detailSentences.push(
+                    `<div style="font-size: 18px; margin-left: 20px;">• It <span style="font-weight: bold;">${description}</span> the probability that ${intermediateNodes}, which in turn <span style="font-weight: bold;">${description}</span> the probability of <span style="font-weight: bold;">${toNode}</span>.</div><br>`
+                );
+            }
+        });
+    }
+
+	// Overall conclusion
+    detailSentences.push(
+        `<span style="font-size:16px;">Overall, the finding <strong>${description}</strong> the probability of <strong>${targetNodeName}</strong>.</span>`
+    );
+
+    return `<div>${detailHeader}${detailSentences.join("\n")}</div>`;
 }
 
 function pick(obj, keys) {
@@ -503,7 +504,6 @@ class BnDetail {
 				influenceList.innerHTML = detailHtml;
 			}
 		});
-		
 	}
 	
 	toHtml() { return this.root.outerHTML; }
@@ -674,9 +674,8 @@ class BnDetail {
 				if (nodeName === 'overall') continue; // Skip the 'overall' key as it's already displayed
 		
 				let explanation = influenceData.explanation;
-				let detail = influenceData.detail;
-				let listItem = n('p', html(`${explanation}`)); // Combine explanation and detail
-        		influenceListEl.appendChild(listItem);
+				let listItem = n('p',html(explanation));
+				influenceListEl.appendChild(listItem);
 			}
 		}
 		// Update all evidence nodes and show the influence (as a bar overlayed of the evidence state)
@@ -1315,12 +1314,22 @@ module.exports = {
 						console.log("Cleared all evidence");
 					
 						// Set evidence for all nodes in the path except the first one (baseline scenario)
-						for (let i = 1; i < path.length - 1; i++) {
+						for (let i = 1; i < path.length; i++) {
 							let nodeName = path[i];
 							let nodeStateIndex = evidence[nodeName];
 							if (nodeStateIndex !== undefined) {
 								tempNet.node(nodeName).finding(Number(nodeStateIndex));
 								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
+							}
+						}
+					
+						// Also set evidence for all neighbors of the first node in the path
+						let firstNodeName = path[0];
+						let neighbors = getNeighbors(firstNodeName, relationships);
+						for (let neighbor of neighbors) {
+							if (neighbor !== path[1] && evidence.hasOwnProperty(neighbor)) {
+								tempNet.node(neighbor).finding(Number(evidence[neighbor]));
+								console.log(`Set neighbor node ${neighbor} to state ${evidence[neighbor]}`);
 							}
 						}
 					
@@ -1330,7 +1339,6 @@ module.exports = {
 						console.log(`Baseline belief: ${baselineBelief}`);
 					
 						// Set the state for the first node in the path
-						let firstNodeName = path[0];
 						let firstNodeStateIndex = evidence[firstNodeName];
 						if (firstNodeStateIndex === undefined) {
 							console.error(`State index for node ${firstNodeName} is undefined`);
@@ -1347,7 +1355,7 @@ module.exports = {
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief);
+							influencePercentage = (newBelief - baselineBelief) ;
 							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
@@ -1356,6 +1364,19 @@ module.exports = {
 					
 						// Return the influence percentage
 						return influencePercentage;
+					}
+					
+					// Helper function to get all neighbors of a node
+					function getNeighbors(node, relationships) {
+						const neighbors = [];
+						for (let rel of relationships) {
+							if (rel.from === node) {
+								neighbors.push(rel.to);
+							} else if (rel.to === node) {
+								neighbors.push(rel.from);
+							}
+						}
+						return neighbors;
 					}
 					
 					function calculatePathContribution(path) {
@@ -1384,20 +1405,20 @@ module.exports = {
 						return graph;
 					}
 
-					function filterShortestPaths(paths) {
-						const filteredPaths = [];
-						const visitedNodes = new Set();
+					// function filterShortestPaths(paths) {
+					// 	const filteredPaths = [];
+					// 	const visitedNodes = new Set();
 					
-						paths.forEach(path => {
-							const toNode = path[path.length - 1];
-							if (!visitedNodes.has(toNode)) {
-								filteredPaths.push(path);
-								visitedNodes.add(toNode);
-							}
-						});
+					// 	paths.forEach(path => {
+					// 		const toNode = path[path.length - 1];
+					// 		if (!visitedNodes.has(toNode)) {
+					// 			filteredPaths.push(path);
+					// 			visitedNodes.add(toNode);
+					// 		}
+					// 	});
 					
-						return filteredPaths;
-					}
+					// 	return filteredPaths;
+					// }
 					
 
 					function findAllPaths(graph, startNode, endNode) {
@@ -1445,20 +1466,57 @@ module.exports = {
 					}
 					
 					function isActivePath(path, relationships, evidence) {
-						// Helper function to find the relationship between two nodes
-						function findRelationship(from, to) {
-							return relationships.find(rel => rel.from === from && rel.to === to);
+						// Helper function to check if a node is a collider
+						function isCollider(node, prevNode, nextNode) {
+							const incomingToNode = relationships.filter(rel => rel.to === node);
+							return incomingToNode.some(rel => rel.from === prevNode) && incomingToNode.some(rel => rel.from === nextNode);
+						}
+					
+						// Helper function to get all descendants of a node
+						function getDescendants(node) {
+							const descendants = [];
+							const stack = [node];
+					
+							while (stack.length > 0) {
+								const current = stack.pop();
+								const children = relationships.filter(rel => rel.from === current).map(rel => rel.to);
+					
+								for (const child of children) {
+									if (!descendants.includes(child)) {
+										descendants.push(child);
+										stack.push(child);
+									}
+								}
+							}
+					
+							return descendants;
+						}
+					
+						// Helper function to check if a node has a descendant in the evidence
+						function hasDescendantInEvidence(node) {
+							const descendants = getDescendants(node);
+							return descendants.some(descendant => evidence.hasOwnProperty(descendant));
 						}
 					
 						// Check the path step by step, excluding the start and end nodes
 						for (let i = 1; i < path.length - 1; i++) {
 							const current = path[i];
-							if (!evidence.hasOwnProperty(current)) {
-								return false;
+							const prevNode = path[i - 1];
+							const nextNode = path[i + 1];
+					
+							if (isCollider(current, prevNode, nextNode)) {
+								// If the current node is a collider, it must be in the evidence or have a descendant in the evidence
+								if (!evidence.hasOwnProperty(current) && !hasDescendantInEvidence(current)) {
+									return false;
+								}
+							} else {
+								// If the current node is not a collider, it must not be in the evidence
+								if (evidence.hasOwnProperty(current)) {
+									return false;
+								}
 							}
 						}
 					
-						
 						return true;
 					}
 					
@@ -1610,7 +1668,7 @@ module.exports = {
 						
 							// filterActivePaths
 							let ActivePaths = filterActivePaths(allPaths,relationships,evidence);
-							ActivePaths = filterShortestPaths(ActivePaths);
+							// ActivePaths = filterShortestPaths(ActivePaths);
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths", ActivePaths);
