@@ -1259,6 +1259,7 @@ module.exports = {
 						// Get the baseline belief
 						tempNet.update();
 						let baselineBelief = targetNode.beliefs()[targetStateIndex];
+						baselineBelief = parseFloat(baselineBelief.toFixed(2)); // 保留两位小数
 						console.log(`Baseline belief: ${baselineBelief}`);
 					
 						// Set the state for the first node in the path
@@ -1273,14 +1274,15 @@ module.exports = {
 						// Update the network and get the new belief
 						tempNet.update();
 						let newBelief = targetNode.beliefs()[targetStateIndex];
+						newBelief = parseFloat(newBelief.toFixed(2)); // 保留两位小数
 						console.log(`After setting ${firstNodeName}, new belief for ${targetNodeName} is ${newBelief}`);
 					
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief) ;
-							influencePercentage = parseFloat(influencePercentage.toFixed(2)); 
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
+							influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+							influencePercentage = parseFloat(influencePercentage.toFixed(2)); // 保留两位小数
+							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) / ${baselineBelief} = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
 							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);

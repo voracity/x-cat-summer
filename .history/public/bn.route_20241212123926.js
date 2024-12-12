@@ -1237,22 +1237,12 @@ module.exports = {
 						console.log("Cleared all evidence");
 					
 						// Set evidence for all nodes in the path except the first one (baseline scenario)
-						for (let i = 1; i < path.length; i++) {
+						for (let i = 1; i < path.length - 1; i++) {
 							let nodeName = path[i];
 							let nodeStateIndex = evidence[nodeName];
 							if (nodeStateIndex !== undefined) {
 								tempNet.node(nodeName).finding(Number(nodeStateIndex));
 								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
-							}
-						}
-					
-						// Also set evidence for all neighbors of the first node in the path
-						let firstNodeName = path[0];
-						let neighbors = getNeighbors(firstNodeName, relationships);
-						for (let neighbor of neighbors) {
-							if (neighbor !== path[1] && evidence.hasOwnProperty(neighbor)) {
-								tempNet.node(neighbor).finding(Number(evidence[neighbor]));
-								console.log(`Set neighbor node ${neighbor} to state ${evidence[neighbor]}`);
 							}
 						}
 					
@@ -1262,6 +1252,7 @@ module.exports = {
 						console.log(`Baseline belief: ${baselineBelief}`);
 					
 						// Set the state for the first node in the path
+						let firstNodeName = path[0];
 						let firstNodeStateIndex = evidence[firstNodeName];
 						if (firstNodeStateIndex === undefined) {
 							console.error(`State index for node ${firstNodeName} is undefined`);
@@ -1278,8 +1269,7 @@ module.exports = {
 						// Calculate the influence percentage
 						let influencePercentage;
 						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief) ;
-							influencePercentage = parseFloat(influencePercentage.toFixed(2)); 
+							influencePercentage = (newBelief - baselineBelief);
 							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
 						} else {
 							influencePercentage = newBelief !== 0 ? Infinity : 0;
@@ -1288,19 +1278,6 @@ module.exports = {
 					
 						// Return the influence percentage
 						return influencePercentage;
-					}
-					
-					// Helper function to get all neighbors of a node
-					function getNeighbors(node, relationships) {
-						const neighbors = [];
-						for (let rel of relationships) {
-							if (rel.from === node) {
-								neighbors.push(rel.to);
-							} else if (rel.to === node) {
-								neighbors.push(rel.from);
-							}
-						}
-						return neighbors;
 					}
 					
 					function calculatePathContribution(path) {
@@ -1329,20 +1306,20 @@ module.exports = {
 						return graph;
 					}
 
-					// function filterShortestPaths(paths) {
-					// 	const filteredPaths = [];
-					// 	const visitedNodes = new Set();
+					function filterShortestPaths(paths) {
+						const filteredPaths = [];
+						const visitedNodes = new Set();
 					
-					// 	paths.forEach(path => {
-					// 		const toNode = path[path.length - 1];
-					// 		if (!visitedNodes.has(toNode)) {
-					// 			filteredPaths.push(path);
-					// 			visitedNodes.add(toNode);
-					// 		}
-					// 	});
+						paths.forEach(path => {
+							const toNode = path[path.length - 1];
+							if (!visitedNodes.has(toNode)) {
+								filteredPaths.push(path);
+								visitedNodes.add(toNode);
+							}
+						});
 					
-					// 	return filteredPaths;
-					// }
+						return filteredPaths;
+					}
 					
 
 					function findAllPaths(graph, startNode, endNode) {
@@ -1447,7 +1424,7 @@ module.exports = {
 					function filterActivePaths(allPaths, relationships, evidence) {
 						return allPaths.filter(path => isActivePath(path, relationships, evidence));
 					}
-
+					
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
@@ -1592,7 +1569,7 @@ module.exports = {
 						
 							// filterActivePaths
 							let ActivePaths = filterActivePaths(allPaths,relationships,evidence);
-							// ActivePaths = filterShortestPaths(ActivePaths);
+							ActivePaths = filterShortestPaths(ActivePaths);
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths", ActivePaths);

@@ -1207,101 +1207,103 @@ module.exports = {
 					}
 
 					function calculateIndirectInfluence(path) {
-						console.log(`\nCalculating influence along path ${path.join(' -> ')}`);
-						
-						// Create a temporary network instance to avoid altering the main network
-						let tempNet = new Net(bnKey);
-						tempNet.compile();
-					
-						// Check if all nodes in the path exist
-						for (let nodeName of path) {
-							if (!tempNet.node(nodeName)) {
-								console.error(`Node ${nodeName} does not exist`);
-								return 0;
-							}
-						}
-					
-						// Get the target node and its state index
-						let targetNodeName = path[path.length - 1];
-						let targetNode = tempNet.node(targetNodeName);
-						let targetStateIndexArray = selectedStates[targetNodeName];
-						if (!targetStateIndexArray || targetStateIndexArray.length === 0) {
-							console.error(`No selected states for target node ${targetNodeName}`);
-							return 0;
-						}
-						let targetStateIndex = targetStateIndexArray[0];
-						console.log(`Target state index for node ${targetNodeName} is ${targetStateIndex}`);
-					
-						// Clear all evidence
-						tempNet.retractFindings();
-						console.log("Cleared all evidence");
-					
-						// Set evidence for all nodes in the path except the first one (baseline scenario)
-						for (let i = 1; i < path.length; i++) {
-							let nodeName = path[i];
-							let nodeStateIndex = evidence[nodeName];
-							if (nodeStateIndex !== undefined) {
-								tempNet.node(nodeName).finding(Number(nodeStateIndex));
-								console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
-							}
-						}
-					
-						// Also set evidence for all neighbors of the first node in the path
-						let firstNodeName = path[0];
-						let neighbors = getNeighbors(firstNodeName, relationships);
-						for (let neighbor of neighbors) {
-							if (neighbor !== path[1] && evidence.hasOwnProperty(neighbor)) {
-								tempNet.node(neighbor).finding(Number(evidence[neighbor]));
-								console.log(`Set neighbor node ${neighbor} to state ${evidence[neighbor]}`);
-							}
-						}
-					
-						// Get the baseline belief
-						tempNet.update();
-						let baselineBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`Baseline belief: ${baselineBelief}`);
-					
-						// Set the state for the first node in the path
-						let firstNodeStateIndex = evidence[firstNodeName];
-						if (firstNodeStateIndex === undefined) {
-							console.error(`State index for node ${firstNodeName} is undefined`);
-							return 0;
-						}
-						tempNet.node(firstNodeName).finding(Number(firstNodeStateIndex));
-						console.log(`Set node ${firstNodeName} to state ${firstNodeStateIndex}`);
-					
-						// Update the network and get the new belief
-						tempNet.update();
-						let newBelief = targetNode.beliefs()[targetStateIndex];
-						console.log(`After setting ${firstNodeName}, new belief for ${targetNodeName} is ${newBelief}`);
-					
-						// Calculate the influence percentage
-						let influencePercentage;
-						if (baselineBelief !== 0) {
-							influencePercentage = (newBelief - baselineBelief) ;
-							influencePercentage = parseFloat(influencePercentage.toFixed(2)); 
-							console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) = ${influencePercentage}`);
-						} else {
-							influencePercentage = newBelief !== 0 ? Infinity : 0;
-							console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
-						}
-					
-						// Return the influence percentage
-						return influencePercentage;
-					}
-					
-					// Helper function to get all neighbors of a node
-					function getNeighbors(node, relationships) {
-						const neighbors = [];
-						for (let rel of relationships) {
-							if (rel.from === node) {
-								neighbors.push(rel.to);
-							} else if (rel.to === node) {
-								neighbors.push(rel.from);
-							}
-						}
-						return neighbors;
-					}
+    console.log(`\nCalculating influence along path ${path.join(' -> ')}`);
+    
+    // Create a temporary network instance to avoid altering the main network
+    let tempNet = new Net(bnKey);
+    tempNet.compile();
+
+    // Check if all nodes in the path exist
+    for (let nodeName of path) {
+        if (!tempNet.node(nodeName)) {
+            console.error(`Node ${nodeName} does not exist`);
+            return 0;
+        }
+    }
+
+    // Get the target node and its state index
+    let targetNodeName = path[path.length - 1];
+    let targetNode = tempNet.node(targetNodeName);
+    let targetStateIndexArray = selectedStates[targetNodeName];
+    if (!targetStateIndexArray || targetStateIndexArray.length === 0) {
+        console.error(`No selected states for target node ${targetNodeName}`);
+        return 0;
+    }
+    let targetStateIndex = targetStateIndexArray[0];
+    console.log(`Target state index for node ${targetNodeName} is ${targetStateIndex}`);
+
+    // Clear all evidence
+    tempNet.retractFindings();
+    console.log("Cleared all evidence");
+
+    // Set evidence for all nodes in the path except the first one (baseline scenario)
+    for (let i = 1; i < path.length; i++) {
+        let nodeName = path[i];
+        let nodeStateIndex = evidence[nodeName];
+        if (nodeStateIndex !== undefined) {
+            tempNet.node(nodeName).finding(Number(nodeStateIndex));
+            console.log(`In baseline scenario, set node ${nodeName} to state ${nodeStateIndex}`);
+        }
+    }
+
+    // Also set evidence for all neighbors of the first node in the path
+    let firstNodeName = path[0];
+    let neighbors = getNeighbors(firstNodeName, relationships);
+    for (let neighbor of neighbors) {
+        if (neighbor !== path[1] && evidence.hasOwnProperty(neighbor)) {
+            tempNet.node(neighbor).finding(Number(evidence[neighbor]));
+            console.log(`Set neighbor node ${neighbor} to state ${evidence[neighbor]}`);
+        }
+    }
+
+    // Get the baseline belief
+    tempNet.update();
+    let baselineBelief = targetNode.beliefs()[targetStateIndex];
+    baselineBelief = parseFloat(baselineBelief.toFixed(2)); // 保留两位小数
+    console.log(`Baseline belief: ${baselineBelief}`);
+
+    // Set the state for the first node in the path
+    let firstNodeStateIndex = evidence[firstNodeName];
+    if (firstNodeStateIndex === undefined) {
+        console.error(`State index for node ${firstNodeName} is undefined`);
+        return 0;
+    }
+    tempNet.node(firstNodeName).finding(Number(firstNodeStateIndex));
+    console.log(`Set node ${firstNodeName} to state ${firstNodeStateIndex}`);
+
+    // Update the network and get the new belief
+    tempNet.update();
+    let newBelief = targetNode.beliefs()[targetStateIndex];
+    newBelief = parseFloat(newBelief.toFixed(2)); // 保留两位小数
+    console.log(`After setting ${firstNodeName}, new belief for ${targetNodeName} is ${newBelief}`);
+
+    // Calculate the influence percentage
+    let influencePercentage;
+    if (baselineBelief !== 0) {
+        influencePercentage = (newBelief - baselineBelief) / baselineBelief;
+        influencePercentage = parseFloat(influencePercentage.toFixed(2)); // 保留两位小数
+        console.log(`Influence percentage: (${newBelief} - ${baselineBelief}) / ${baselineBelief} = ${influencePercentage}`);
+    } else {
+        influencePercentage = newBelief !== 0 ? Infinity : 0;
+        console.log(`Baseline belief is 0, influence percentage is ${influencePercentage}`);
+    }
+
+    // Return the influence percentage
+    return influencePercentage;
+}
+
+// Helper function to get all neighbors of a node
+function getNeighbors(node, relationships) {
+    const neighbors = [];
+    for (let rel of relationships) {
+        if (rel.from === node) {
+            neighbors.push(rel.to);
+        } else if (rel.to === node) {
+            neighbors.push(rel.from);
+        }
+    }
+    return neighbors;
+}
 					
 					function calculatePathContribution(path) {
 						let totalInfluence = calculateIndirectInfluence(path);
