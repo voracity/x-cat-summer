@@ -8,6 +8,7 @@ var bn = {
 	roles: {},
 	selectedStates: {},
 	beliefs: {},
+	activePaths: {},
 	ciTableEnabled: false,
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -53,6 +54,7 @@ var bn = {
 			else
 				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=beliefs&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
 			//let nodeBeliefs = {};
+			console.log('reqData:', reqData)
 			if (reqData.model) {
 				for (let node of reqData.model) {
 					this.beliefs[node.name] = node.beliefs;
@@ -61,6 +63,9 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
+					console.log('reqData.arcInfluence:', reqData.arcInfluence);
+					console.log('Object.values(reqData.activePaths:', Object.values(reqData.activePaths));
+					this.activePaths = Object.values(reqData.activePaths);
 				} else {
 					this.influences = {};
 				}
@@ -71,7 +76,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths});
 	},
 
 	guiUpdateInfoWindows() {

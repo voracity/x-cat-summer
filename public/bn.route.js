@@ -450,8 +450,12 @@ class BnDetail {
 
 	$handleUpdate(m) {
 		let barMax = 100; //px
+		console.log('---------------------------------------')
+		console.log('m:', m)
+		console.log('---------------------------------------')
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
+			console.log('m.title:', m.title)
 			if (document.body) {
 				q('h1 .text').innerHTML = m.title;
 			}
@@ -461,6 +465,7 @@ class BnDetail {
 		}
 		
 		if (m.model) {
+			console.log('m.model:', m.model)
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
 				{dataName: node.name},
@@ -700,59 +705,53 @@ class BnDetail {
 
 				})
 				// ARCS
+
 				if (m.arcInfluence) {
 					let delay = 0;
-					// console.log("arcInfluence:", m.arcInfluence);
-				
-					this.bnView.querySelectorAll(`div.node`).forEach((node) => {
-					node.style.opacity = 1;
-					});
+					// console.log("arcInfluence:", m.arcInfluence);			
 				
 					reset(m.arcInfluence, bn, this.bnView);
+
+					// console.log('---------------------------------------AAAAAAA')
+					// Fade Nodes					
+					if (m.activePaths) {
+						console.log('m.activePaths is activated: ', m.activePaths)
+						let activeNodes = new Set(m.activePaths.flat())
+						this.bnView.querySelectorAll('div.node').forEach(node => {
+							let nodeName = node.getAttribute('data-name')
+							if (!activeNodes.has(nodeName)) {
+								node.style.opacity = 0.3
+							}
+						})
+						// console.log('m.activePaths -> newSet: ', newSet)
+						// console.log('AAAAAAA---------------------------------------')
+					}
 				
 					const sortedArcInfluence = sortArcInfluenceByDiff(
-					m.arcInfluence,
-					m.nodeBeliefs,
-					this.getColor,
+						m.arcInfluence,
+						m.nodeBeliefs,
+						this.getColor,
 					);
 				
-					console.log("importantMiddleNodes", importantMiddleNodes);
-					console.log("evidenceNodeLabels", evidenceNodeLabels);
-					console.log("targetNodeLabel", targetNodeLabel);
+					// console.log("importantMiddleNodes", importantMiddleNodes);
+					// console.log("evidenceNodeLabels", evidenceNodeLabels);
+					// console.log("targetNodeLabel", targetNodeLabel);
 				
-					console.log("sortedArcInfluence:", sortedArcInfluence);
+					// console.log("sortedArcInfluence:", sortedArcInfluence);
 				
 					sortedArcInfluence.forEach((arcEntry) => {
-					console.log("arcEntry:", arcEntry);
+					// console.log("arcEntry:", arcEntry);
 					let arc = document.querySelector(
 						`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 					);
 					// console.log('arcEntry[child]', arcEntry.child)
 					// console.log('arcEntry[parent]', arcEntry.parent)
 				
-					if (
-						evidenceNodeLabels.has(arcEntry.child) &&
-						arcEntry.color != "influence-idx3" &&
-						arcEntry.child != targetNodeLabel
-					) {
-						importantMiddleNodes.add(arcEntry.parent);
-					}
-				
-					if (
-						evidenceNodeLabels.has(arcEntry.parent) &&
-						arcEntry.color != "influence-idx3" &&
-						arcEntry.parent != targetNodeLabel
-					) {
-						importantMiddleNodes.add(arcEntry.child);
-					}
-				
-					// if (importantMiddleNodes.has(arcEntry.child) && importantMiddleNodes.has(arcEntry.parent)) {
-					// 	importantArcs.add(arcEntry)
-					// }
-				
 					// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 					// we know the first child is the colour arc
 					// coloring order of arrows
+
+
 					setTimeout(() => {
 						let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
 						let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
@@ -812,17 +811,17 @@ class BnDetail {
 				
 					delay += 500;
 					});
-					console.log("-------------------------------------------");
-					console.log("importantMiddleNodes", importantMiddleNodes);
-					console.log("evidenceNodeLabels", evidenceNodeLabels);
-					console.log("targetNodeLabel", targetNodeLabel);
-					let mergedSetNodes = new Set([
-					...importantMiddleNodes,
-					...evidenceNodeLabels,
-					targetNodeLabel,
-					]);
-					console.log("mergedSetNodes", mergedSetNodes);
-					console.log("importantArcs", importantArcs);
+					// console.log("-------------------------------------------");
+					// console.log("importantMiddleNodes", importantMiddleNodes);
+					// console.log("evidenceNodeLabels", evidenceNodeLabels);
+					// console.log("targetNodeLabel", targetNodeLabel);
+					// let mergedSetNodes = new Set([
+					// ...importantMiddleNodes,
+					// ...evidenceNodeLabels,
+					// targetNodeLabel,
+					// ]);
+					// console.log("mergedSetNodes", mergedSetNodes);
+					// console.log("importantArcs", importantArcs);
 				
 					// this.bnView.querySelectorAll(`div.node`).forEach(node => {
 					// 	let nodeName = node.getAttribute('data-name')
@@ -971,8 +970,6 @@ class BnDetail {
 	}
 
 	saveSnapshot() {
-
-
 		
 		let btnOK = n("button", "OK", {type:'button', on:{click: () => {
 			// let snapshotNode = document.querySelector('.bnView .snapshots')
@@ -1379,7 +1376,7 @@ module.exports = {
 						}
 					
 						dfs(startNode, endNode, [], new Set());
-						console.log('allPaths:', allPaths)
+						console.log('allPaths:', allPaths)						
 					
 						return allPaths;
 					}
@@ -1536,6 +1533,7 @@ module.exports = {
 							return bn;
 						}
 						bn.influences = {};
+						bn.activePaths = [];
 
 
 						// Ensure only one selected target node
@@ -1604,17 +1602,19 @@ module.exports = {
 							let description = Contribute_DESCRIPTIONS[scale.toString()];
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);
+							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);						
 						
 							// filterActivePaths
-							let ActivePaths = filterActivePaths(allPaths,relationships,evidence);
-							// ActivePaths = filterShortestPaths(ActivePaths);
+							let ActivePaths = filterActivePaths(allPaths,relationships,evidence);		
+											
+							// ActivePaths = filterShortestPaths(ActivePaths);							
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths: ", ActivePaths);
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {
+								bn.activePaths.push(path)	
 								let pathScale = calculatePathContribution(path);
 								const contributionPhrase = Contribute_DESCRIPTIONS[pathScale.toString()];
 						
@@ -1679,8 +1679,7 @@ module.exports = {
 						}
 						
 						// After processing all nonActiveNodes, remove duplicates from the global sentences array.
-						sentences = [...new Set(sentences)];
-						
+						sentences = [...new Set(sentences)];						
 						
 						// If there are multiple sentences, we generate an overall summary sentence.
 						if (sentences.length > 1) {
@@ -1744,9 +1743,10 @@ module.exports = {
 								
 								arcs.push(entry)								
 							})
-						})
-						console.log('arcs', arcs)
+						})						
 						bn.arcInfluence = arcs;
+						console.log('bn.activePaths:', bn.activePaths)
+						// console.log('bn:', bn)
 
 						return bn;
 					}
