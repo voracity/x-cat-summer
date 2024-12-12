@@ -84,73 +84,119 @@ function marginalizeParentArc(child, parentToRemove, reduce = false) {
 
 function generateDetailContent(nonActiveNodeName, targetNodeName, allPaths, edgeMap, description, getAttribute) {
     let detailSentences = [];
-    const directPaths = allPaths.filter((path) => path.length === 2);
+    const directPaths = allPaths.filter(
+        (path) =>
+            path.length === 2 &&
+            ((path[0] === targetNodeName && path[1] === nonActiveNodeName) ||
+                (path[1] === targetNodeName && path[0] === nonActiveNodeName))
+    );
     const indirectPaths = allPaths.filter((path) => path.length > 2);
 
-    // Mapping for contribution descriptions
     const Contribute_DESCRIPTIONS = {
         "-3": "greatly reduces",
         "-2": "moderately reduces",
         "-1": "slightly reduces",
-        "0": "barely changes",
+        "0": "does not change",
         "1": "slightly increases",
         "2": "moderately increases",
-        "3": "greatly increases"
+        "3": "greatly increases",
     };
 
-    // Header with consistent styling
+	const Contribute_DESCRIPTIONS2 = {
+        "-3": "reduces",
+        "-2": "reduces",
+        "-1": "reduces",
+        "0": "does not change",
+        "1": "increases",
+        "2": "increases",
+        "3": "increases",
+    };
+
+	const nonActiveNodeNameState = getAttribute(nonActiveNodeName);
+
+    // Header
     let detailHeader = `<div style="font-size: 18px; font-weight: bold; margin-bottom: 10px;">
-        Detail: How finding out <span style="font-weight: bold;">${nonActiveNodeName}</span> contributes:
+        Detail: How finding out <span style="font-weight: bold;">${nonActiveNodeName} was ${nonActiveNodeNameState}</span> contributes:
     </div>`;
 
-	detailSentences.push(
-        `<span style="font-size:16px;">Finding out <strong>${nonActiveNodeName}</strong> contributes due to the following connections:</span>`
+    // Direct Connection Case (Single Connection)
+    if (directPaths.length > 0 && indirectPaths.length === 0) {
+        const path = directPaths[0]; // Pick the first direct path
+        const edgeKey1 = `${path[0]}->${path[1]}`;
+        const edgeKey2 = `${path[1]}->${path[0]}`;
+        const contributionScale = edgeMap[edgeKey1] || edgeMap[edgeKey2];
+        const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale?.toString()] || "has no significant effect on";
+
+        const isReversePath = !edgeMap[edgeKey1];
+        const findingNode = isReversePath ? path[1] : path[0];
+        const targetNode = isReversePath ? path[0] : path[1];
+        const findingNodeState = getAttribute(findingNode);
+        const targetNodeState = getAttribute(targetNode);
+
+        detailSentences.push(
+            `<span style="font-size:16px; font-weight:400;">Finding out <strong>${nonActiveNodeName}</strong> is <span style="font-style:italic;">${findingNodeState}</span> <span style="font-weight:bold;">${contributionPhrase}</span> the probability of <span style="font-style:italic;">${targetNodeState}</span> <span style="font-weight:bold;">${targetNode}</span>, by direct connection.</span>`
+        );
+
+        return `<div>${detailHeader}${detailSentences.join("\n")}</div>`;
+    }
+
+    let pathlen = directPaths.length + indirectPaths.length;
+
+    // Two Connections Case (Direct + Indirect)
+    detailSentences.push(
+        `<span style="font-size:16px; font-weight:400;">Finding out <strong>${nonActiveNodeName}</strong> contributes due to ${pathlen} connections:</span><br><br>`
     );
 
-    // Direct paths
-    if (directPaths.length > 0) {
-        directPaths.forEach((path) => {
-            const edgeKey = `${path[0]}->${path[1]}`;
-            const contributionScale = edgeMap[edgeKey];
-            const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale?.toString()] || "has no significant effect on";
-
-            // Check if the contributionScale is undefined or invalid
-            if (contributionScale === undefined) {
-                console.warn(`Warning: Contribution scale undefined for edge ${edgeKey}`);
-                return; // Skip processing this path
-            }
-
-            detailSentences.push(
-                `<div style="font-size: 18px; margin-left: 20px;"><br>• By direct connection, it <span style="font-weight: bold;">${contributionPhrase}</span> the probability of <span style="font-weight: bold;">${path[1]}</span>.</div><br>`
-            );
-        });
-    }
-
-    // Indirect paths
+    // Indirect Connection
     if (indirectPaths.length > 0) {
-        indirectPaths.forEach((path) => {
-            const fromNode = path[0];
-            const toNode = path[path.length - 1];
-            const intermediateNodes = path
-                .slice(1, -1)
-                .map((node) => `<span style="font-weight: bold;">${node}</span> is <span style="font-style: italic;">${getAttribute(node)}</span>`)
-                .join(", ");
+        const path = indirectPaths[0]; // Pick the first indirect path
+        const fromNode = path[0];
+        const toNode = path[path.length - 1];
+        const intermediateNode = path[1];
 
-            if (intermediateNodes) {
-                detailSentences.push(
-                    `<div style="font-size: 18px; margin-left: 20px;">• It <span style="font-weight: bold;">${description}</span> the probability that ${intermediateNodes}, which in turn <span style="font-weight: bold;">${description}</span> the probability of <span style="font-weight: bold;">${toNode}</span>.</div><br>`
-                );
-            }
-        });
+        // Extract contributions
+        const edgeKey1 = `${fromNode}->${intermediateNode}`;
+        const edgeKey2 = `${intermediateNode}->${toNode}`;
+        const contributionScale1 = edgeMap[edgeKey1] || edgeMap[`${intermediateNode}->${fromNode}`];
+        const contributionScale2 = edgeMap[edgeKey2] || edgeMap[`${toNode}->${intermediateNode}`];
+
+        const contributionPhrase1 = Contribute_DESCRIPTIONS2[contributionScale1?.toString()] || "has no significant effect on";
+        const contributionPhrase2 = Contribute_DESCRIPTIONS[contributionScale2?.toString()] || "has no significant effect on";
+
+        detailSentences.push(
+            `<li style="margin-left: 20px; font-size:16px; font-weight:400;">- It <span style="font-weight: bold;">${contributionPhrase1}</span> the probability that <span style="font-weight: bold;">${intermediateNode}</span> is affected, which in turn <span style="font-weight: bold;">${contributionPhrase2}</span> the probability of <span style="font-weight: bold;">${toNode}</span>.</li><br>`
+        );
     }
 
-	// Overall conclusion
+    // Direct Connection
+	if (directPaths.length > 0) {
+		const path = directPaths[0]; // Pick the first direct path
+		const edgeKey1 = `${path[0]}->${path[1]}`;
+		const edgeKey2 = `${path[1]}->${path[0]}`;
+			
+		// Fetch correct contribution scale
+		const contributionScale = edgeMap[edgeKey1] !== undefined ? edgeMap[edgeKey1] : edgeMap[edgeKey2];
+		const contributionPhrase = Contribute_DESCRIPTIONS[contributionScale?.toString()] || "has no significant effect on";
+	
+		const isReversePath = !edgeMap[edgeKey1];
+		const findingNode = isReversePath ? path[1] : path[0];
+		const targetNode = isReversePath ? path[0] : path[1];
+		const findingNodeState = getAttribute(findingNode);
+		const targetNodeState = getAttribute(targetNode);
+	
+		detailSentences.push(
+			`<li style="margin-left: 20px; font-size:16px; font-weight:400;">- By direct connection, it <span style="font-weight: bold;">${contributionPhrase}</span> the probability of <span style="font-weight: bold;">${targetNode}</span> being <span style="font-style: italic;">${targetNodeState}</span>.</li><br>`
+		);
+	}
+
+    // Overall Contribution
     detailSentences.push(
-        `<span style="font-size:16px;">Overall, the finding <strong>${description}</strong> the probability of <strong>${targetNodeName}</strong>.</span>`
+        `<span style="font-size:16px; font-weight:400;">Overall, the finding <strong>${description}</strong> the probability of <strong>${targetNodeName}</strong>.</span>`
     );
 
     return `<div>${detailHeader}${detailSentences.join("\n")}</div>`;
 }
+
 
 function pick(obj, keys) {
 	let newObj = {};
@@ -1596,10 +1642,11 @@ module.exports = {
 					// Edge map for contribute values
 					const edgeMap = {};
 					relationships.forEach(rel => {
-						const edgeKey = `${rel.from}->${rel.to}`;
-						edgeMap[edgeKey] = rel.contribute;
+						const edgeKey1 = `${rel.from}->${rel.to}`;
+						const edgeKey2 = `${rel.to}->${rel.from}`;
+						edgeMap[edgeKey1] = rel.contribute;
+						edgeMap[edgeKey2] = rel.contribute; // Ensure bidirectional relationships
 					});
-					
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
