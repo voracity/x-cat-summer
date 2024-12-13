@@ -181,6 +181,15 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	/* display:inline; */
 }
 
+/*border for the text part*/
+.text-with-border {
+	border: 1px solid black; /* 黑色边框 */
+	padding: 10px; /* 内边距 */
+	margin: 10px; /* 外边距 */
+	border-radius: 5px; /* 圆角边框 */
+	background-color: #f9f9f9; /* 背景色 */
+	display: inline-block; /* 保证边框适应内容 */
+  }
 
 .node .controls { position: absolute; padding: 0; margin: -4px -4px 0 -4px; bottom: 100%; text-align: right; width: 100%; }
 .node .controls a { color: #777; font-size: 10pt; }

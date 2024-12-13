@@ -1685,7 +1685,7 @@ module.exports = {
 									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
 								`;
 						
-							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
+							let explanation = `<span style="text-with-border">${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:</span>`;
 							bn.influences['overall'] = {
 								explanation: explanation
 							};
