@@ -466,6 +466,7 @@ class BnDetail {
 		
 		if (m.model) {
 			console.log('m.model:', m.model)
+			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
 				{dataName: node.name},
@@ -739,77 +740,94 @@ class BnDetail {
 					// console.log("sortedArcInfluence:", sortedArcInfluence);
 				
 					sortedArcInfluence.forEach((arcEntry) => {
-						console.log("arcEntry:", arcEntry);
+						// console.log("arcEntry:", arcEntry);
 						let arc = document.querySelector(
 							`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 						);
-
-						console.log("arcEntry:", arcEntry);
-						console.log("arcEntry.color:", arcEntry.color);
+						
+						// console.log("arcEntry:", arcEntry);
+						// console.log("arcEntry.color:", arcEntry.color);
 						// console.log('arcEntry[child]', arcEntry.child)
 						// console.log('arcEntry[parent]', arcEntry.parent)
 					
 						// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
+						
+
 						// we know the first child is the colour arc
 						// coloring order of arrows
 						if (arcEntry.color != 'influence-idx3') {
-							setTimeout(() => {
-								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-						
-								let combinedElems = Array.from(influeceArcBodyElems).map(
+							let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+							let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");						
+
+							let combinedElems = Array.from(influeceArcBodyElems).map(
 								(bodyElem, index) => {
 									return {
-									body: bodyElem,
-									head: influeceArcHeadElems[index],
+										body: bodyElem,
+										head: influeceArcHeadElems[index],
 									};
 								},
-								);
-						
+							);
+
+							setTimeout(() => {														
 								combinedElems.forEach((pair, index) => {
-								let bodyElem = pair.body;
-								let headElem = pair.head;
-						
-								let bodyColor = getComputedStyle(
-									document.documentElement,
-								).getPropertyValue(`--${arcEntry.color}`);
-								bodyElem.style.stroke = bodyColor;
-								bodyElem.style.strokeWidth = arcSize;
-						
-								let bodyLength = bodyElem.getTotalLength();
-								bodyElem.style.strokeDasharray = bodyLength;
-								bodyElem.style.strokeDashoffset = bodyLength;
-								bodyElem.style.transition = "none";
-						
-								bodyElem.getBoundingClientRect();
-						
-								bodyElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-						
-								bodyElem.style.strokeDashoffset = "0";
-						
-								setTimeout(() => {
-									let headColor = getComputedStyle(
-									document.documentElement,
+									let bodyElem = pair.body;
+									let headElem = pair.head;
+							
+									let bodyColor = getComputedStyle(
+										document.documentElement,
 									).getPropertyValue(`--${arcEntry.color}`);
-									headElem.style.stroke = headColor;
-									headElem.style.strokeWidth = arcSize;
-						
-									let headLength = headElem.getTotalLength();
-									headElem.style.strokeDasharray = headLength;
-									headElem.style.strokeDashoffset = headLength;
-									headElem.style.transition = "none";
-						
-									headElem.getBoundingClientRect();
-						
-									headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-						
+
+									
+									bodyElem.style.stroke = bodyColor;
+									bodyElem.style.strokeWidth = arcSize;
+							
+									let bodyLength = bodyElem.getTotalLength();
+									bodyElem.style.strokeDasharray = bodyLength;
+									bodyElem.style.strokeDashoffset = bodyLength;
+									bodyElem.style.transition = "none";
+							
+									bodyElem.getBoundingClientRect();
+							
+									bodyElem.style.transition = "stroke-dashoffset 1s ease-in-out";
+							
+									bodyElem.style.strokeDashoffset = "0";
+							
 									setTimeout(() => {
-									headElem.style.strokeDashoffset = "0";
-									}, 0);
-								}, 1000);
+										let headColor = getComputedStyle(
+										document.documentElement,
+										).getPropertyValue(`--${arcEntry.color}`);
+										headElem.style.stroke = headColor;
+										headElem.style.strokeWidth = arcSize;
+							
+										let headLength = headElem.getTotalLength();
+										headElem.style.strokeDasharray = headLength;
+										headElem.style.strokeDashoffset = headLength;
+										headElem.style.transition = "none";
+							
+										headElem.getBoundingClientRect();
+							
+										headElem.style.transition = "stroke-dashoffset 1s ease-in-out";										
+							
+										setTimeout(() => {
+											headElem.style.strokeDashoffset = "0";
+										}, 0);
+									}, 1000);
 								});
 							}, delay);					
 							delay += 500;
+						} else {	
+							// Fade arrows						
+							// console.log("arc:", arc);
+							let arcBodys = arc.querySelectorAll('path.line')							
+							arcBodys[1].setAttribute('stroke', '#ffffff')
+							// console.log("arcBodys[1]:", arcBodys[1]);
+
+							let arcHeads = arc.querySelectorAll('g.head')							
+							arcHeads[1].setAttribute('fill', '#fafafa')																
+							arcHeads[1].setAttribute('stroke', '#fafafa')	
+							// console.log("arcHeads[1]:", arcHeads[1]);	
+							// arcBodys[1].style.opacity = 0.1
+							// console.log("arcBodys after changing color:", arcBodys[1]);
 						}
 					});
 				}

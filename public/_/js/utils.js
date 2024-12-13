@@ -29,13 +29,13 @@ function reset(arcInfluence, bn, bnView) {
         `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
       );
       if (arc) {
-        arc.remove();
-        bn.drawArcs();
+        arc.remove();        
       }
     });
     bnView.querySelectorAll(`div.node`).forEach(node => {						
       node.style.opacity = 1
     });
+    bn.drawArcs();
   }
 }
 
