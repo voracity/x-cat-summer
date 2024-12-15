@@ -715,16 +715,17 @@ class BnDetail {
 					// console.log('---------------------------------------AAAAAAA')
 					// Fade Nodes					
 					if (m.activePaths) {
-						// console.log('m.activePaths is activated: ', m.activePaths)
+						console.log('m.activePaths is activated: ', m.activePaths)
 						let activeNodes = new Set(m.activePaths.flat())
+						console.log('bnView:', this.bnView)
+						console.log('activeNodes: ', activeNodes)
 						this.bnView.querySelectorAll('div.node').forEach(node => {
 							let nodeName = node.getAttribute('data-name')
 							if (!activeNodes.has(nodeName)) {
 								node.style.opacity = 0.3
 							}
-						})
-						// console.log('m.activePaths -> newSet: ', newSet)
-						// console.log('AAAAAAA---------------------------------------')
+						})						
+						console.log('AAAAAAA---------------------------------------')
 					}
 				
 					const sortedArcInfluence = sortArcInfluenceByDiff(
