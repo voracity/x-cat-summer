@@ -63,7 +63,7 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
-					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
+					console.log('reqData.arcInfluence:', reqData.arcInfluence);
 					console.log('reqData.activePaths:', reqData.activePaths);
 					this.activePaths = reqData.activePaths;
 				} else {

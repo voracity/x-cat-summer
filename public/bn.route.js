@@ -637,10 +637,14 @@ class BnDetail {
 			// Changed to fixed arc size
 			let arcSize = 8;			
 			
+			// console.log('entries.length:', entries.length)
 			if (entries.length == 0) {
 				reset(m.arcInfluence, bn, this.bnView);				
 			} else {
+				// console.log('entries:', entries)
 				entries.forEach(([evidenceNodeName, value]) => {
+					if (evidenceNodeName == 'overall') return;
+					// console.log('evidenceNodeName:', evidenceNodeName)
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
 					// console.log('evidenceNode:', evidenceNode)									
@@ -705,28 +709,30 @@ class BnDetail {
 
 				})
 				// ARCS
-
-				if (m.arcInfluence) {
+				// console.log('---------------------------------------AAAAAArcInfluence')
+				if (m.arcInfluence && m.activePaths) {
 					let delay = 0;
 					console.log("arcInfluence:", m.arcInfluence);			
 				
 					reset(m.arcInfluence, bn, this.bnView);
 
-					// console.log('---------------------------------------AAAAAAA')
-					// Fade Nodes					
-					if (m.activePaths) {
-						console.log('m.activePaths is activated: ', m.activePaths)
-						let activeNodes = new Set(m.activePaths.flat())
-						console.log('bnView:', this.bnView)
-						console.log('activeNodes: ', activeNodes)
-						this.bnView.querySelectorAll('div.node').forEach(node => {
-							let nodeName = node.getAttribute('data-name')
-							if (!activeNodes.has(nodeName)) {
-								node.style.opacity = 0.3
-							}
-						})						
-						console.log('AAAAAAA---------------------------------------')
-					}
+					// console.log('---------------------------------------AAAAAAactivePaths')
+					// Fade Nodes										
+					console.log('m.activePaths is activated: ', m.activePaths)
+					let activeNodes = new Set(m.activePaths.flat())
+					// console.log('activeNodes:', activeNodes)
+
+					// console.log('bnView:', this.bnView)
+					// console.log('activeNodes: ', activeNodes)
+					this.bnView.querySelectorAll('div.node').forEach(node => {
+						console.log('node:', node)
+						let nodeName = node.getAttribute('data-name')
+						if (!activeNodes.has(nodeName)) {
+							node.style.opacity = 0.3
+						}
+					})						
+					// console.log('AAAAAAA---------------------------------------')
+				
 				
 					const sortedArcInfluence = sortArcInfluenceByDiff(
 						m.arcInfluence,
@@ -747,6 +753,7 @@ class BnDetail {
 						);
 						
 						// console.log("arcEntry:", arcEntry);
+						// console.log("activeNodes:",activeNodes);
 						// console.log("arcEntry.color:", arcEntry.color);
 						// console.log('arcEntry[child]', arcEntry.child)
 						// console.log('arcEntry[parent]', arcEntry.parent)
@@ -756,7 +763,7 @@ class BnDetail {
 
 						// we know the first child is the colour arc
 						// coloring order of arrows
-						if (arcEntry.color != 'influence-idx3') {
+						if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
 							let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
 							let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");						
 
