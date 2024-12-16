@@ -762,7 +762,13 @@ class BnDetail {
 							// coloring order of arrows
 							if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
 								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");						
+								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
+								let animationOrder = 'normal';
+								if (index == 0 && arcEntry.child == evidenceNodeName) {
+									animationOrder = 'reverse';
+								}			
+
+								console.log("animationOrder:", animationOrder);
 
 								let combinedElems = Array.from(influeceArcBodyElems).map(
 									(bodyElem, index) => {
@@ -779,14 +785,23 @@ class BnDetail {
 								setTimeout(() => {														
 									combinedElems.forEach((pair) => {
 										let bodyElem = pair.body;
-										let headElem = pair.head;																	
+										let headElem = pair.head;																						
 										
-										colorElement(bodyElem, paintColor, arcSize, 'reverse');
-								
-										setTimeout(() => {											
-											colorElement(headElem, paintColor, arcSize);
-											
-										}, 1000);
+										if (animationOrder == 'normal') {
+											// coloring arrow from bottom to top
+											colorElement(bodyElem, paintColor, arcSize, animationOrder);							
+											setTimeout(() => {											
+												colorElement(headElem, paintColor, arcSize, animationOrder);												
+											}, 1000);
+										
+										} else {
+											// coloring arrow from top to bottom														
+											colorElement(bodyElem, paintColor, arcSize, animationOrder);											
+											// don't have to wait to color the head		
+											setTimeout(() => {											
+												colorElement(headElem, paintColor, arcSize, animationOrder);												
+											}, 0);													
+										}										
 									});
 								}, delay);					
 								delay += 500;
