@@ -1670,7 +1670,7 @@ module.exports = {
 							})
 						})						
 						bn.arcInfluence = arcs;
-						console.log('bn.activePaths:', bn.activePaths)
+						// console.log('bn.activePaths:', bn.activePaths)
 						// console.log('bn:', bn)
 
 						return bn;
