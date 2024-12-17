@@ -1262,6 +1262,21 @@ module.exports = {
 						return graph;
 					}
 
+					// function filterShortestPaths(paths) {
+					// 	const filteredPaths = [];
+					// 	const visitedNodes = new Set();
+					
+					// 	paths.forEach(path => {
+					// 		const toNode = path[path.length - 1];
+					// 		if (!visitedNodes.has(toNode)) {
+					// 			filteredPaths.push(path);
+					// 			visitedNodes.add(toNode);
+					// 		}
+					// 	});
+					
+					// 	return filteredPaths;
+					// }
+					
 
 					function findAllPaths(graph, startNode, endNode) {
 						const allPaths = [];

@@ -450,9 +450,9 @@ class BnDetail {
 
 	$handleUpdate(m) {
 		let barMax = 100; //px
-		// console.log('---------------------------------------')
-		// console.log('m:', m)
-		// console.log('---------------------------------------')
+		console.log('---------------------------------------')
+		console.log('m:', m)
+		console.log('---------------------------------------')
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
 			console.log('m.title:', m.title)
@@ -465,7 +465,7 @@ class BnDetail {
 		}
 		
 		if (m.model) {
-			// console.log('m.model:', m.model)
+			console.log('m.model:', m.model)
 			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -753,9 +753,9 @@ class BnDetail {
 							console.log("index:", index);
 							// console.log("arcEntry:", arcEntry);							
 							// console.log("activeNodes:",activeNodes);
-							// console.log("arcEntry.color:", arcEntry.color);
-							// console.log('arcEntry[child]', arcEntry.child)
-							// console.log('arcEntry[parent]', arcEntry.parent)
+							console.log("arcEntry.color:", arcEntry.color);
+							console.log('arcEntry[child]', arcEntry.child)
+							console.log('arcEntry[parent]', arcEntry.parent)
 							// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 
 							// we know the first child is the colour arc
@@ -1262,6 +1262,21 @@ module.exports = {
 						return graph;
 					}
 
+					// function filterShortestPaths(paths) {
+					// 	const filteredPaths = [];
+					// 	const visitedNodes = new Set();
+					
+					// 	paths.forEach(path => {
+					// 		const toNode = path[path.length - 1];
+					// 		if (!visitedNodes.has(toNode)) {
+					// 			filteredPaths.push(path);
+					// 			visitedNodes.add(toNode);
+					// 		}
+					// 	});
+					
+					// 	return filteredPaths;
+					// }
+					
 
 					function findAllPaths(graph, startNode, endNode) {
 						const allPaths = [];
@@ -1367,6 +1382,39 @@ module.exports = {
 						return allPaths.filter(path => isActivePath(path, relationships, evidence));
 					}
 
+
+					function getPathBeliefs(path) {				
+						if (!bn.arcInfluence) {
+							console.log('arcInfluence is undefined');
+							bn.arcInfluence = [];
+							return [];
+						}
+					
+						let pathBeliefs = [];
+						
+						for (let i = 0; i < path.length - 1; i++) {
+							const currentNode = path[i];
+							const nextNode = path[i + 1];
+
+							const arc = bn.arcInfluence.find(a => {
+								// console.log('Comparing with arc:', a);
+								return (a.parent === currentNode && a.child === nextNode) || 
+									   (a.child === currentNode && a.parent === nextNode);
+							});
+					
+							if (arc) {
+								pathBeliefs.push({
+									from: currentNode,
+									to: nextNode,
+									beliefs: arc.targetBelief || {}
+								});
+							}
+						}
+					
+						console.log('Returning pathBeliefs:', pathBeliefs);
+						return pathBeliefs;
+					}
+
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
@@ -1444,7 +1492,7 @@ module.exports = {
 						}
 						bn.influences = {};
 						bn.activePaths = [];
-						bn.pathInfluences = {}
+
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1511,26 +1559,7 @@ module.exports = {
 							})
 						})						
 						bn.arcInfluence = arcs;
-
-						// Yang Modified 17/12
-
-						// Generate pathInfluences based on arcs without using document.querySelector
-						bn.pathInfluences = arcs.map(arcEntry => {
-							const diffs = Object.entries(arcEntry.targetBelief).map(([targetNodeName, arcBeliefs]) => {
-							// Retrieve targetStateIdx from selectedStates instead of the DOM
-							const targetStateIdx = selectedStates[targetNodeName][0] || 0;
-						
-							const nodeBeliefObj = baselineModel.find(node => node.name === targetNodeName);
-							const nodeBelief = nodeBeliefObj ? nodeBeliefObj.beliefs[targetStateIdx] : 0;
-						
-							const diff = nodeBelief - arcBeliefs[targetStateIdx];
-							return diff;
-							});
-						
-							return { ...arcEntry, diffs };
-						});
-						
-						console.log('pathInfluences', bn.pathInfluences);
+						// console.log('arcs', arcs)
 
 						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
@@ -1583,7 +1612,10 @@ module.exports = {
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {
-								bn.activePaths.push(path)
+								bn.activePaths.push(path)	
+
+								const beliefs = getPathBeliefs(path);
+                                // console.log('Path Beliefs:', beliefs);
 								
 								let pathScale = calculatePathContribution(path);
 								const contributionPhrase = Contribute_DESCRIPTIONS[pathScale.toString()];

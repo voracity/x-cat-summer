@@ -1262,6 +1262,21 @@ module.exports = {
 						return graph;
 					}
 
+					// function filterShortestPaths(paths) {
+					// 	const filteredPaths = [];
+					// 	const visitedNodes = new Set();
+					
+					// 	paths.forEach(path => {
+					// 		const toNode = path[path.length - 1];
+					// 		if (!visitedNodes.has(toNode)) {
+					// 			filteredPaths.push(path);
+					// 			visitedNodes.add(toNode);
+					// 		}
+					// 	});
+					
+					// 	return filteredPaths;
+					// }
+					
 
 					function findAllPaths(graph, startNode, endNode) {
 						const allPaths = [];
@@ -1367,6 +1382,21 @@ module.exports = {
 						return allPaths.filter(path => isActivePath(path, relationships, evidence));
 					}
 
+					function calculateDiff(baselineModel, newBelief, targetNodeName, targetStateIndex) {
+						// 从 baselineModel 中找到目标节点的 beliefs
+						const targetNodeBaseline = baselineModel.find(node => node.name === targetNodeName);
+						if (!targetNodeBaseline) {
+						  console.error(`Node ${targetNodeName} not found in baselineModel`);
+						  return null;
+						}
+						const baselineBeliefs = targetNodeBaseline.beliefs;
+					  
+						// 计算指定目标状态的差异
+						const diff = baselineBeliefs[targetStateIndex] - newBelief[targetStateIndex];
+						return diff;
+					  }
+
+
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
@@ -1437,6 +1467,7 @@ module.exports = {
 						net.update();
 						baselineModel = net.nodes().map(n => ({name: n.name(), beliefs: n.beliefs()}));
 						// origNet.update();
+						console.log("baselineModel",baselineModel)
 						bn.model = baselineModel;
 						
 						if (Object.keys(evidence).length == 0) {
@@ -1444,7 +1475,7 @@ module.exports = {
 						}
 						bn.influences = {};
 						bn.activePaths = [];
-						bn.pathInfluences = {}
+
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1511,26 +1542,7 @@ module.exports = {
 							})
 						})						
 						bn.arcInfluence = arcs;
-
-						// Yang Modified 17/12
-
-						// Generate pathInfluences based on arcs without using document.querySelector
-						bn.pathInfluences = arcs.map(arcEntry => {
-							const diffs = Object.entries(arcEntry.targetBelief).map(([targetNodeName, arcBeliefs]) => {
-							// Retrieve targetStateIdx from selectedStates instead of the DOM
-							const targetStateIdx = selectedStates[targetNodeName][0] || 0;
-						
-							const nodeBeliefObj = baselineModel.find(node => node.name === targetNodeName);
-							const nodeBelief = nodeBeliefObj ? nodeBeliefObj.beliefs[targetStateIdx] : 0;
-						
-							const diff = nodeBelief - arcBeliefs[targetStateIdx];
-							return diff;
-							});
-						
-							return { ...arcEntry, diffs };
-						});
-						
-						console.log('pathInfluences', bn.pathInfluences);
+						// console.log('arcs', arcs)
 
 						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
@@ -1580,6 +1592,9 @@ module.exports = {
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths: ", ActivePaths);
+
+							let diff = calculateDiff(baselineModel, newBelief, targetNodeName, targetStateIndex);
+                            console.log(`Difference for ${targetNodeName}:`, diff);
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {

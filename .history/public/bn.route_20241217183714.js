@@ -1262,6 +1262,21 @@ module.exports = {
 						return graph;
 					}
 
+					// function filterShortestPaths(paths) {
+					// 	const filteredPaths = [];
+					// 	const visitedNodes = new Set();
+					
+					// 	paths.forEach(path => {
+					// 		const toNode = path[path.length - 1];
+					// 		if (!visitedNodes.has(toNode)) {
+					// 			filteredPaths.push(path);
+					// 			visitedNodes.add(toNode);
+					// 		}
+					// 	});
+					
+					// 	return filteredPaths;
+					// }
+					
 
 					function findAllPaths(graph, startNode, endNode) {
 						const allPaths = [];
@@ -1437,6 +1452,7 @@ module.exports = {
 						net.update();
 						baselineModel = net.nodes().map(n => ({name: n.name(), beliefs: n.beliefs()}));
 						// origNet.update();
+						console.log("baselineModel",baselineModel)
 						bn.model = baselineModel;
 						
 						if (Object.keys(evidence).length == 0) {
@@ -1445,6 +1461,7 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.pathInfluences = {}
+
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1511,8 +1528,7 @@ module.exports = {
 							})
 						})						
 						bn.arcInfluence = arcs;
-
-						// Yang Modified 17/12
+						console.log('arcs', arcs)
 
 						// Generate pathInfluences based on arcs without using document.querySelector
 						bn.pathInfluences = arcs.map(arcEntry => {
@@ -1580,6 +1596,9 @@ module.exports = {
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths: ", ActivePaths);
+
+							let diff = calculateDiff(baselineModel, newBelief, targetNodeName, targetStateIndex);
+                            console.log(`Difference for ${targetNodeName}:`, diff);
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of ActivePaths) {
