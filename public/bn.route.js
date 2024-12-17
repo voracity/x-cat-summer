@@ -392,10 +392,11 @@ class BnDetail {
 			),
 
 			n('div.influenceContainer',
-				{class: 'influenceContainer'},
-				n('h2', 'Influence Descriptions'),
-				n('ul', {class: 'influenceList'})
-			),
+				{id:"VerbalBox", class: 'influenceContainer' },
+				n('h2.TextBoxBold', 'Summary: What all the findings contribute'),
+				n('p', { class: 'influenceList'},
+				)
+			  ),
 
 			n('div.infoWindows',
 				/*	
@@ -1565,30 +1566,31 @@ module.exports = {
 								let isDirectPath = (path.length === 2);
 								let sentence;
 						
-								// construct an appropriate sentence describing the influence.
+									// construct an appropriate sentence describing the influence.
 								if (isDirectPath && intermediateNodes.length === 0) {
 									// Direct path with no intermediate node.
 									const neighbors = graph[fromNode] || [];
 									let adjacentNonActiveNodes = neighbors.filter(n => nonActiveNodes.includes(n) && n !== toNode);
-						
 									if (adjacentNonActiveNodes.length > 0) {
 										// we consider it as an indirect influence scenario.
 										let intermediateNodesStr = adjacentNonActiveNodes.map(node => {
 											let nodeAttribute = getAttribute(node);
-											return `<span style="font-weight:900; font-size:18px">${node}</span> is <span style="font-style:italic">${nodeAttribute}</span>`;
+											return `${node} is <span class = "VerbalTextUnderItalic">${nodeAttribute}</span>`;
 										}).join(', ');
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</li>`;
+										sentence = `<li><span class = "VerbalText">Finding out <span class = "VerbalTextbold">${fromNode}</span> is <span class = "VerbalTextUnderItalic">${fromNodeAttribute}</span>
+										<span class = "VerbalTextUnderLine">${contributionPhrase}</span> the probability of <span class = "VerbalTextbold">${toNode}</span> is <span class = "VerbalTextUnderItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
 									} else {
 										// No adjacent nonActiveNodes, this is a straightforward direct influence sentence.
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>.</li>`;
+										sentence = `<li><span class = "VerbalText">Finding out <span class = "VerbalTextbold">${fromNode}</span> is <span class = "VerbalTextUnderItalic">${fromNodeAttribute}</span>
+										<span class = "VerbalTextUnderLine">${contributionPhrase}</span> the probability of <span class = "VerbalTextbold">${toNode}</span> is <span class = "VerbalTextUnderItalic">${targetNodeAttribute}</span>.</span></li>`;
 									}
 								} else {
 									// Indirect path or a path with intermediate nodes.
 									if (intermediateNodes.length === 0) {
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>.</li>`;
+										sentence = `<li><span class = "VerbalText">Finding out <span class = "VerbalTextbold">${fromNode}</span> is <span class = "VerbalTextUnderItalic">${fromNodeAttribute}</span> <span class = "VerbalTextUnderLine"">${contributionPhrase}</span> the probability of <span class = "VerbalTextbold"">${toNode}</span> is <span class = "VerbalTextUnderItalic">${targetNodeAttribute}</span>.</span></li>`;
 									} else {
 										const intermediateNodesStr = intermediateNodes.join(', ');
-										sentence = `<li style="margin-left: 20px;">Finding out <span style="font-weight:900; font-size:18px">${fromNode}</span> is <span style="font-style:italic">${fromNodeAttribute}</span> <span style="text-decoration:underline">${contributionPhrase}</span> the probability of <span style="font-weight:900; font-size:18px">${toNode}</span> is <span style="font-style:italic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</li>`;
+										sentence = `<li><span class = "VerbalText">Finding out <span class = "VerbalTextbold">${fromNode}</span> is <span class = "VerbalTextUnderItalic">${fromNodeAttribute}</span> <span class = "VerbalTextUnderLine"">${contributionPhrase}</span> the probability of <span class = "VerbalTextbold"">${toNode}</span> is <span class = "VerbalTextUnderItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
 									}
 								}
 						
@@ -1608,6 +1610,7 @@ module.exports = {
 						
 						// If there are multiple sentences, we generate an overall summary sentence.
 						if (sentences.length > 1) {
+
 							let overallContribution = mapInfluencePercentageToScale(totalInfluencePercentage);
 							const overallDescription = Contribute_DESCRIPTIONS[overallContribution.toString()];
 							let node = netWithAllEvidence.node(targetNodeName);
@@ -1615,18 +1618,15 @@ module.exports = {
 							let stateNames = node._stateNames;
 							const targetNodeAttribute = stateNames[targetStateIndex];
 						
-							let start = '<span style="font-size:18px; font-weight:900">Summary: what all the findings contribute</span><br>';
-							let overallSentence = `
-							${start} <br><span style="font-weight:900; font-size:18px;">All findings</span> 
+							let overallSentence = `<span class = "VerbalText"><span class = "VerbalTextbold">All findings</span> 
 									combined
-									<span style="font-size:18px; text-decoration: underline; font-style: italic;">${overallDescription}</span> 
+									<span class = "VerbalTextUnderLine">${overallDescription}</span> 
 									the probability that 
-									<span style="font-weight:900; font-size:18px;">${targetNodeName}</span> 
+									<span class = "VerbalTextbold">${targetNodeName}</span> 
 									is 
-									<span style="font-style: italic; font-size:18px;">${targetNodeAttribute}.</span><br>
-								`;
+									<span class = "VerbalTextUnderItalic">${targetNodeAttribute}</span>.</span><br>`;
 						
-							let explanation = `${overallSentence}<br>The <span style="text-decoration:underline">contribution</span> of each finding is:`;
+							let explanation = `<span class = "VerbalText">${overallSentence}<br>The <span class = "VerbalTextUnderLine" >contribution</span> of each finding is:`;
 							bn.influences['overall'] = {
 								explanation: explanation
 							};

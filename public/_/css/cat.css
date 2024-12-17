@@ -34,6 +34,62 @@ h1 .logo:hover { filter: drop-shadow(3px 3px 3px #aaaa); }
 
 h2 { margin: 0; margin-bottom: 0.5em; }
 
+h2.TextBoxBold {
+    font-family: Arial bold; 
+    font-weight: 900; 
+    font-size: 20px; 
+    margin: 0;
+	padding: 0;
+    margin-top: 1em; 
+    margin-bottom: 0.2em;
+}
+
+
+.influenceContainer {
+    border: 1.5px solid black; 
+    display: inline-block; 
+    width: 400px;
+    height: 550px;
+    box-sizing: border-box; 
+    padding: 10px; 
+    margin-top: 20px; 
+	margin-right:200%;
+	margin-left: -100%;
+}
+
+.influenceContainer.small {
+	height: 100px;
+  }
+  
+  .influenceContainer.medium {
+	height: 200px;
+  }
+  
+  .influenceContainer.large {
+	height: 300px;
+  }
+
+.VerbalTextbold{
+	font-family: Arial bold; 
+	font-weight: 900; 
+    font-size: 20px; 
+}
+.VerbalText{
+	font-family: Arial bold;
+	font-size: 20px; 
+}
+.VerbalTextUnderLine{
+	font-family: Arial bold;
+	font-size: 20px; 
+	text-decoration: underline;
+}
+.VerbalTextUnderItalic{
+	font-family: Arial bold ;
+	font-size: 20px; 
+	font-style: italic;
+}
+
+
 .header { font-size: 24px; padding: 20px 10px; border-bottom: solid 1px #555; height: 132px;
 	/*background: url(/_/images/cat_logo.png) no-repeat left 15px center/auto 75%;*/ display: flex; }
 .header h1 { margin: 0; /*margin-left: 130px;*/ display: flex; align-items: center; }
@@ -283,7 +339,9 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 .bnPage .content { flex: 1; padding: 0; }
 .bnPage .bnDetail { display: grid; grid-template-columns: 1fr 22%; grid-template-rows: auto 1fr; height: 100%; }
 .bnPage .bnDetail > .controls { grid-column: 1 / span 2; padding: 8px; background: var(--back-color2); border-bottom: solid 1px black; }
-.bnPage .bnView { height: 100%; overflow: auto; }
+
+/* Hao delete height:100%*/
+.bnPage .bnView {overflow: auto; }
 
 .influencelegend {
 	padding:3px;

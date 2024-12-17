@@ -647,10 +647,20 @@ document.addEventListener('DOMContentLoaded', event => {
 	})
 });
 
+
+
+
+function onMouseUp() {
+  isDragging = false;
+
+  // 移除事件监听器
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+}
+
 // drag and drop
 document.addEventListener('DOMContentLoaded', (event) => {
 
-  
 	function handleDragEnter(e) {
 	  this.classList.add('over');
 
