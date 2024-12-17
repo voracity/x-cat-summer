@@ -66,6 +66,9 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .bnView { position: relative; }
 .node { position: absolute; border: solid 1px black; padding: 4px; z-index: 10; background: #fff7e9; user-select: none; }
 .node h3 { margin: 0; font-size: 10pt; border-bottom: solid 1px black; margin: -4px -4px 0 -4px; padding: 1px 4px; cursor: grab; }
+.node h3:hover {
+    cursor: pointer;
+}
 .node.moving h3, .node.moving { cursor: grabbing; }
 .node.moving { box-shadow: 3px 3px 4px #4444; margin: -2px 0 0 -2px; }
 
@@ -327,6 +330,18 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	border: 1px dotted black;
 	opacity: 0.6;
 }
+.variable-name {
+    font-weight: bold;
+    color: #007BFF; /* 蓝色高亮 */
+}
+
+p {
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}
+
 /* 
 .ccheckbox {
 	opacity: 0;
@@ -350,3 +365,57 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	padding: initial;
 	border: initial;
 	}  */
+
+.drag{
+	cursor: grabbing;
+}
+	
+.play-button {
+	width: 15px;
+	height: 15px;
+	background-color: black;
+	clip-path: polygon(25% 0%, 100% 50%, 25% 100%);
+	cursor: pointer;
+	transition: transform 0.2s;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.play-button:hover {
+	transform: scale(1.1);
+}
+
+.play-button:active {
+	transform: scale(0.9);
+}
+
+.node-detail-popup {
+    position: fixed;
+    bottom: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    font-size: 14px;
+    color: #333;
+}
+.influenceList {
+    padding: 10px;
+    margin: 10px;
+    list-style-type: none;
+    font-size: 14px;
+    color: #333;
+}
+.detailContainer {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-top: 10px;
+    font-size: 14px;
+}
+.detailContainer h4 {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
