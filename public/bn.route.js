@@ -389,14 +389,14 @@ class BnDetail {
 				),
 			),
 			n('div.bnView',
+				n('div.influenceContainer',
+					{id:"VerbalBox", class: 'influenceContainer' },
+					n('h2.TextBoxBold', 'Summary: What all the findings contribute'),
+					n('p', { class: 'influenceList'},)
+				),
 			),
 
-			n('div.influenceContainer',
-				{id:"VerbalBox", class: 'influenceContainer' },
-				n('h2.TextBoxBold', 'Summary: What all the findings contribute'),
-				n('p', { class: 'influenceList'},
-				)
-			  ),
+			
 
 			n('div.infoWindows',
 				/*	
@@ -410,16 +410,16 @@ class BnDetail {
 				),
 				*/
 				n("div", {class:"evidence-scale"}, 
-					n("div", {class:"evidence-scale-header"}, "Evidence impact scale"),
+					n("div", {class:"evidence-scale-header"}, "Contribution Scale"),
 					// n("div", "Colour scale showing the influence of evidence on the target."),
 					n("table", {class:"influencelegend"} ,
-						n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
-						n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
-						n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
-						n("tr", n("td", "barely changes", {class:`influence-idx3`})),
-						n("tr", n("td", "slightly reduces", {class:`influence-idx4`})),
-						n("tr", n("td", "moderately reduces", {class:`influence-idx5`})),
-						n("tr", n("td", "greatly reduces", {class:`influence-idx6`})),
+						n("tr", n("td", "greatly increases (31-100%)", {class:`influence-idx0`})),
+						n("tr", n("td", "moderately increases (16-30%)", {class:`influence-idx1`})),
+						n("tr", n("td", "slightly increases (1-15%)", {class:`influence-idx2`})),
+						n("tr", n("td", "doesn't changes (0%)", {class:`influence-idx3`})),
+						n("tr", n("td", "slightly reduces (1-15%)", {class:`influence-idx4`})),
+						n("tr", n("td", "moderately reduces (16-30%)", {class:`influence-idx5`})),
+						n("tr", n("td", "greatly reduces (31-100%)", {class:`influence-idx6`})),
 					),
 					n("div", {style:"text-align:center; padding:3px;"}, "probability of"),
 					n("div", n("div", {class:"target"}, "target state"))
@@ -1069,7 +1069,7 @@ module.exports = {
 						"-3": "greatly reduces",
 						"-2": "moderately reduces",
 						"-1": "slightly reduces",
-						"0": "barely changes",
+						"0": "doesn't changes",
 						"1": "slightly increases",
 						"2": "moderately increases",
 						"3": "greatly increases"

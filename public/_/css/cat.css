@@ -35,13 +35,13 @@ h1 .logo:hover { filter: drop-shadow(3px 3px 3px #aaaa); }
 h2 { margin: 0; margin-bottom: 0.5em; }
 
 h2.TextBoxBold {
-    font-family: Arial bold; 
-    font-weight: 900; 
-    font-size: 20px; 
-    margin: 0;
+	/* font-family: Arial bold;  */
+	font-weight: 900; 
+	font-size: 20px; 
+	margin: 0;
 	padding: 0;
-    margin-top: 1em; 
-    margin-bottom: 0.2em;
+	margin-top: 1em; 
+	margin-bottom: 0.2em;
 }
 
 
@@ -49,12 +49,11 @@ h2.TextBoxBold {
 	border: 1.5px solid black; 
 	display: inline-block; 
 	width: 400px;
-	height: 750px;
+	/* height: 500px; */
 	box-sizing: border-box; 
 	padding: 10px; 
-	margin-top: 20px; 
-	margin-right:200%;
-	margin-left: -100%;
+	margin-top: 12px; 	
+	margin-left: 60%; 
 }
 
 .influenceContainer.small {
@@ -119,7 +118,7 @@ h2.TextBoxBold {
 .userLogin .register.form, .userLogin .login.form { display: none; }
 .userLogin .form.active { display: grid; }
 
-.bnView { position: relative; }
+.bnView { position: relative;}
 .node { position: absolute; border: solid 1px black; padding: 4px; z-index: 10; background: #fff7e9; user-select: none; }
 .node h3 { margin: 0; font-size: 10pt; border-bottom: solid 1px black; margin: -4px -4px 0 -4px; padding: 1px 4px; cursor: grab; }
 .node.moving h3, .node.moving { cursor: grabbing; }
