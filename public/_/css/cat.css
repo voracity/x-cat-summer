@@ -34,10 +34,10 @@ h1 .logo:hover { filter: drop-shadow(3px 3px 3px #aaaa); }
 
 h2 { margin: 0; margin-bottom: 0.5em; }
 
-h2.TextBoxBold {
-	/* font-family: Arial bold;  */
+h2.textBoxBold {
+	font-family: Arial bold, sans-serif; 
 	font-weight: 900; 
-	font-size: 20px; 
+	font-size: 14px; 
 	margin: 0;
 	padding: 0;
 	margin-top: 1em; 
@@ -51,7 +51,7 @@ h2.TextBoxBold {
 	width: 400px;
 	/* height: 500px; */
 	box-sizing: border-box; 
-	padding: 10px; 
+	padding: 12px; 
 	margin-top: 12px; 	
 	margin-left: 60%; 
 }
@@ -60,31 +60,31 @@ h2.TextBoxBold {
 	height: 100px;
   }
   
-  .influenceContainer.medium {
+.influenceContainer.medium {
 	height: 200px;
-  }
+}
   
-  .influenceContainer.large {
+.influenceContainer.large {
 	height: 300px;
-  }
+}
 
-.VerbalTextbold{
-	font-family: Arial bold; 
+.verbalTextbold{
+	font-family: Arial bold, sans-serif; 
 	font-weight: 900; 
-    font-size: 20px; 
+  font-size: 16px; 
 }
-.VerbalText{
-	font-family: Arial bold;
-	font-size: 20px; 
+.verbalText{
+	font-family: Arial bold, sans-serif;
+	font-size: 16px; 
 }
-.VerbalTextUnderLine{
-	font-family: Arial bold;
-	font-size: 20px; 
+.verbalTextUnderLine{
+	font-family: Arial bold, sans-serif;
+	font-size: 16px; 
 	text-decoration: underline;
 }
-.VerbalTextUnderItalic{
-	font-family: Arial bold ;
-	font-size: 20px; 
+.verbalTextUnderItalic{
+	font-family: Arial bold, sans-serif;
+	font-size: 16px; 
 	font-style: italic;
 }
 
