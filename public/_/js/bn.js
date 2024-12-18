@@ -337,74 +337,157 @@ class Node {
 		menu.popup({left,top:bottom});
 	}
 	
+
+	static flashNode(nodeElement) {
+		let flashes = 2; 
+		let flashDuration = 200;
+		let count = flashes * 2;
+
+		function toggleFlash() {
+			if (count > 0) {
+				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px 3px rgba(0, 255, 255, 0.9)' : '';
+				count--;
+				setTimeout(toggleFlash, flashDuration);
+			}
+		}
+
+		toggleFlash(); 
+	}
+
 	static guiSetupEvents() {
-		q('.bnView').addEventListener('click', event => {
+		
+
+		q(".bnView").addEventListener("click", (event) => {
+			console.log("move");
 			event.stopPropagation();
-			let menuButton = event.target.closest('a.menu');
+			let target_node = event.target.closest('.node h3');
+			let targte_node_shining =  event.target.closest('.node');
+
+			document.querySelectorAll(".node h3").forEach((nodeHeader) => {
+				nodeHeader.addEventListener("mouseenter", () => {
+					nodeHeader.style.cursor = "pointer"; 
+				});
+			
+				nodeHeader.addEventListener("mouseleave", () => {
+					nodeHeader.style.cursor = "default"; 
+				});
+			});
+			if (target_node){
+				
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+				const existingButton = target_node.querySelector(".play-button");
+				if (existingButton) {
+					existingButton.remove();
+				}
+						
+				const playButton = document.createElement("button");
+				playButton.textContent = "▶";
+				playButton.className = "play-button";
+
+				playButton.addEventListener("click", () => {
+					console.log('Button play');
+					//Hao add backend here
+				});
+
+				target_node.style.position = "relative"; 
+				playButton.style.position = "absolute";
+				playButton.style.left = "-30px"; 
+				playButton.style.top = "55%"; 
+				playButton.style.transform = "translateY(-50%)";
+				target_node.appendChild(playButton);
+				Node.flashNode(targte_node_shining);
+			}
+				
+			
+			let menuButton = event.target.closest("a.menu");
 			if (menuButton) {
 				refs.Node(event.target).guiPopupMenu();
 			}
-			menuButton = event.target.closest('a.setCause, a.setEffect');
+			menuButton = event.target.closest("a.setCause, a.setEffect");
 			if (menuButton) {
 				let node = refs.Node(event.target);
-				if (menuButton.matches('.on')) {
+				if (menuButton.matches(".on")) {
 					node.setRole(null);
 					/// Not sure why I was clearing evidence on this node?
 					//node.bn.update({[node.nodeName]: null});
 					node.bn.update();
-				}
-				else if (menuButton.matches('.setCause')) {
-					node.setRole('cause');
+				} else if (menuButton.matches(".setCause")) {
+					node.setRole("cause");
+					node.bn.update();
+				} else if (menuButton.matches(".setEffect")) {
+					node.setRole("effect");
 					node.bn.update();
 				}
-				else if (menuButton.matches('.setEffect')) {
-					node.setRole('effect');
-					node.bn.update();
-				}
+
 				/// Arrows need updating, and since there's an animation,
 				/// least visually ugly thing to do is sync it with the animation
 				let arrowDraw;
-				node.el().addEventListener('transitionend', _=>{
-					cancelAnimationFrame(arrowDraw);
-				}, {once:true});
-				let nextFrame = _=> {
-					draw.updateArrows(document.querySelector('.bnView'));
+				node.el().addEventListener(
+					"transitionend",
+					(_) => {
+						cancelAnimationFrame(arrowDraw);
+					},
+					{ once: true }
+				);
+				let nextFrame = (_) => {
+					draw.updateArrows(document.querySelector(".bnView"));
 					arrowDraw = requestAnimationFrame(nextFrame);
 				};
 				nextFrame();
 			}
 		});
-		q('.bnView').addEventListener('mousedown', event => {
-			let target = event.target.closest('.node h3');
-			console.log(target);
-			if (target) {
-				let targetNode = target.closest('.node');
-				event.stopPropagation();
-				event.preventDefault();
-				console.log('in');
-				targetNode.classList.add('moving');
-				targetNode.closest('.bnView').classList.add('hasMoving');
-				let origX = event.clientX, origY = event.clientY;
-				let origLeft = parseFloat(targetNode.style.left), origTop = parseFloat(targetNode.style.top);
-				let mm, mu;
-				document.addEventListener('mousemove', mm = event => {
-					//onsole.log('x');
-					let deltaX = event.clientX - origX, deltaY = event.clientY - origY;
-					//onsole.log(origLeft, deltaX);
-					targetNode.style.left = (origLeft + deltaX)+'px';
-					targetNode.style.top = (origTop + deltaY)+'px';
-					/// Update with something more efficient
-					draw.updateArrows(document.querySelector('.bnView'));
-				});
-				document.addEventListener('mouseup', mu = event => {
-					targetNode.classList.remove('moving');
-					target.closest('.bnView').classList.remove('hasMoving');
-					/// Update with something more efficient
-					draw.updateArrows(document.querySelector('.bnView'));
-					document.removeEventListener('mousemove', mm);
-					document.removeEventListener('mouseup', mu);
-				});
-			}
+
+
+
+
+		document.querySelectorAll(".node").forEach((setMoveEl) => {
+			setMoveEl.addEventListener("mousedown", (event) => {
+				console.log("Mousedown triggered");
+				let target = event.target.closest(".node");
+				console.log(target);
+				
+
+				if (target) {
+					let targetNode = target.closest(".node");
+					event.stopPropagation();
+					event.preventDefault();
+					console.log("start dragging");
+					console.log(targetNode.classList);
+
+
+					// define init pos
+					let origX = event.clientX,
+						origY = event.clientY;
+					let origLeft = parseFloat(targetNode.style.left),
+						origTop = parseFloat(targetNode.style.top);
+					let mm, mu;
+
+					document.addEventListener(
+						"mousemove",
+						(mm = (event) => {
+							let deltaX = event.clientX - origX,
+								deltaY = event.clientY - origY;
+							//onsole.log(origLeft, deltaX);
+							target.style.cursor = 'grabbing';
+							targetNode.style.left = origLeft + deltaX + "px";
+							targetNode.style.top = origTop + deltaY + "px";
+							/// Update with something more efficient
+							draw.updateArrows(document.querySelector(".bnView"));
+						})
+					);
+					document.addEventListener(
+						"mouseup",
+						(mu = (event) => {
+							target.closest(".bnView").classList.remove("grabbing");
+							/// Update with something more efficient
+							draw.updateArrows(document.querySelector(".bnView"));
+							document.removeEventListener("mousemove", mm);
+							document.removeEventListener("mouseup", mu);
+
+						})
+					);
+				}
+			});
 		});
 	}
 }
