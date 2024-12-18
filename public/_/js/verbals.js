@@ -17,13 +17,32 @@ function colorToVerbal(color) {
     return "greatly increases";
 }
 
-function buildFindingOutSentence(evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState) {
-  let contribution = colorToVerbal(colorContribute);
-  return n('p', 'Finding out ', 
-    n('span', evidenceNodeName, {class: 'verbalTextbold'}), ' was ', 
+function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState) {  
+  let findingSentence = n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
+    n('span', evidenceNodeName, {class: 'verbalTextBold'}), ' was ', 
     n('span', evidenceState, {class: 'verbalTextUnderItalic'}),' ', 
-    n('span', contribution, {class: 'verbalTextUnderLine'}), ' the probability of ', 
-    n('span', targetNodeName, {class: 'verbalTextbold'}), ' is ', 
+    n('span', colorToVerbal(colorContribute), {class: 'verbalTextUnderLine'}), ' the probability of ', 
+    n('span', targetNodeName, {class: 'verbalTextBold'}), ' is ', 
     n('span', targetState, {class: 'verbalTextUnderItalic'}), ' .');
+    
+  return findingSentence;
 }
   
+function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
+  let findings = numsFinding == 2 ? 'Both' : 'All';
+  return n('p', 
+    n('span', `${findings} findings`, {class: 'verbalTextBold'}),
+    ' combined ',
+    n('span', colorToVerbal(colorContribute), {class: 'verbalTextUnderLine'}),
+    ' the probability that ',
+    n('span', targetNodeName, {class: 'verbalTextBold'}),
+    ' is ',
+    n('span', targetState, {class: 'verbalTextUnderItalic'}),
+    '.',
+    n('br'),
+    n('br'),
+    'The ',
+    n('span', 'contribution', {style: 'text-decoration: underline;'}),
+    ' of each finding is:',
+   )
+}

@@ -1,3 +1,5 @@
+var { getColor} = require('./utils.js');
+
 function reset(arcInfluence, bn, bnView) {
     if (arcInfluence) {
       arcInfluence.forEach((arcEntry) => {
@@ -15,7 +17,7 @@ function reset(arcInfluence, bn, bnView) {
     }
   }
   
-  function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, getColor, evidenceNodeName) {
+  function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
     console.log('evidenceNodeName:', evidenceNodeName);
     return arcInfluence
       .map((arcEntry) => {

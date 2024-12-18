@@ -392,7 +392,8 @@ class BnDetail {
 				n('div.influenceContainer',
 					{id:"verbalBox", class: 'influenceContainer' },
 					n('h2.textBoxBold', 'Summary: What all the findings contribute'),
-					n('p', { class: 'influenceList'},)
+					n('p', { class: 'summarySentence'}),
+					n('p', { class: 'influenceList'})
 				),
 			),
 
@@ -431,23 +432,6 @@ class BnDetail {
 	}
 	
 	toHtml() { return this.root.outerHTML; }
-	
-	getColor(changerate) {
-		if (changerate <= -0.3) 
-			return "influence-idx6";
-		else if (-0.3 < changerate && changerate <= -0.15)
-			return "influence-idx5";
-		else if (-0.15 < changerate  && changerate < 0)
-			return "influence-idx4";
-		else if (changerate == 0)
-			return "influence-idx3";
-		else if (0 < changerate && changerate <= 0.15)
-			return "influence-idx2";
-		else if (0.15 < changerate && changerate <= 0.3)
-			return "influence-idx1";
-		else if (0.3 < changerate)
-			return "influence-idx0";
-	}
 
 	$handleUpdate(m) {
 		let barMax = 100; //px
@@ -632,19 +616,23 @@ class BnDetail {
 			let entries = Object.entries(m.influences)
 			console.log('m.influences', m.influences)			
 			
-			let verbalDisplay = this.root.querySelector('.influenceList');
+			let verbalSummarySentence = this.root.querySelector('.summarySentence');
+			let verbalListDisplay = this.root.querySelector('.influenceList');
 
 			// Changed to fixed arc size
 			let arcSize = 8;			
 			
 			// console.log('entries.length:', entries.length)
 			if (entries.length == 0) {
-				verbalDisplay.innerHTML = '';
+				verbalListDisplay.innerHTML = '';
+				verbalSummarySentence.innerHTML = '';
 				reset(m.arcInfluence, bn, this.bnView);				
 			} else {
 				// console.log('entries:', entries)
-				verbalDisplay.innerHTML = '';
+				verbalListDisplay.innerHTML = '';				
+				let numsEntries = entries.length;
 				entries.forEach(([evidenceNodeName, value]) => {
+					verbalSummarySentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;
 					console.log('-------------------------------------')
 					console.log('evidenceNodeName:', evidenceNodeName)					
@@ -666,25 +654,32 @@ class BnDetail {
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
+						let targetStateColor = getTargetStateColor(
+							targetBaseModel.beliefs[targetStateIdx], 
+							m.nodeBeliefs[targetNodeName][targetStateIdx]
+						);
+
+						console.log('targetStateColor:', targetStateColor)
+
 						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
 						let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
 						let absChange = Math.abs(relativeBeliefChange * 100);
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
-						
-						
-						console.log('stateElem:', stateElem)
 						let stateName = stateElem.querySelector('.label').textContent;	
-						console.log('stateName:', stateName)
-						let targetStateName = targetStateElem.querySelector('.label').textContent;
-						console.log('targetStateName:', targetStateName)
-
+						
+						let targetStateName = targetStateElem.querySelector('.label').textContent;						
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
-						let colorClass = this.getColor(relativeBeliefChange);
+						let colorClass = getColor(relativeBeliefChange);
+												
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName);
+						verbalListDisplay.appendChild(findingOutSentence);
+						console.log('verbalListDisplay length:', verbalListDisplay.children.length)
 						
 						
-						let findingOutSentence = buildFindingOutSentence(evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName);
-						verbalDisplay.appendChild(findingOutSentence);
+						if (numsEntries >= 2) {
+							verbalSummarySentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+						}
 
 						console.log('colorClass:', colorClass)
 						console.log('-------------------------------------')
@@ -752,8 +747,7 @@ class BnDetail {
 						console.log("evidenceNodeName:", evidenceNodeName);
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
-							m.nodeBeliefs,
-							this.getColor,
+							m.nodeBeliefs,													
 							evidenceNodeName
 						);
 					
@@ -845,13 +839,14 @@ class BnDetail {
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
 				let diff = currentBelief - baseBelief
 				let absDiff = 100*Math.abs(diff)
-				let colorClass = this.getColor(diff)
+				let targetColorClass = getColor(diff)
+				console.log('targetColorClass of TARGETTTTT:', targetColorClass)
 				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
 				Array.from(barchangeElem.classList).forEach(classname=> {
 					if (classname.indexOf("influence-idx") == 0) {
 						barchangeElem.classList.remove(classname);
-						barchangeElem.classList.remove(`${colorClass}-box`);
+						barchangeElem.classList.remove(`${targetColorClass}-box`);
 						barchangeElem.classList.remove(`influence-box`);
 					}
 				})
@@ -866,7 +861,7 @@ class BnDetail {
 				}
 				// shadow-boxes with width 0 still show their glow
 				if (Math.abs(diff)>0)
-					barchangeElem.classList.add(colorClass+"-box");
+					barchangeElem.classList.add(targetColorClass+"-box");
 
 			})
 			
@@ -883,11 +878,11 @@ class BnDetail {
 						let diff = curBelief - origBeliefs[idx]
 						let absDiff = diff * 100;
 						
-						// let colorClass = this.getColor(/curBelief/origBeliefs[idx])
-						let colorClass = this.getColor(diff)
+						// let colorClass = getColor(/curBelief/origBeliefs[idx])
+						let colorClass = getColor(diff)
 
 						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-						barchangeElem.classList.add(colorClass)
+						barchangeElem.classList.add(colorClass)						
 
 						if (absDiff > 0) {
 							// overlay change over the current belief bar

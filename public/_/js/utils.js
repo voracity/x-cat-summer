@@ -1,3 +1,5 @@
+var { getColor } = require('./utils.js');
+
 document.addEventListener('DOMContentLoaded', event => {
 	document.addEventListener('click', event => {
 		if (event.target.matches('button[href]')) {
@@ -20,6 +22,29 @@ function getQs(searchStr) {
 		}
 	}
 	return params;
+}
+
+function getTargetStateColor(baseBelief, currentBelief) {
+  let diff = currentBelief - baseBelief;
+  let color = getColor(diff);
+  return color
+}
+
+function getColor(changerate) {
+  if (changerate <= -0.3) 
+    return "influence-idx6";
+  else if (-0.3 < changerate && changerate <= -0.15)
+    return "influence-idx5";
+  else if (-0.15 < changerate  && changerate < 0)
+    return "influence-idx4";
+  else if (changerate == 0)
+    return "influence-idx3";
+  else if (0 < changerate && changerate <= 0.15)
+    return "influence-idx2";
+  else if (0.15 < changerate && changerate <= 0.3)
+    return "influence-idx1";
+  else if (0.3 < changerate)
+    return "influence-idx0";
 }
 // ---------------------------------------
 
@@ -265,3 +290,7 @@ function filterPathsByDirectConnection(allPaths) {
 
   return filteredPaths;
 }
+
+module.exports = {
+  getColor,
+};
