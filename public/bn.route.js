@@ -390,8 +390,8 @@ class BnDetail {
 			),
 			n('div.bnView',
 				n('div.influenceContainer',
-					{id:"verbalBox", class: 'influenceContainer' },
-					n('h2.textBoxBold', 'Summary: What all the findings contribute'),
+					{id:"verbalBox", class: 'influenceContainer', style: 'display: none'},
+					n('p', 'Summary: What all the findings contribute', {class: 'verbalTitle'}),
 					n('p', { class: 'summarySentence'}),
 					n('p', { class: 'influenceList'})
 				),
@@ -616,8 +616,12 @@ class BnDetail {
 			let entries = Object.entries(m.influences)
 			console.log('m.influences', m.influences)			
 			
+			let verbalBox = this.root.querySelector('.influenceContainer');
+			verbalBox.style.display = 'block';
 			let verbalSummarySentence = this.root.querySelector('.summarySentence');
 			let verbalListDisplay = this.root.querySelector('.influenceList');
+			let displayDetail = false;
+			let verbalTitle = this.root.querySelector('.verbalTitle');
 
 			// Changed to fixed arc size
 			let arcSize = 8;			
@@ -626,23 +630,42 @@ class BnDetail {
 			if (entries.length == 0) {
 				verbalListDisplay.innerHTML = '';
 				verbalSummarySentence.innerHTML = '';
+				verbalBox.style.display = 'none';
 				reset(m.arcInfluence, bn, this.bnView);				
 			} else {
 				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
-				let numsEntries = entries.length;
+				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalSummarySentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;
 					console.log('-------------------------------------')
-					console.log('evidenceNodeName:', evidenceNodeName)					
+					console.log('evidenceNodeName:', evidenceNodeName)			
+					console.log('this.bnView:', this.bnView)		
+
+					let evidenceShining = this.bnView.querySelector('div.node.shining')					
+
+					if (evidenceShining) {
+						console.log('1111111111111111111111111111-----------------------------')
+						console.log('evidenceShiningLLLLLLLLLLLL:', evidenceShining)
+						displayDetail = true;
+						verbalTitle.textContent = 'DETAILLLLLLL';
+					} else {
+						console.log('0000000000000000000000000000-----------------------------')
+					}
+
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					console.log('evidenceNode:', evidenceNode)									
+					// console.log('evidenceNode:', evidenceNode)
+					
+									
+					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
 					let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
 					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {	
+
+						
 						
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
 
@@ -659,7 +682,7 @@ class BnDetail {
 							m.nodeBeliefs[targetNodeName][targetStateIdx]
 						);
 
-						console.log('targetStateColor:', targetStateColor)
+						// console.log('targetStateColor:', targetStateColor)
 
 						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
 						let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
@@ -681,7 +704,7 @@ class BnDetail {
 							verbalSummarySentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
 						}
 
-						console.log('colorClass:', colorClass)
+						// console.log('colorClass:', colorClass)
 						console.log('-------------------------------------')
 						// set colour and width of the barchange element
 
@@ -723,13 +746,13 @@ class BnDetail {
 					// console.log('---------------------------------------AAAAAArcInfluence')
 					if (m.arcInfluence && m.activePaths) {
 						let delay = 0;
-						console.log("arcInfluence:", m.arcInfluence);			
+						// console.log("arcInfluence:", m.arcInfluence);			
 					
 						reset(m.arcInfluence, bn, this.bnView);
 
 						// console.log('---------------------------------------AAAAAAactivePaths')
 						// Fade Nodes										
-						console.log('m.activePaths is activated: ', m.activePaths)
+						// console.log('m.activePaths is activated: ', m.activePaths)
 						let activeNodes = new Set(m.activePaths.flat())
 						// console.log('activeNodes:', activeNodes)
 
@@ -744,7 +767,7 @@ class BnDetail {
 						})						
 						// console.log('AAAAAAA---------------------------------------')
 					
-						console.log("evidenceNodeName:", evidenceNodeName);
+						// console.log("evidenceNodeName:", evidenceNodeName);
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
 							m.nodeBeliefs,													
@@ -755,13 +778,13 @@ class BnDetail {
 						// console.log("evidenceNodeLabels", evidenceNodeLabels);
 						// console.log("targetNodeLabel", targetNodeLabel);
 					
-						console.log("sortedArcInfluence:", sortedArcInfluence);												
+						// console.log("sortedArcInfluence:", sortedArcInfluence);												
 					
 						sortedArcInfluence.forEach((arcEntry, index) => {						
 							let arc = document.querySelector(
 								`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 							);
-							console.log("index:", index);
+							// console.log("index:", index);
 							// console.log("arcEntry:", arcEntry);							
 							// console.log("activeNodes:",activeNodes);
 							// console.log("arcEntry.color:", arcEntry.color);
@@ -777,9 +800,7 @@ class BnDetail {
 								let animationOrder = 'normal';
 								if (index == 0 && arcEntry.child == evidenceNodeName) {
 									animationOrder = 'reverse';
-								}			
-
-								console.log("animationOrder:", animationOrder);
+								}											
 
 								let combinedElems = Array.from(influeceArcBodyElems).map(
 									(bodyElem, index) => {
@@ -839,8 +860,7 @@ class BnDetail {
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
 				let diff = currentBelief - baseBelief
 				let absDiff = 100*Math.abs(diff)
-				let targetColorClass = getColor(diff)
-				console.log('targetColorClass of TARGETTTTT:', targetColorClass)
+				let targetColorClass = getColor(diff)				
 				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
 				Array.from(barchangeElem.classList).forEach(classname=> {

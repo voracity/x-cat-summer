@@ -268,10 +268,10 @@ class Node {
 		let nodeName = this.nodeName;
 		let evidence = {};
 		let nodeEl = this.el();		
-    	let allStateElem = nodeEl.querySelectorAll(".state");
+    let allStateElem = nodeEl.querySelectorAll(".state");
 
 		allStateElem.forEach((elem) => {
-		elem.style.backgroundColor = "";
+			elem.style.backgroundColor = "";
 		});
 		nodeEl.style.boxShadow = "";
 
@@ -296,22 +296,6 @@ class Node {
 			//bn.evidence[nodeName] = state.dataset.index;
 			evidence[nodeName] = stateIndex;
 			this.el().classList.add('hasEvidence');
-			// Flashing Node when activated
-      let flashes = 2;
-      let flashDuration = 200;
-      let flash = (count) => {
-        if (count > 0) {
-          nodeEl.style.boxShadow =
-            count % 2 === 0 ? "0px 0px 12px rgba(255,0,0,0.9)" : "";
-          setTimeout(() => flash(count - 1), flashDuration);
-        } else {
-          nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
-        }
-      };
-
-      flash(flashes * 2);
-
-      nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
 		}
 		if (o.update)  bn.update(evidence);
 	}
@@ -345,13 +329,16 @@ class Node {
 
 		function toggleFlash() {
 			if (count > 0) {
-				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px 3px rgba(0, 255, 255, 0.9)' : '';
+				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px rgba(255,0,0,0.9)' : '';
 				count--;
 				setTimeout(toggleFlash, flashDuration);
+			} else {
+				nodeElement.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)"
 			}
 		}
 
 		toggleFlash(); 
+		
 	}
 
 	static guiSetupEvents() {
@@ -360,8 +347,8 @@ class Node {
 		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
 			event.stopPropagation();
-			let target_node = event.target.closest('.node h3');
-			let targte_node_shining =  event.target.closest('.node');
+			let evidenceNodeTitle = event.target.closest('.node h3');
+			let evidenceNodeShining =  event.target.closest('.node');
 
 			document.querySelectorAll(".node h3").forEach((nodeHeader) => {
 				nodeHeader.addEventListener("mouseenter", () => {
@@ -372,10 +359,10 @@ class Node {
 					nodeHeader.style.cursor = "default"; 
 				});
 			});
-			if (target_node){
+			if (evidenceNodeTitle) {				
 				
 				document.querySelectorAll(".play-button").forEach(button => button.remove());
-				const existingButton = target_node.querySelector(".play-button");
+				const existingButton = evidenceNodeTitle.querySelector(".play-button");
 				if (existingButton) {
 					existingButton.remove();
 				}
@@ -389,13 +376,20 @@ class Node {
 					//Hao add backend here
 				});
 
-				target_node.style.position = "relative"; 
+				evidenceNodeTitle.style.position = "relative"; 
 				playButton.style.position = "absolute";
 				playButton.style.left = "-30px"; 
 				playButton.style.top = "55%"; 
 				playButton.style.transform = "translateY(-50%)";
-				target_node.appendChild(playButton);
-				Node.flashNode(targte_node_shining);
+				evidenceNodeTitle.appendChild(playButton);
+				Node.flashNode(evidenceNodeShining);
+				evidenceNodeShining.classList.add("shining");		
+				
+				const node = refs.Node(evidenceNodeShining)
+				node.bn.update();
+				
+					// console.log("evidenceNodeShining:", evidenceNodeShining);
+								
 			}
 				
 			
@@ -452,7 +446,7 @@ class Node {
 					event.stopPropagation();
 					event.preventDefault();
 					console.log("start dragging");
-					console.log(targetNode.classList);
+					console.log('targetNode.classList:', targetNode.classList);
 
 
 					// define init pos

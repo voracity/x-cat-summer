@@ -34,7 +34,7 @@ h1 .logo:hover { filter: drop-shadow(3px 3px 3px #aaaa); }
 
 h2 { margin: 0; margin-bottom: 0.5em; }
 
-h2.textBoxBold {
+.verbalTitle {
 	font-family: Arial bold, sans-serif; 
 	font-weight: 900; 
 	font-size: 14px; 
