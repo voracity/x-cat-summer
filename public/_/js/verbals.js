@@ -37,56 +37,6 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
   return findingSentence;
 }
 
-// function enhanceActivePaths(activePaths, sortedArcInfluence, bnView) {
-//   const enhancedPaths = [];
-
-//   activePaths.forEach((path) => {
-//     const enhancedPath = []; // To store information for each step in the path
-
-//     for (let i = 0; i < path.length - 1; i++) {
-//       const fromNode = path[i];
-//       const toNode = path[i + 1];
-
-//       // Find the arc information for this step
-//       const arcInfo = sortedArcInfluence.find(
-//         (arc) => arc.parent === fromNode && arc.child === toNode
-//       );
-
-//       if (arcInfo) {
-//         // Get states and other details
-//         const fromNodeElement = bnView.querySelector(`div.node[data-name="${fromNode}"]`);
-//         const fromState = fromNodeElement
-//           ? fromNodeElement.querySelector('.label')?.textContent || 'unknown'
-//           : 'unknown';
-
-//         const toNodeElement = bnView.querySelector(`div.node[data-name="${toNode}"]`);
-//         const toState = toNodeElement
-//           ? toNodeElement.querySelector('.label')?.textContent || 'unknown'
-//           : 'unknown';
-
-//         // Push the step with additional information
-//         enhancedPath.push({
-//           from: fromNode,
-//           fromState: fromState,
-//           to: toNode,
-//           toState: toState,
-//           color: arcInfo.color,
-//         });
-//       } else {
-//         console.warn(`Arc information missing for transition: ${fromNode} -> ${toNode}`);
-//       }
-//     }
-
-//     if (enhancedPath.length > 0) {
-//       enhancedPaths.push(enhancedPath);
-//     } else {
-//       console.warn(`No arcs found for path: ${path.join(' -> ')}`);
-//     }
-//   });
-
-//   return enhancedPaths;
-// }
-
 function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
   let index = 0;
 
