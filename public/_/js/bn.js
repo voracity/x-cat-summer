@@ -431,6 +431,7 @@ class Node {
 			}
 		});
 
+	
 
 
 
@@ -447,7 +448,6 @@ class Node {
 					event.preventDefault();
 					console.log("start dragging");
 					console.log('targetNode.classList:', targetNode.classList);
-
 
 					// define init pos
 					let origX = event.clientX,
@@ -727,10 +727,10 @@ document.addEventListener('DOMContentLoaded', event => {
 
 
 
+
 function onMouseUp() {
   isDragging = false;
 
-  // 移除事件监听器
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
 }
@@ -765,5 +765,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	items.onmouseup = handleDragLeave
 	items.onmouseleave = handleDragLeave
 	items.onmousemove = handleDragMove
+
+	let verbalBox = document.querySelector('.influenceContainer');
+	verbalBox.onmousedown = handleDragEnter
+	verbalBox.onmouseup = handleDragLeave
+	verbalBox.onmouseleave = handleDragLeave
+	verbalBox.onmousemove = handleDragMove
+
+
 
   });
