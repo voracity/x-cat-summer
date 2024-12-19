@@ -56,17 +56,10 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	margin-left: 60%; 
 }
 
-.influenceContainer.small {
-	height: 100px;
-  }
-  
-.influenceContainer.medium {
-	height: 200px;
+.influenceContainer:hover {
+	cursor: move;
 }
-  
-.influenceContainer.large {
-	height: 300px;
-}
+
 
 .verbalTextBold{
 	font-family: Arial bold, sans-serif; 
@@ -87,6 +80,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	font-size: 16px; 
 	font-style: italic;
 }
+
 
 
 .header { font-size: 24px; padding: 20px 10px; border-bottom: solid 1px #555; height: 132px;
