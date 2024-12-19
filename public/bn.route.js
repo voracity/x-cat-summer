@@ -822,8 +822,10 @@ class BnDetail {
 						}
 					
 						// console.log("sortedArcInfluence:", sortedArcInfluence);		
-						let arcsContribution = [];			
+						// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, this.bnView);			
 					
+						let arcsContribution = [];
+
 						sortedArcInfluence.forEach((arcEntry, index) => {						
 							let arc = document.querySelector(
 								`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
@@ -843,6 +845,7 @@ class BnDetail {
 							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
 							let childNodeState = childNode.querySelector('.label').textContent;
 
+							
 
 							// coloring order of arrows
 							if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
@@ -852,8 +855,8 @@ class BnDetail {
 									to: arcEntry.child,
 									toState: childNodeState,
 									color: arcEntry.color,
-									targetNodeName: targetNodeName,
-									endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
+									// targetNodeName: targetNodeName,
+									// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
 								})
 
 								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
@@ -915,7 +918,7 @@ class BnDetail {
 						});
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
-							buildDetailSentenceList(arcsContribution, verbalListDisplay);
+							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
 						}
 					}
 				})

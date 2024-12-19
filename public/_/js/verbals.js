@@ -37,97 +37,131 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
   return findingSentence;
 }
 
-// function buildDetailSentenceList(arcsContributionArr, verbalListDisplay) {
-//   arcsContributionArr.forEach((arc) => {
-//     if (arc.targetNodeName == arc.to) {
-//       let simpleSentence = n(
-//         'p',
-//         '● By direct connection, it ',
-//         n('span', colorToVerbal(arc.color), { class: 'verbalText' }),
-//         ' the probability of ',
-//         n('span', arc.to, { class: 'verbalTextBold' }),
-//         '.'
+// function enhanceActivePaths(activePaths, sortedArcInfluence, bnView) {
+//   const enhancedPaths = [];
+
+//   activePaths.forEach((path) => {
+//     const enhancedPath = []; // To store information for each step in the path
+
+//     for (let i = 0; i < path.length - 1; i++) {
+//       const fromNode = path[i];
+//       const toNode = path[i + 1];
+
+//       // Find the arc information for this step
+//       const arcInfo = sortedArcInfluence.find(
+//         (arc) => arc.parent === fromNode && arc.child === toNode
 //       );
-//       verbalListDisplay.appendChild(simpleSentence);
+
+//       if (arcInfo) {
+//         // Get states and other details
+//         const fromNodeElement = bnView.querySelector(`div.node[data-name="${fromNode}"]`);
+//         const fromState = fromNodeElement
+//           ? fromNodeElement.querySelector('.label')?.textContent || 'unknown'
+//           : 'unknown';
+
+//         const toNodeElement = bnView.querySelector(`div.node[data-name="${toNode}"]`);
+//         const toState = toNodeElement
+//           ? toNodeElement.querySelector('.label')?.textContent || 'unknown'
+//           : 'unknown';
+
+//         // Push the step with additional information
+//         enhancedPath.push({
+//           from: fromNode,
+//           fromState: fromState,
+//           to: toNode,
+//           toState: toState,
+//           color: arcInfo.color,
+//         });
+//       } else {
+//         console.warn(`Arc information missing for transition: ${fromNode} -> ${toNode}`);
+//       }
+//     }
+
+//     if (enhancedPath.length > 0) {
+//       enhancedPaths.push(enhancedPath);
 //     } else {
-//       let findingSentence = n(
-//         'p', `● It ${colorToVerbalShorten(arc.color)} the probability that `,
-//         n('span', arc.to, {class: 'verbalTextBold'}),
-//         ' was ',
-//         n('span', arc.toState, {class: 'verbalTextItalic'}),
-//         ', which in turn ',
-//         n('span', colorToVerbal(arc.color)),
-//         ` the probability of `,
-//         n('span', arc.to, {class: 'verbalTextBold'}),
-//         '.'
-//       );
-//       verbalListDisplay.appendChild(findingSentence);
+//       console.warn(`No arcs found for path: ${path.join(' -> ')}`);
 //     }
 //   });
-//   return detailSentence;
+
+//   return enhancedPaths;
 // }
 
-function buildDetailSentenceList(arcsContributionArr, verbalListDisplay) {
-  arcsContributionArr.forEach((arc, index) => {
-    // Check if it's a simple sentence (ends in this arc)
-    if (arc.endSentence) {
-      let simpleSentence = n(
+function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
+  let index = 0;
+
+  console.log('activePaths', activePaths);
+
+  activePaths.forEach((path) => {
+    console.log('path', path);
+    const arc = arcsContribution[index]; // Access the arc using the current index
+    if (path.length == 2) { 
+      // Direct connection: only one arc      
+      const sentence = n(
         'p',
         '● By direct connection, it ',
         n('span', colorToVerbal(arc.color), { class: 'verbalText' }),
         ' the probability of ',
-        n('span', arc.to, { class: 'verbalTextBold' }),
+        n('span', path[1], { class: 'verbalTextBold' }),
         '.'
       );
-      verbalListDisplay.appendChild(simpleSentence);
+      verbalListDisplay.appendChild(sentence); // Append the generated sentence to the display
     } else {
-      // If it's a multi-part sentence
-      let findingSentence = n(
-        'p',
-        '● It ',
-        n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' }),
-        ' the probability that ',
-        n('span', arc.from, { class: 'verbalTextBold' }),
-        ' was ',
-        n('span', arc.fromState, { class: 'verbalTextItalic' }),
-        ','
-      );
+      // Indirect connection: multiple arcs
+      const sentence = n('p', '● It ');
 
-      // Check if it continues or ends
-      if (arc.endSentence) {
-        findingSentence.appendChild(
-          n(
-            'span',
-            ' which in turn ',
-            n(
-              'span',
-              colorToVerbal(arc.color),
-              { class: 'verbalText' }
-            ),
-            ' the probability of ',
-            n('span', arc.targetNodeName, { class: 'verbalTextBold' }),
-            '.'
-          )
-        );
-      } else {
-        findingSentence.appendChild(
-          n(
-            'span',
-            ' which in turn ',
-            n(
-              'span',
-              colorToVerbalShorten(arc.color),
-              { class: 'verbalText' }
-            ),
-            ' the probability that ',
-            n('span', arc.to, { class: 'verbalTextBold' }),
-            ' was ',
-            n('span', arc.toState, { class: 'verbalTextItalic' }),
-            '.'
-          )
-        );
-      }
-      verbalListDisplay.appendChild(findingSentence);
+      path.forEach((node, i) => {
+        if (i < path.length - 1) {
+          let toState = path[index + 1] == arc.to ? arc.toState : arc.fromState;
+          // Not the last node in the path          
+          if (i === 0) {
+            // First step in the path
+            sentence.appendChild(
+              n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' })
+            );
+            sentence.appendChild(n('span', ' the probability that '));
+            sentence.appendChild(
+              n('span', path[index + 1], { class: 'verbalTextBold' })
+            );
+            sentence.appendChild(n('span', ' was '));
+            sentence.appendChild(
+              n('span', toState, { class: 'verbalTextItalic' })
+            );
+            sentence.appendChild(n('span', ','));
+          } 
+          // else {
+          //   // Intermediate steps
+          //   sentence.appendChild(n('span', ' which in turn '));
+          //   sentence.appendChild(
+          //     n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' })
+          //   );
+          //   sentence.appendChild(n('span', ' the probability that '));
+          //   sentence.appendChild(
+          //     n('span', arc.to, { class: 'verbalTextBold' })
+          //   );
+          //   sentence.appendChild(n('span', ' was '));
+          //   sentence.appendChild(
+          //     n('span', arc.toState, { class: 'verbalTextItalic' })
+          //   );
+          //   sentence.appendChild(n('span', ','));
+          // }
+        } else {
+          // Last step in the path  
+          // console.log('path[i]', path[i]); 
+          
+          sentence.appendChild(n('span', ' which in turn '));
+          sentence.appendChild(
+            n('span', colorToVerbal(arc.color), { class: 'verbalText' })
+          );
+          sentence.appendChild(n('span', ' the probability of '));
+          sentence.appendChild(
+            n('span', path[i], { class: 'verbalTextBold' })
+          );
+          sentence.appendChild(n('span', '.'));
+        }        
+      });
+      index++; // Move to the next arc
+      verbalListDisplay.appendChild(sentence); // Append the generated sentence
     }
   });
 }
