@@ -392,8 +392,9 @@ class BnDetail {
 				n('div.influenceContainer',
 					{id:"verbalBox", class: 'influenceContainer', style: 'display: none'},
 					n('p', 'Summary: What all the findings contribute', {class: 'verbalTitle'}),
-					n('p', { class: 'summarySentence'}),
-					n('p', { class: 'influenceList'})
+					n('p', { class: 'introSentence'}),
+					n('p', { class: 'influenceList'}),
+					n('p', { class: 'overallSentence'})
 				),
 			),
 
@@ -618,10 +619,11 @@ class BnDetail {
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
 			verbalBox.style.display = 'block';
-			let verbalSummarySentence = this.root.querySelector('.summarySentence');
+			let verbalIntroSentence = this.root.querySelector('.introSentence');
 			let verbalListDisplay = this.root.querySelector('.influenceList');
 			let displayDetail = false;
 			let verbalTitle = this.root.querySelector('.verbalTitle');
+			let verbalOverallSentence = this.root.querySelector('.overallSentence');
 
 			// Changed to fixed arc size
 			let arcSize = 8;			
@@ -629,29 +631,41 @@ class BnDetail {
 			// console.log('entries.length:', entries.length)
 			if (entries.length == 0) {
 				verbalListDisplay.innerHTML = '';
-				verbalSummarySentence.innerHTML = '';
+				verbalIntroSentence.innerHTML = '';
 				verbalBox.style.display = 'none';
+				
+				verbalOverallSentence.innerHTML = '';
+				displayDetail = false;
+
 				reset(m.arcInfluence, bn, this.bnView);				
+
 			} else {
 				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
-					verbalSummarySentence.innerHTML = '';
+					verbalIntroSentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;
 					console.log('-------------------------------------')
 					console.log('evidenceNodeName:', evidenceNodeName)			
 					console.log('this.bnView:', this.bnView)		
 
-					let evidenceShining = this.bnView.querySelector('div.node.shining')					
+					// Activate Evidence - Flash Node - Shining Node
+					// console.log('displayDetail:', displayDetail)
+					let evidenceShining = this.bnView.querySelector('div.node.shining')
+					let evidenceShiningName = ''
+					let evidenceShiningState = ''
+					if (evidenceShining && !displayDetail) {
+						evidenceShiningName = evidenceShining.getAttribute('data-name')
+						evidenceShiningState = evidenceShining.querySelector('.label').textContent
 
-					if (evidenceShining) {
-						console.log('1111111111111111111111111111-----------------------------')
-						console.log('evidenceShiningLLLLLLLLLLLL:', evidenceShining)
 						displayDetail = true;
-						verbalTitle.textContent = 'DETAILLLLLLL';
-					} else {
-						console.log('0000000000000000000000000000-----------------------------')
+						verbalTitle.innerHTML = '';
+						verbalTitle.appendChild(n('p', `Details: Finding out how ${evidenceShiningName} was `, 
+							n('span', `${evidenceShiningState}`, {style: 'font-style: italic'}), ' contributes'));
+
+						// console.log('evidenceShiningName:', evidenceShiningName)
+						// console.log('evidenceShiningState:', evidenceShiningState)
 					}
 
 					let targetBeliefs = value['targetBeliefs'];
@@ -695,13 +709,26 @@ class BnDetail {
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
 												
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName);
-						verbalListDisplay.appendChild(findingOutSentence);
-						console.log('verbalListDisplay length:', verbalListDisplay.children.length)
-						
-						
-						if (numsEntries >= 2) {
-							verbalSummarySentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName, displayDetail);
+						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
+						// console.log('outputSentence:', )
+						// console.log('findingOutSentence:', findingOutSentence)
+						if (!displayDetail) {
+							verbalListDisplay.appendChild(findingOutSentence)
+							
+							if (numsEntries >= 2) {
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+							}
+						}												
+
+						// Overall Detail Sentence
+						if (displayDetail && m.activePaths.length >= 2) {
+							verbalOverallSentence.innerHTML = '';
+							verbalOverallSentence.appendChild(
+								n('p', `Overall, the findings `, 
+								n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
+								n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
+							));
 						}
 
 						// console.log('colorClass:', colorClass)
@@ -755,6 +782,10 @@ class BnDetail {
 						// console.log('m.activePaths is activated: ', m.activePaths)
 						let activeNodes = new Set(m.activePaths.flat())
 						// console.log('activeNodes:', activeNodes)
+						console.log('m.activePaths:', m.activePaths)
+						console.log('m.activePaths length:', m.activePaths.length)
+
+						let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
 						// console.log('bnView:', this.bnView)
 						// console.log('activeNodes: ', activeNodes)
@@ -772,13 +803,26 @@ class BnDetail {
 							m.arcInfluence,
 							m.nodeBeliefs,													
 							evidenceNodeName
-						);
+						);						
 					
 						// console.log("importantMiddleNodes", importantMiddleNodes);
 						// console.log("evidenceNodeLabels", evidenceNodeLabels);
 						// console.log("targetNodeLabel", targetNodeLabel);
+						if (m.activePaths.length >= 2 && displayDetail) {
+							verbalIntroSentence.innerHTML = '';
+							verbalIntroSentence.appendChild(
+								n('p', 'Finding out ', 
+								n('span', evidenceShiningName, {class: 'verbalTextBold'}),
+								' was ',
+								n('span', evidenceShiningState, {class: 'verbalTextItalic'}),
+								' contributes due to ',
+								numberToWord(m.activePaths.length),
+								' connections:'
+								))
+						}
 					
-						// console.log("sortedArcInfluence:", sortedArcInfluence);												
+						// console.log("sortedArcInfluence:", sortedArcInfluence);		
+						let arcsContribution = [];			
 					
 						sortedArcInfluence.forEach((arcEntry, index) => {						
 							let arc = document.querySelector(
@@ -793,8 +837,25 @@ class BnDetail {
 							// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 
 							// we know the first child is the colour arc
+							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
+							let parentNodeState = parentNode.querySelector('.label').textContent;
+							
+							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
+							let childNodeState = childNode.querySelector('.label').textContent;
+
+
 							// coloring order of arrows
 							if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
+								arcsContribution.push({
+									from: arcEntry.parent,
+									fromState: parentNodeState,
+									to: arcEntry.child,
+									toState: childNodeState,
+									color: arcEntry.color,
+									targetNodeName: targetNodeName,
+									endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
+								})
+
 								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
 								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
 								let animationOrder = 'normal';
@@ -852,6 +913,10 @@ class BnDetail {
 								// console.log("arcBodys after changing color:", arcBodys[1]);
 							}
 						});
+						console.log('arcsContribution:', arcsContribution)
+						if (displayDetail) {
+							buildDetailSentenceList(arcsContribution, verbalListDisplay);
+						}
 					}
 				})
 			}
@@ -1606,22 +1671,22 @@ module.exports = {
 								// 		// we consider it as an indirect influence scenario.
 								// 		let intermediateNodesStr = adjacentNonActiveNodes.map(node => {
 								// 			let nodeAttribute = getAttribute(node);
-								// 			return `${node} is <span class = "verbalTextUnderItalic">${nodeAttribute}</span>`;
+								// 			return `${node} is <span class = "verbalTextItalic">${nodeAttribute}</span>`;
 								// 		}).join(', ');
-								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextUnderItalic">${fromNodeAttribute}</span>
-								// 		<span class = "verbalTextUnderLine">${contributionPhrase}</span> the probability of <span class = "verbalTextbold">${toNode}</span> is <span class = "verbalTextUnderItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
+								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextItalic">${fromNodeAttribute}</span>
+								// 		<span class = "verbalTextUnderline">${contributionPhrase}</span> the probability of <span class = "verbalTextbold">${toNode}</span> is <span class = "verbalTextItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
 								// 	} else {
 								// 		// No adjacent nonActiveNodes, this is a straightforward direct influence sentence.
-								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextUnderItalic">${fromNodeAttribute}</span>
-								// 		<span class = "verbalTextUnderLine">${contributionPhrase}</span> the probability of <span class = "verbalTextbold">${toNode}</span> is <span class = "verbalTextUnderItalic">${targetNodeAttribute}</span>.</span></li>`;
+								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextItalic">${fromNodeAttribute}</span>
+								// 		<span class = "verbalTextUnderline">${contributionPhrase}</span> the probability of <span class = "verbalTextbold">${toNode}</span> is <span class = "verbalTextItalic">${targetNodeAttribute}</span>.</span></li>`;
 								// 	}
 								// } else {
 								// 	// Indirect path or a path with intermediate nodes.
 								// 	if (intermediateNodes.length === 0) {
-								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextUnderItalic">${fromNodeAttribute}</span> <span class = "verbalTextUnderLine"">${contributionPhrase}</span> the probability of <span class = "verbalTextbold"">${toNode}</span> is <span class = "verbalTextUnderItalic">${targetNodeAttribute}</span>.</span></li>`;
+								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextItalic">${fromNodeAttribute}</span> <span class = "verbalTextUnderline"">${contributionPhrase}</span> the probability of <span class = "verbalTextbold"">${toNode}</span> is <span class = "verbalTextItalic">${targetNodeAttribute}</span>.</span></li>`;
 								// 	} else {
 								// 		const intermediateNodesStr = intermediateNodes.join(', ');
-								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextUnderItalic">${fromNodeAttribute}</span> <span class = "verbalTextUnderLine"">${contributionPhrase}</span> the probability of <span class = "verbalTextbold"">${toNode}</span> is <span class = "verbalTextUnderItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
+								// 		sentence = `<li><span class = "verbalText">Finding out <span class = "verbalTextbold">${fromNode}</span> is <span class = "verbalTextItalic">${fromNodeAttribute}</span> <span class = "verbalTextUnderline"">${contributionPhrase}</span> the probability of <span class = "verbalTextbold"">${toNode}</span> is <span class = "verbalTextItalic">${targetNodeAttribute}</span>, given that ${intermediateNodesStr}.</span></li>`;
 								// 	}
 								// }
 						
@@ -1651,13 +1716,13 @@ module.exports = {
 						
 						// 	let overallSentence = `<span class = "verbalText"><span class = "verbalTextbold">All findings</span> 
 						// 			combined
-						// 			<span class = "verbalTextUnderLine">${overallDescription}</span> 
+						// 			<span class = "verbalTextUnderline">${overallDescription}</span> 
 						// 			the probability that 
 						// 			<span class = "verbalTextbold">${targetNodeName}</span> 
 						// 			is 
-						// 			<span class = "verbalTextUnderItalic">${targetNodeAttribute}</span>.</span><br>`;
+						// 			<span class = "verbalTextItalic">${targetNodeAttribute}</span>.</span><br>`;
 						
-						// 	let explanation = `<span class = "verbalText">${overallSentence}<br>The <span class = "verbalTextUnderLine" >contribution</span> of each finding is:`;
+						// 	let explanation = `<span class = "verbalText">${overallSentence}<br>The <span class = "verbalTextUnderline" >contribution</span> of each finding is:`;
 						// 	bn.influences['overall'] = {
 						// 		explanation: explanation
 						// 	};

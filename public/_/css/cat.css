@@ -77,12 +77,12 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	font-family: Arial bold, sans-serif;
 	font-size: 16px; 
 }
-.verbalTextUnderLine{
+.verbalTextUnderline{
 	font-family: Arial bold, sans-serif;
 	font-size: 16px; 
 	text-decoration: underline;
 }
-.verbalTextUnderItalic{
+.verbalTextItalic{
 	font-family: Arial bold, sans-serif;
 	font-size: 16px; 
 	font-style: italic;
