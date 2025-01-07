@@ -9,6 +9,8 @@ var bn = {
 	selectedStates: {},
 	beliefs: {},
 	ciTableEnabled: false,
+	isLimitedMode: false,
+
 	drawArcs() {
 		let bnView = document.querySelector(".bnView");
 		for (let node of bn.model) {
@@ -416,8 +418,6 @@ class Node {
 					nodeHeader.style.cursor = "default"; 
 				});
 			});
-
-
 	
 			if (target_node){
 				
@@ -484,9 +484,25 @@ class Node {
 			}
 		});
 
+		// Hao
+		// mode change listener
+		document.addEventListener("modeChange", (event) => {
+			console.log("Mode changed:", event.detail.isLimitedMode ? "Enabled" : "Disabled");
+			window.isLimitedMode = event.detail.isLimitedMode; 
+		});
+
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
+				
+
+				//Hao 
+				// change mode to limited 
+				if (window.isLimitedMode) {
+					console.log("Dragging is disabled");
+					return;
+				}
+
 				console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
 				console.log(target);
@@ -734,6 +750,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
 	q("input.influence-target-node").addEventListener("click", (event) => {
 		bnDetail.onlyTargetNode = event.target.checked;
 		bnDetail.$handleUpdate({ updateShowBarChange: "" });
+	});
+	q("button.ChangeLimited").addEventListener("click",() => {
+		bnDetail.ChangeLimited();
+		
 	});
 });
 

@@ -3,8 +3,8 @@ var { sitePath, ...siteUtils } = require("siteUtils");
 var { Net, Node } = require("../bni_smile");
 var fs = require("fs");
 
+
 function addJointChild(net, parentNames, tempNodeName = null) {
-	let stateList = [];
 	let stateIndexes = parentNames.map((_) => 0);
 	do {
 		stateList.push("s" + stateIndexes.join("_"));
@@ -381,6 +381,7 @@ class BnDetail {
 
 					n("label", "Influence Frame", n("input.influence-as-frame", { type: "checkbox" })),
 					n("label", "Only Show Target Node", n("input.influence-target-node", { type: "checkbox" })),
+					n("button.ChangeLimited", "Limited Mode"),
 					n("button.publish", "Publish to Public Library"),
 					n("span.gap"),
 					n(
@@ -974,7 +975,28 @@ class BnDetail {
 		document.getElementById("snapshotname").focus();
 		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
 	}
+
+	//Hao Limited mode
+	ChangeLimited() {
+		this.isLimitedMode = !this.isLimitedMode;
+		const limited_button = document.querySelector(".ChangeLimited");
+		const event = new CustomEvent("modeChange", {
+			detail: { isLimitedMode: this.isLimitedMode },
+		});
+		document.dispatchEvent(event);
+		if (this.isLimitedMode) {
+			limited_button.style.color = "red";
+			console.log("Limited Mode Enabled");
+		} else {
+			limited_button.style.backgroundColor = ""; 
+			limited_button.style.color = ""; 
+			console.log("Limited Mode Disabled");
+		}
+		console.log("Limited Mode:", this.isLimitedMode ? "Enabled" : "Disabled");
+	}
+	
 }
+
 
 module.exports = {
 	template: "BnPage",

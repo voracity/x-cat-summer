@@ -306,7 +306,7 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	display:inline-block;
 	border: 1px solid black;
 	background-color: #fff;
-	user-select: none;
+	user-select: none;button
 }
 
 .evidence-scale-header{
