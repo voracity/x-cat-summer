@@ -437,7 +437,7 @@ class BnDetail {
 	$handleUpdate(m) {
 		let barMax = 100; //px
 		// console.log('---------------------------------------')
-		// console.log('m:', m)
+		console.log('m:', m)
 		// console.log('---------------------------------------')
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
@@ -917,11 +917,10 @@ class BnDetail {
 							}
 						});
 						console.log('arcsContribution:', arcsContribution)
-						console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
 							console.log('colliders:', m.colliders)
 							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							// generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
+							// generateDetailedExplanations({m.activePaths,secondOrderPaths,arcsContribution,verbalListDisplay,})
 						}
 					}
 				})

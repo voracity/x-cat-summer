@@ -917,11 +917,8 @@ class BnDetail {
 							}
 						});
 						console.log('arcsContribution:', arcsContribution)
-						console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
-							console.log('colliders:', m.colliders)
 							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							// generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
 						}
 					}
 				})
@@ -1425,28 +1422,6 @@ module.exports = {
 					// 	return NodeAttribute
 	
 					// }
-
-					function findAllColliders(relationships) {
-						// Map each child node -> a set of its distinct parents
-						const childToParents = {};
-					  
-						// Build up the sets of parents
-						relationships.forEach(({ from, to }) => {
-						  if (!childToParents[to]) {
-							childToParents[to] = new Set();
-						  }
-						  childToParents[to].add(from);
-						});
-					  
-						// A node is a collider if it has >=2 distinct parents
-						const colliders = [];
-						for (const node in childToParents) {
-						  if (childToParents[node].size >= 2) {
-							colliders.push(node);
-						  }
-						}
-						return colliders;
-					  }
 					
 					function isActivePath(path, relationships, evidence) {
 						// Helper function to check if a node is a collider
@@ -1541,8 +1516,10 @@ module.exports = {
 					});
 
 					console.log("relationships",relationships)
-					const graph = buildUndirectedGraph(relationships);
 					
+
+
+					const graph = buildUndirectedGraph(relationships);
 
 
 					// Edge map for contribute values
@@ -1582,12 +1559,6 @@ module.exports = {
 						}
 						bn.influences = {};
 						bn.activePaths = [];
-						bn.colliders = {};
-
-
-						const colliders = findAllColliders(relationships);
-						bn.colliders = colliders;
-                        // console.log('Collider nodes:', bn.colliders);
 
 
 						// Ensure only one selected target node

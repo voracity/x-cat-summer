@@ -917,11 +917,10 @@ class BnDetail {
 							}
 						});
 						console.log('arcsContribution:', arcsContribution)
-						console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
 							console.log('colliders:', m.colliders)
 							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							// generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
+							// generateDetailedExplanations({m.activePaths,secondOrderPaths,arcsContribution,verbalListDisplay,})
 						}
 					}
 				})

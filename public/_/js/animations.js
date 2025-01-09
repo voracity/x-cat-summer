@@ -1,3 +1,5 @@
+var { getColor} = require('./utils.js');
+
 function reset(arcInfluence, bn, bnView) {
     if (arcInfluence) {
       arcInfluence.forEach((arcEntry) => {
@@ -15,9 +17,8 @@ function reset(arcInfluence, bn, bnView) {
     }
   }
   
-  function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, getColor, evidenceNodeName) {
+  function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
     console.log('evidenceNodeName:', evidenceNodeName);
-    console.log('nodeBeliefs', nodeBeliefs);
     return arcInfluence
       .map((arcEntry) => {
         // Calculate max diff for this arcEntry       
@@ -33,7 +34,6 @@ function reset(arcInfluence, bn, bnView) {
             return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
           }
         );
-        console.log('diffs', diffs);
   
         // max to ensures the arc represents its strongest influence across all targets.
         const maxDiff = Math.max(...diffs);

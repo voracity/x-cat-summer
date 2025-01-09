@@ -65,8 +65,6 @@ var bn = {
 					this.arcInfluence = reqData.arcInfluence;
 					console.log('reqData.arcInfluence:', reqData.arcInfluence);
 					console.log('reqData.activePaths:', reqData.activePaths);
-					console.log('reqData.colliders:', reqData.colliders);
-					this.colliders = reqData.colliders;
 					this.activePaths = reqData.activePaths;
 				} else {
 					this.influences = {};
@@ -78,7 +76,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths});
 	},
 
 	guiUpdateInfoWindows() {

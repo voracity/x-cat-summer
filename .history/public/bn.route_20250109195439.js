@@ -917,11 +917,10 @@ class BnDetail {
 							}
 						});
 						console.log('arcsContribution:', arcsContribution)
-						console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
-							console.log('colliders:', m.colliders)
+							
 							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							// generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
+							// generateDetailedExplanations({m.activePaths,secondOrderPaths,arcsContribution,verbalListDisplay,})
 						}
 					}
 				})
@@ -1426,25 +1425,29 @@ module.exports = {
 	
 					// }
 
-					function findAllColliders(relationships) {
-						// Map each child node -> a set of its distinct parents
+					function findAllColliders(graph) {
 						const childToParents = {};
 					  
-						// Build up the sets of parents
-						relationships.forEach(({ from, to }) => {
-						  if (!childToParents[to]) {
-							childToParents[to] = new Set();
-						  }
-						  childToParents[to].add(from);
-						});
+						// Loop over each parent in the graph
+						for (const parent in graph) {
+						  const children = graph[parent];
+						  children.forEach(child => {
+							if (!childToParents[child]) {
+							  childToParents[child] = new Set();
+							}
+							// Add the parent to this child's set of parents
+							childToParents[child].add(parent);
+						  });
+						}
 					  
-						// A node is a collider if it has >=2 distinct parents
+						// Step 2: A child is a collider if it has 2 or more distinct parents
 						const colliders = [];
-						for (const node in childToParents) {
-						  if (childToParents[node].size >= 2) {
-							colliders.push(node);
+						for (const child in childToParents) {
+						  if (childToParents[child].size >= 2) {
+							colliders.push(child);
 						  }
 						}
+					  
 						return colliders;
 					  }
 					
@@ -1541,8 +1544,12 @@ module.exports = {
 					});
 
 					console.log("relationships",relationships)
-					const graph = buildUndirectedGraph(relationships);
 					
+
+					
+					const graph = buildUndirectedGraph(relationships);
+					const colliders = findAllColliders(graph);
+                    console.log('Collider nodes:', colliders);
 
 
 					// Edge map for contribute values
@@ -1582,12 +1589,6 @@ module.exports = {
 						}
 						bn.influences = {};
 						bn.activePaths = [];
-						bn.colliders = {};
-
-
-						const colliders = findAllColliders(relationships);
-						bn.colliders = colliders;
-                        // console.log('Collider nodes:', bn.colliders);
 
 
 						// Ensure only one selected target node

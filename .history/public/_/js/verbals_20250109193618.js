@@ -176,27 +176,31 @@ function generateDetailedExplanations({activePaths,secondOrderPaths,arcsContribu
   }
 }
 
-function findAllColliders(relationships) {
-  // Map each child node -> a set of its distinct parents
+function findAllColliders(graph) {
   const childToParents = {};
-  
-  // Build up the sets of parents
-  relationships.forEach(({ from, to }) => {
-    if (!childToParents[to]) {
-    childToParents[to] = new Set();
-    }
-    childToParents[to].add(from);
-  });
-  
-  // A node is a collider if it has >=2 distinct parents
+
+  // Loop over each parent in the graph
+  for (const parent in graph) {
+    const children = graph[parent];
+    children.forEach(child => {
+      if (!childToParents[child]) {
+        childToParents[child] = new Set();
+      }
+      // Add the parent to this child's set of parents
+      childToParents[child].add(parent);
+    });
+  }
+
+  // Step 2: A child is a collider if it has 2 or more distinct parents
   const colliders = [];
-  for (const node in childToParents) {
-    if (childToParents[node].size >= 2) {
-    colliders.push(node);
+  for (const child in childToParents) {
+    if (childToParents[child].size >= 2) {
+      colliders.push(child);
     }
   }
+
   return colliders;
-  }
+}
   
 function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
   let findings = numsFinding == 2 ? 'Both' : 'All';

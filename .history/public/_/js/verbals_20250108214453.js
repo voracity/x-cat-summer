@@ -175,28 +175,6 @@ function generateDetailedExplanations({activePaths,secondOrderPaths,arcsContribu
     buildDetailColliderSentenceList(secondOrderPaths, arcsContribution, verbalListDisplay);
   }
 }
-
-function findAllColliders(relationships) {
-  // Map each child node -> a set of its distinct parents
-  const childToParents = {};
-  
-  // Build up the sets of parents
-  relationships.forEach(({ from, to }) => {
-    if (!childToParents[to]) {
-    childToParents[to] = new Set();
-    }
-    childToParents[to].add(from);
-  });
-  
-  // A node is a collider if it has >=2 distinct parents
-  const colliders = [];
-  for (const node in childToParents) {
-    if (childToParents[node].size >= 2) {
-    colliders.push(node);
-    }
-  }
-  return colliders;
-  }
   
 function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
   let findings = numsFinding == 2 ? 'Both' : 'All';
