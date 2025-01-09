@@ -20,6 +20,70 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
+function identifyColliders(networkModel) {
+    const colliders = [];
+
+    // Build a graph adjacency list for parent-to-child relationships
+    const graph = {};
+    networkModel.forEach(node => {
+        node.parents?.forEach(parent => {
+            if (!graph[parent]) graph[parent] = [];
+            graph[parent].push(node.name);
+        });
+    });
+
+    // Helper function to check if there is a path between two nodes
+    function hasPathBetweenNodes(start, end, graph) {
+        if (!graph[start]) return false; // No outgoing edges from the start node
+        const queue = [start];
+        const visited = new Set();
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+            if (current === end) return true;
+            visited.add(current);
+            if (graph[current]) {
+                for (const neighbor of graph[current]) {
+                    if (!visited.has(neighbor)) {
+                        queue.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    // Iterate through all nodes to find colliders
+    networkModel.forEach(node => {
+        if (node.parents?.length > 1) { // Node must have 2+ parents
+            const parentPairs = [];
+            
+            // Generate all pairs of parents
+            for (let i = 0; i < node.parents.length; i++) {
+                for (let j = i + 1; j < node.parents.length; j++) {
+                    parentPairs.push([node.parents[i], node.parents[j]]);
+                }
+            }
+
+            // Check if all parent pairs have no paths between them
+            const isCollider = parentPairs.every(([parent1, parent2]) => 
+                !hasPathBetweenNodes(parent1, parent2, graph) &&
+                !hasPathBetweenNodes(parent2, parent1, graph) // Ensure no reverse path
+            );
+
+            if (isCollider) {
+                colliders.push({
+                    colliderNode: node.name,
+                    parents: node.parents,
+                    paths: node.parents.map(parent => `${parent} -> ${node.name}`)
+                });
+            }
+        }
+    });
+
+    return colliders;
+}
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
 	function getRowIndex(parIndexes) {
@@ -452,6 +516,15 @@ class BnDetail {
 		
 		if (m.model) {
 			console.log('m.model:', m.model)
+
+			// Identify colliders based on dynamically selected nodes
+			const colliders = identifyColliders(m.model);
+	
+			if (colliders.length > 0) {
+				console.log(`Found ${colliders.length} collider structure(s):`, colliders);
+			} else {
+				console.log("No collider structures found.");
+			}
 			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -1915,7 +1988,6 @@ module.exports = {
 							parents: node.parents().map(p => p.name()),
 							states: node.states().map(s => s.name()),
 							beliefs: node.beliefs(),
-							//beliefs: [],
 						}));
 					//console.log('HI3');
 					console.log('Done BN info');
