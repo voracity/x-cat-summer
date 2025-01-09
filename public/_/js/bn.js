@@ -439,7 +439,7 @@ class Node {
 			setMoveEl.addEventListener("mousedown", (event) => {
 				console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
-				console.log(target);
+				console.log('target:', target);
 				
 
 				if (target) {
