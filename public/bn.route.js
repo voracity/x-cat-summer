@@ -20,70 +20,162 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
-function identifyColliders(networkModel) {
+function findColliders(net, relationships) {
     const colliders = [];
+    const incomingEdges = {};
 
-    // Build a graph adjacency list for parent-to-child relationships
-    const graph = {};
-    networkModel.forEach(node => {
-        node.parents?.forEach(parent => {
-            if (!graph[parent]) graph[parent] = [];
-            graph[parent].push(node.name);
-        });
+    // Build a map of incoming edges for each node
+    relationships.forEach(rel => {
+        if (!incomingEdges[rel.to]) {
+            incomingEdges[rel.to] = [];
+        }
+        incomingEdges[rel.to].push(rel.from);
     });
 
-    // Helper function to check if there is a path between two nodes
-    function hasPathBetweenNodes(start, end, graph) {
-        if (!graph[start]) return false; // No outgoing edges from the start node
-        const queue = [start];
-        const visited = new Set();
-
-        while (queue.length > 0) {
-            const current = queue.shift();
-            if (current === end) return true;
-            visited.add(current);
-            if (graph[current]) {
-                for (const neighbor of graph[current]) {
-                    if (!visited.has(neighbor)) {
-                        queue.push(neighbor);
-                    }
-                }
-            }
-        }
-
-        return false;
-    }
-
-    // Iterate through all nodes to find colliders
-    networkModel.forEach(node => {
-        if (node.parents?.length > 1) { // Node must have 2+ parents
-            const parentPairs = [];
-            
-            // Generate all pairs of parents
-            for (let i = 0; i < node.parents.length; i++) {
-                for (let j = i + 1; j < node.parents.length; j++) {
-                    parentPairs.push([node.parents[i], node.parents[j]]);
-                }
-            }
-
-            // Check if all parent pairs have no paths between them
-            const isCollider = parentPairs.every(([parent1, parent2]) => 
-                !hasPathBetweenNodes(parent1, parent2, graph) &&
-                !hasPathBetweenNodes(parent2, parent1, graph) // Ensure no reverse path
+    // Check for colliders (nodes with two or more incoming edges)
+    for (const [node, parents] of Object.entries(incomingEdges)) {
+        if (parents.length > 1) {
+            // Check if there is a direct path between the parents
+            const hasDirectPath = parents.some(parentA =>
+                parents.some(parentB =>
+                    relationships.some(rel => (rel.from === parentA && rel.to === parentB) || (rel.from === parentB && rel.to === parentA))
+                )
             );
 
-            if (isCollider) {
-                colliders.push({
-                    colliderNode: node.name,
-                    parents: node.parents,
-                    paths: node.parents.map(parent => `${parent} -> ${node.name}`)
-                });
+            if (!hasDirectPath) {
+                colliders.push({ node, parents });
             }
         }
-    });
+    }
 
     return colliders;
 }
+
+function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
+    const baselineNet = new Net(bnKey);
+    const evidenceNet = new Net(bnKey);
+	evidenceNet.compile();
+
+    Object.keys(evidence).forEach(nodeName => {
+        if (baselineNet.node(nodeName)) baselineNet.node(nodeName).finding(Number(evidence[nodeName]));
+        if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(evidence[nodeName]));
+    });
+
+    if (!evidenceNet.node(colliderNode) || !evidenceNet.node(targetNode)) {
+        console.error(`Nodes are missing in evidenceNet: Collider(${colliderNode}), Target(${targetNode})`);
+        return null;
+    }
+
+    evidenceNet.node(targetNode).finding(targetStateIndex);
+    let baseDiff = Infinity;
+
+    parents.forEach(parent => {
+        const parentNode = evidenceNet.node(parent);
+        if (!parentNode) {
+            console.error(`Parent node ${parent} does not exist.`);
+            return null;
+        }
+
+        parentNode.states().forEach((_, stateIndex) => {
+            parentNode.finding(stateIndex);
+            evidenceNet.update();
+
+            const probWithEvidence = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
+            const probWithoutEvidence = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
+
+            const diff = Math.abs(probWithEvidence - probWithoutEvidence);
+            baseDiff = Math.min(baseDiff, diff);
+        });
+
+        parentNode.retractFindings();
+    });
+
+    return baseDiff;
+}
+
+
+function calculatePowerDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
+    const evidenceNet = new Net(bnKey);
+	evidenceNet.compile();
+
+    if (!evidenceNet.node(colliderNode)) {
+        console.error(`Collider node ${colliderNode} does not exist.`);
+        return null;
+    }
+
+    // Set the target state and apply evidence
+    evidenceNet.node(targetNode).finding(targetStateIndex);
+    Object.keys(evidence).forEach(nodeName => {
+        if (evidenceNet.node(nodeName)) {
+            evidenceNet.node(nodeName).finding(Number(evidence[nodeName]));
+        }
+    });
+
+    evidenceNet.update();
+
+    let powerDiff = 0;
+
+    parents.forEach(parent => {
+        const parentNode = evidenceNet.node(parent);
+        if (!parentNode) {
+            console.error(`Parent node ${parent} does not exist.`);
+            return null;
+        }
+
+        const parentStates = parentNode.states();
+        parentStates.forEach((_, stateIndex) => {
+            parentNode.finding(stateIndex);
+            evidenceNet.update();
+
+            const beliefs = evidenceNet.node(colliderNode).beliefs();
+            const probWithEvidence = beliefs[targetStateIndex];
+            const probWithoutEvidence = 1 - probWithEvidence;
+
+            powerDiff += Math.abs(probWithEvidence - probWithoutEvidence);
+        });
+
+        parentNode.retractFindings();
+    });
+
+    return powerDiff;
+}
+
+
+function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
+    const colliders = findColliders(net, relationships);
+    const results = [];
+
+    colliders.forEach(collider => {
+        const baseDiff = calculateBaseDiff(
+            net,
+            collider.node,
+            collider.parents,
+            targetNode,
+            evidence,
+            targetStateIndex,
+			bnKey
+        );
+        const powerDiff = calculatePowerDiff(
+            net,
+            collider.node,
+            collider.parents,
+            targetNode,
+            evidence,
+            targetStateIndex,
+			bnKey
+        );
+
+        results.push({
+            colliderNode: collider.node,
+            parents: collider.parents,
+            baseDiff,
+            powerDiff,
+        });
+    });
+
+    return results;
+}
+
 
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
 	function getRowIndex(parIndexes) {
@@ -516,15 +608,6 @@ class BnDetail {
 		
 		if (m.model) {
 			console.log('m.model:', m.model)
-
-			// Identify colliders based on dynamically selected nodes
-			const colliders = identifyColliders(m.model);
-	
-			if (colliders.length > 0) {
-				console.log(`Found ${colliders.length} collider structure(s):`, colliders);
-			} else {
-				console.log("No collider structures found.");
-			}
 			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -1140,6 +1223,7 @@ module.exports = {
 			let origNet = null;
 			try {
 				console.log('prepareData');
+
 				/// tbd
 				let bnKey;
 				let bn =  {};
@@ -1661,6 +1745,23 @@ module.exports = {
 						let sentences = [];
 						let totalInfluencePercentage = 0; 
 
+						let findings = {}; // Initialize findings
+
+							if (req.query.evidence) {
+								findings = JSON.parse(req.query.evidence); // Parse findings from the request
+								for (let [nodeName, stateI] of Object.entries(findings)) {
+									console.log(nodeName, stateI);
+									net.node(nodeName).finding(Number(stateI)); // Set evidence in the network
+								}
+							}
+
+							net.update(); // Update the network with the findings
+
+							// Call the function to detect colliders
+							const colliders = analyzeColliders(net, relationships, evidence, targetNodeName, targetStateIndex, bnKey);
+
+							console.log("Detected Colliders:", colliders);
+
 						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
 							// let nodeSentences = [];
@@ -1709,7 +1810,9 @@ module.exports = {
 						
 							const nonActiveNodes = Object.keys(evidence);
 							console.log("ActivePaths: ", activePaths);
-						
+
+							
+					
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of activePaths) {
 								bn.activePaths.push(path)	
@@ -1988,6 +2091,7 @@ module.exports = {
 							parents: node.parents().map(p => p.name()),
 							states: node.states().map(s => s.name()),
 							beliefs: node.beliefs(),
+							//beliefs: [],
 						}));
 					//console.log('HI3');
 					console.log('Done BN info');
