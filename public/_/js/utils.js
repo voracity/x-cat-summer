@@ -1,3 +1,4 @@
+var {Net} = require('../../../bni_smile');
 document.addEventListener('DOMContentLoaded', event => {
 	document.addEventListener('click', event => {
 		if (event.target.matches('button[href]')) {
@@ -6,6 +7,95 @@ document.addEventListener('DOMContentLoaded', event => {
 		}
 	});
 });
+
+function addJointChild(net, parentNames, tempNodeName = null) {
+	let stateList = [];
+	let stateIndexes = parentNames.map(_=>0);
+	do {
+		stateList.push('s'+stateIndexes.join('_'));
+	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
+	/// XXX: Add support to bni_smile for deterministic nodes
+	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
+	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	net
+		.addNode(tempNodeName, null, stateList)
+		.addParents(parentNames)
+		/// Essentially, create an identity matrix for now (later, replace with det node)
+		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	return tempNodeName;
+}
+
+
+function marginalizeParentArc(child, parentToRemove, reduce = false) {
+	function getRowIndex(parIndexes) {
+		let rowIndex = 0;
+		for (let i=0; i<parIndexes.length; i++) {
+			if (i!=0)  rowIndex *= pars[i].states().length;
+			rowIndex += parIndexes[i];
+		}
+		return rowIndex;
+	}
+	
+	function addWeightedVec(vec1, vec2, weight) {
+		return vec1.map((v,i) => v + vec2[i]*weight);
+	}
+
+	let net = child.net;
+	
+	/// The CPT (we'll modify in place)
+	let cpt = child.cpt();
+	
+	let pars = child.parents();
+	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
+	
+	let marginals = parentToRemove.beliefs();
+	
+	let parIndexes = pars.map(_=>0);
+	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
+	do {
+		let row = child.states().map(_=>0);
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			//console.log(parIndexes, rowI);
+			row = addWeightedVec(row, cpt[rowI], marginals[i]);
+		}
+		let marginalizedRow = row;
+		
+		/// Replace all the matching rows with the weighted combination
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			cpt[rowI] = marginalizedRow;
+		}
+	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+	
+	if (reduce) {
+		/// Resize the CPT (i.e. remove the redundant rows)
+		let parIndexes = pars.map(_=>0);
+		let newCpt = [];
+		do {
+			newCpt.push(cpt[getRowIndex(parIndexes)]);
+		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+		
+		return newCpt;
+	}
+	else {
+		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
+		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
+		return cpt;
+	}
+}
+
+function pick(obj, keys) {
+	let newObj = {};
+	for (let key of keys) {
+		if (key in obj) {
+			newObj[key] = obj[key];
+		}
+	}
+	return newObj;
+}
 
 function getQs(searchStr) {
 	searchStr = searchStr || window.location.search;
@@ -88,7 +178,7 @@ function findAllPaths(graph, startNode, endNode) {
   }
 
   dfs(startNode, endNode, [], new Set());
-  console.log('allPaths:', allPaths)						
+  // console.log('allPaths:', allPaths)						
 
   return allPaths;
 }
@@ -154,10 +244,70 @@ function filterActivePaths(allPaths, relationships, evidence) {
   return allPaths.filter(path => isActivePath(path, relationships, evidence));
 }
 
+function classifyPaths(relationships, activePaths, focusNode, targetNode, evidenceList) {
+  // function buildGraph(relationships) {
+  //     const graph = {};
+  //     relationships.forEach(({ from, to }) => {
+  //         if (!graph[from]) graph[from] = [];
+  //         graph[from].push(to);
+  //     });
+  //     return graph;
+  // }
+
+  // function isBlockedPath(path, evidenceList, targetNode) {
+  //     for (let i = 0; i < path.length - 1; i++) {
+  //         const currentNode = path[i];
+  //         const nextNode = path[i + 1];
+
+  //         // If the current node is evidence but not the target node or its child, it blocks
+  //         if (
+  //             evidenceList.includes(currentNode) &&
+  //             currentNode !== targetNode &&
+  //             !evidenceList.includes(nextNode)
+  //         ) {
+  //             return true;
+  //         }
+  //     }
+  //     return false;
+  // }
+
+  // function isFirstOrderPath(path, focusNode, targetNode) {
+  //     return path[0] === focusNode && path[path.length - 1] === targetNode;
+  // }
+
+  // function isSecondOrderPath(path, focusNode, targetNode, evidenceList) {
+  //     return (
+  //         path.includes(targetNode) &&
+  //         path[0] !== focusNode &&
+  //         !isBlockedPath(path, evidenceList, targetNode)
+  //     );
+  // }
+
+  // const graph = buildGraph(relationships);
+  // const firstOrderPaths = [];
+  // const secondOrderPaths = [];
+
+  // activePaths.forEach((path) => {
+  //     if (isFirstOrderPath(path, focusNode, targetNode)) {
+  //         firstOrderPaths.push(path);
+  //     } else if (isSecondOrderPath(path, focusNode, targetNode, evidenceList)) {
+  //         secondOrderPaths.push(path);
+  //     }
+  // });
+
+  return {
+      firstOrder: firstOrderPaths,
+      secondOrder: secondOrderPaths,
+  };
+}
+
 module.exports = {
+  addJointChild,
+  marginalizeParentArc,
   getColor,
   isActivePath,
   buildUndirectedGraph,
   findAllPaths,
-  filterActivePaths
+  filterActivePaths,
+  classifyPaths
 };

@@ -1,97 +1,8 @@
 var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
-var {buildUndirectedGraph, findAllPaths, filterActivePaths} = require('./_/js/utils');
+var {addJointChild, marginalizeParentArc, buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths} = require('./_/js/utils');
 var fs = require('fs');
-
-function addJointChild(net, parentNames, tempNodeName = null) {
-	let stateList = [];
-	let stateIndexes = parentNames.map(_=>0);
-	do {
-		stateList.push('s'+stateIndexes.join('_'));
-	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
-	/// XXX: Add support to bni_smile for deterministic nodes
-	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
-	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	net
-		.addNode(tempNodeName, null, stateList)
-		.addParents(parentNames)
-		/// Essentially, create an identity matrix for now (later, replace with det node)
-		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	return tempNodeName;
-}
-
-
-function marginalizeParentArc(child, parentToRemove, reduce = false) {
-	function getRowIndex(parIndexes) {
-		let rowIndex = 0;
-		for (let i=0; i<parIndexes.length; i++) {
-			if (i!=0)  rowIndex *= pars[i].states().length;
-			rowIndex += parIndexes[i];
-		}
-		return rowIndex;
-	}
-	
-	function addWeightedVec(vec1, vec2, weight) {
-		return vec1.map((v,i) => v + vec2[i]*weight);
-	}
-
-	let net = child.net;
-	
-	/// The CPT (we'll modify in place)
-	let cpt = child.cpt();
-	
-	let pars = child.parents();
-	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
-	
-	let marginals = parentToRemove.beliefs();
-	
-	let parIndexes = pars.map(_=>0);
-	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
-	do {
-		let row = child.states().map(_=>0);
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			//console.log(parIndexes, rowI);
-			row = addWeightedVec(row, cpt[rowI], marginals[i]);
-		}
-		let marginalizedRow = row;
-		
-		/// Replace all the matching rows with the weighted combination
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			cpt[rowI] = marginalizedRow;
-		}
-	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-	
-	if (reduce) {
-		/// Resize the CPT (i.e. remove the redundant rows)
-		let parIndexes = pars.map(_=>0);
-		let newCpt = [];
-		do {
-			newCpt.push(cpt[getRowIndex(parIndexes)]);
-		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-		
-		return newCpt;
-	}
-	else {
-		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
-		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
-		return cpt;
-	}
-}
-
-function pick(obj, keys) {
-	let newObj = {};
-	for (let key of keys) {
-		if (key in obj) {
-			newObj[key] = obj[key];
-		}
-	}
-	return newObj;
-}
 
 var measurePlugins = {
 	do: {
@@ -452,7 +363,7 @@ class BnDetail {
 		}
 		
 		if (m.model) {
-			console.log('m.model:', m.model)
+			// console.log('m.model:', m.model)
 			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -573,30 +484,6 @@ class BnDetail {
 			)
 			
 		} 
-
-		if (m.influences) {
-			// let influenceListEl = this.root.querySelector('.influenceList');
-			// influenceListEl.innerHTML = '';
-		
-			// First, display the overall explanation if it exists
-			// if (m.influences['overall']) {
-			// 	let overallExplanation = m.influences['overall'].explanation;
-			// 	console.log('overallExplanation:', overallExplanation)	
-			// 	let listItem = n('p', html(overallExplanation));
-			// 	influenceListEl.appendChild(listItem);
-			// }
-
-			// influenceListEl.appendChild(n('p', 'Hello World'));
-		
-			// Now, iterate over the other influences and display them
-			// for (let [nodeName, influenceData] of Object.entries(m.influences)) {
-			// 	if (nodeName === 'overall') continue; // Skip the 'overall' key as it's already displayed
-		
-			// 	let explanation = influenceData.explanation;
-			// 	let listItem = n('p', html(explanation));
-			// 	influenceListEl.appendChild(listItem);
-			// }
-		}
 		// Update all evidence nodes and show the influence (as a bar overlayed of the evidence state)
 		// they have on the target node
 
@@ -642,37 +529,39 @@ class BnDetail {
 				reset(m.arcInfluence, bn, this.bnView);				
 
 			} else {
-				// console.log('entries:', entries)
+				console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;
 					console.log('-------------------------------------')
-					console.log('evidenceNodeName:', evidenceNodeName)			
+					// console.log('evidenceNodeName:', evidenceNodeName)			
 					console.log('this.bnView:', this.bnView)		
 
 					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
-					let evidenceShining = this.bnView.querySelector('div.node.shining')
-					let evidenceShiningName = ''
-					let evidenceShiningState = ''
-					if (evidenceShining && !displayDetail) {
-						evidenceShiningName = evidenceShining.getAttribute('data-name')
-						evidenceShiningState = evidenceShining.querySelector('.label').textContent
+					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
+					
+					let focusEvidenceName = ''
+					let focusEvidenceState = ''
+					if (focusEvidence && !displayDetail) {
+						focusEvidenceName = focusEvidence.getAttribute('data-name')
+						focusEvidenceState = focusEvidence.querySelector('.label').textContent
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						verbalTitle.appendChild(n('p', `Details: Finding out how ${evidenceShiningName} was `, 
-							n('span', `${evidenceShiningState}`, {style: 'font-style: italic'}), ' contributes'));
-
-						// console.log('evidenceShiningName:', evidenceShiningName)
-						// console.log('evidenceShiningState:', evidenceShiningState)
+						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
+							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
+						
+						// console.log('focusEvidence:', focusEvidence)
+						
+						// console.log('focusEvidenceState:', focusEvidenceState)
 					}
 
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					// console.log('evidenceNode:', evidenceNode)
+					console.log('evidenceNode:', evidenceNode)
 					
 									
 					// console.log('evidenceNode:', evidenceNode)									
@@ -680,9 +569,7 @@ class BnDetail {
 
 					let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
 					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {	
-
-						
-						
+												
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
 
 						let targetStateElem = targetNode.querySelector(".state.istarget");
@@ -814,9 +701,9 @@ class BnDetail {
 							verbalIntroSentence.innerHTML = '';
 							verbalIntroSentence.appendChild(
 								n('p', 'Finding out ', 
-								n('span', evidenceShiningName, {class: 'verbalTextBold'}),
+								n('span', focusEvidenceName, {class: 'verbalTextBold'}),
 								' was ',
-								n('span', evidenceShiningState, {class: 'verbalTextItalic'}),
+								n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
 								' contributes due to ',
 								numberToWord(m.activePaths.length),
 								' connections:'
@@ -1050,7 +937,7 @@ module.exports = {
 		}
 		else if (req.query.updateBn) {
 			console.log('UPDATING');
-			let updates = JSON.parse(req.body.updates);
+			let updates = JSON.parse(req.body.updates);			
 			let updParams = {};
 			for (let [k,v] of Object.entries(updates)) {
 				updParams['$'+k] = v;
@@ -1157,32 +1044,40 @@ module.exports = {
 					let evidence = {};
 					if (req.query.evidence) {
 						evidence = JSON.parse(req.query.evidence);
-						// console.log('evidence:', evidence)
+						
 					}
+					console.log('req.query:-----------------------', req.query)
 
 					// Initialize 'selectedStates' variable
 					let selectedStates = {};
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
+						console.log('selectedStates:', selectedStates)
 					}
+				
 
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
 					}
-					console.log("evidence",evidence)
+					console.log("evidence: ---------------",evidence)
 					net.update();
 
-					let baselineBeliefs = {};
-					Object.keys(selectedStates).forEach(targetNodeName => {
-						baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();
-					});
+					// console.log('Object.keys(selectedStates):', Object.keys(selectedStates))
 
-					let relationships = [];					
+					let baselineBeliefs = {};
+					// Object.keys(selectedStates).forEach(targetNodeName => {
+					// 	baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();						
+					// });
+					var targetNodeName = Object.keys(selectedStates)[0];
+					baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();												
+
+					let relationships = [];		
+					// console.log('net.nodes():', net.nodes())			
 
 					net.nodes().forEach(node => {
 						// Get all parents of the node
-						node.parents().forEach(parent => {					
+						node.parents().forEach(parent => {										
 					
 							// Add the relationship to the list
 							relationships.push({
@@ -1193,12 +1088,11 @@ module.exports = {
 						});
 					});
 
-					console.log("relationships",relationships)
+					// console.log("relationships",relationships)
 					
 
 
 					const graph = buildUndirectedGraph(relationships);
-
 
 					// Edge map for contribute values
 					const edgeMap = {};
@@ -1211,16 +1105,21 @@ module.exports = {
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
 
+						let focusEvidence = null
+
+						if (req.query.focusEvidence) {
+							focusEvidence = req.query.focusEvidence;							
+						}
+
 						// the selected state is our Target
 						
-
 						if (req.query.selectedStates) {
 							selectedStates = JSON.parse(req.query.selectedStates);
 						}
 
 						// get network with all evidence 
 						for (let [nodeName,stateI] of Object.entries(evidence)) {
-							console.log(nodeName, stateI);
+							console.log('nodeName, stateI:', nodeName, stateI);
 							net.node(nodeName).finding(Number(stateI));
 							// origNet.node(nodeName).finding(Number(stateI));
 						}
@@ -1283,6 +1182,7 @@ module.exports = {
 						
 							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
 							let influenceData = bn.influences[nonActiveNodeName];
+							// console.log('influenceData:', influenceData)
 							
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
@@ -1295,12 +1195,26 @@ module.exports = {
 											
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
-							const nonActiveNodes = Object.keys(evidence);
-							console.log("ActivePaths: ", activePaths);
+							// const nonActiveNodes = Object.keys(evidence);
+							// console.log("ActivePaths: ", activePaths);
+
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of activePaths) {
-								bn.activePaths.push(path)									
+								bn.activePaths.push(path)				
+								// console.log('bn.activePaths:', bn.activePaths)					
+							}
+
+							evidenceList = Object.keys(evidence)
+
+							if (focusEvidence !== 'null'){
+								console.log('bn.activePaths:', bn.activePaths)
+								console.log('relationships:', relationships)
+								console.log('focusEvidence:', focusEvidence)
+								console.log('targetNodeName:', targetNodeName)
+								console.log('evidenceList:', evidenceList)
+								let testTest = classifyPaths(relationships, bn.activePaths, evidenceList, focusEvidence, targetNodeName)
+								console.log('testTest:', testTest)
 							}
 							
 						}												
