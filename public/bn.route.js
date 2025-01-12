@@ -1221,7 +1221,9 @@ module.exports = {
 								console.log('focusEvidence:', focusEvidence)
 								console.log('targetNodeName:', targetNodeName)								
 								let testTest = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
-							// 	// console.log('testTest:', testTest)
+								const {firstOrderPaths, secondOrderPaths} = testTest
+								console.log('firstOrderPaths:', firstOrderPaths)
+								console.log('secondOrderPaths:', secondOrderPaths)
 							}
 							
 						}					
