@@ -1,8 +1,10 @@
 var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
-var {addJointChild, marginalizeParentArc, buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths} = require('./_/js/utils');
+var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
+var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships, classifyBNStructure} = require('./_/js/nodepath');
 var fs = require('fs');
+const path = require('path');
 
 var measurePlugins = {
 	do: {
@@ -1059,8 +1061,7 @@ module.exports = {
 					// set all evidence
 					for (let [nodeName, stateI] of Object.entries(evidence)) {
 						net.node(nodeName).finding(Number(stateI));
-					}
-					console.log("evidence: ---------------",evidence)
+					}					
 					net.update();
 
 					// console.log('Object.keys(selectedStates):', Object.keys(selectedStates))
@@ -1088,9 +1089,7 @@ module.exports = {
 						});
 					});
 
-					// console.log("relationships",relationships)
-					
-
+					// console.log("relationships",relationships)					
 
 					const graph = buildUndirectedGraph(relationships);
 
@@ -1162,6 +1161,8 @@ module.exports = {
 						const baselineProb = baselineBelief[targetStateIndex];
 						console.log('baselineProb:', baselineProb)
 
+						let pathWithRelationship = []
+
 						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
 							// let nodeSentences = [];
@@ -1196,28 +1197,59 @@ module.exports = {
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
 							// const nonActiveNodes = Object.keys(evidence);
-							// console.log("ActivePaths: ", activePaths);
+							console.log("activePaths: ", activePaths);
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							for (const path of activePaths) {
-								bn.activePaths.push(path)				
+							// for (const path of activePaths) {
+							bn.activePaths.push(activePaths)				
 								// console.log('bn.activePaths:', bn.activePaths)					
-							}
+							// }
 
-							evidenceList = Object.keys(evidence)
+							// evidenceList = Object.keys(evidence)
+
+							let testRel = activePathWithRelationships(activePaths, relationships)
+							// console.log('testRel:', testRel)
+							pathWithRelationship.push(testRel)
+							console.log('evidence:', evidence)
+							console.log('evidence.getT:', evidence['T'])
+
 
 							if (focusEvidence !== 'null'){
 								console.log('bn.activePaths:', bn.activePaths)
 								console.log('relationships:', relationships)
 								console.log('focusEvidence:', focusEvidence)
 								console.log('targetNodeName:', targetNodeName)
-								console.log('evidenceList:', evidenceList)
-								let testTest = classifyPaths(relationships, bn.activePaths, evidenceList, focusEvidence, targetNodeName)
+								// console.log('evidenceList:', evidenceList)
+								let testTest = classifyPaths(relationships, bn.activePaths, evidence, focusEvidence, targetNodeName)
 								console.log('testTest:', testTest)
 							}
 							
-						}												
+						}									
+						
+						console.log('pathWithRelationship:', pathWithRelationship)
+						// classifyPaths(pathWithRelationship, evidence, focusEvidence, targetNodeName)
+						pathWithRelationship.forEach((path) => {
+							// console.log('---------------------------')	
+							i = 0
+							j = 1
+				
+							while (j < path.length) {
+								structure = classifyBNStructure(path[i][1], path[j][1])
+								console.log('structure:', structure)
+								// console.log('path[i]:', path[i])
+								// console.log('path[i][1]:', path[i][1])
+								// console.log('path[j]:', path[j])
+								i++        
+								j++
+							}
+						}) 
+						// pathWithRelationship.forEach((path) => {
+						// 	console.log('---------------------------')	
+						// 	for (let [node, type] of path) {															
+						// 		console.log('node:', node, 'type:', type)								
+						// 	}
+						// })
 
 						// calculate arc importances
 						let arcs = []
