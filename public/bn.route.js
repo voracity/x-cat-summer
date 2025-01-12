@@ -1211,39 +1211,26 @@ module.exports = {
 							let testRel = activePathWithRelationships(activePaths, relationships)
 							// console.log('testRel:', testRel)
 							pathWithRelationship.push(testRel)
-							console.log('evidence:', evidence)
-							console.log('evidence.getT:', evidence['T'])
+							console.log('pathWithRelationship:', pathWithRelationship)	
+							
 
 
 							if (focusEvidence !== 'null'){
+								console.log('pathWithRelationship2:', pathWithRelationship)	
 								console.log('bn.activePaths:', bn.activePaths)
-								console.log('relationships:', relationships)
 								console.log('focusEvidence:', focusEvidence)
-								console.log('targetNodeName:', targetNodeName)
-								// console.log('evidenceList:', evidenceList)
-								let testTest = classifyPaths(relationships, bn.activePaths, evidence, focusEvidence, targetNodeName)
-								console.log('testTest:', testTest)
+								console.log('targetNodeName:', targetNodeName)								
+								let testTest = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
+							// 	// console.log('testTest:', testTest)
 							}
 							
-						}									
+						}					
+						// console.log('evidence:', evidence)
+						// console.log('evidence.getT:', evidence['T'])				
 						
-						console.log('pathWithRelationship:', pathWithRelationship)
+						// console.log('pathWithRelationship:', pathWithRelationship)
 						// classifyPaths(pathWithRelationship, evidence, focusEvidence, targetNodeName)
-						pathWithRelationship.forEach((path) => {
-							// console.log('---------------------------')	
-							i = 0
-							j = 1
-				
-							while (j < path.length) {
-								structure = classifyBNStructure(path[i][1], path[j][1])
-								console.log('structure:', structure)
-								// console.log('path[i]:', path[i])
-								// console.log('path[i][1]:', path[i][1])
-								// console.log('path[j]:', path[j])
-								i++        
-								j++
-							}
-						}) 
+
 						// pathWithRelationship.forEach((path) => {
 						// 	console.log('---------------------------')	
 						// 	for (let [node, type] of path) {															

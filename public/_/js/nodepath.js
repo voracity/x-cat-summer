@@ -134,33 +134,61 @@ function activePathWithRelationships(paths, relationships) {
         continue;
       }
     }
+    // Output the node with the relationship of the next node
     result.push([paths[i], rel]);
   }  
   return result;
 }
 
-function classifyBNStructure(node1ToNode2Type, node2ToNode3Type) {
-  if (node1ToNode2Type === node2ToNode3Type) {
-    return 'chain';
-  } else if (node1ToNode2Type === 'parent' && node2ToNode3Type === 'child') {
+function classifyBNStructure(first2MiddleNodeType, third2MiddleNodeType) {
+  if (first2MiddleNodeType == 'parent' && third2MiddleNodeType == 'parent') {
     return 'v-structure';
-  } else {
+  } else if (first2MiddleNodeType === 'child' && third2MiddleNodeType === 'child') {
     return 'common-cause';
+  } else {
+    return 'chain';
   }
 }
 
-function classifyPaths(pathWithRelationship, evidence, focusNode, targetNode) {
-    pathWithRelationship.forEach((path) => {
-      // console.log('---------------------------')	
-      i = 0
-      j = 1
+function isBlockedByBNStructure(structure) {
+  if (structure === 'v-structure') {
+    return false;
+  } 
+  return true;
+}
 
-      while (j < path.length) {
-        structure = classifyBNStructure(path[i][1], path[j][1])
-        console.log('structure:', structure)
-        i++        
-      }
+function classifyPaths(pathWithRelationship, pathNoRelationship, focusNode, targetNode) {
+    let firstOrderPaths = [];
+    let secondOrderPaths = [];
+  
+    pathWithRelationship.forEach((path) => {
+      if (path[0][0] == focusNode && path[path.length-1][0] == targetNode) {
+        firstOrderPaths.push(path)
+      }      
     }) 
+    
+    for (let i = 0; i < pathWithRelationship.length; i++) {      
+      let lenPathRel = pathWithRelationship[i].length;
+      if (pathWithRelationship[i][0][0] == focusNode && pathWithRelationship[i][lenPathRel-1][0] == targetNode) {
+        continue;
+      }
+      
+      let focusNodePathType = null;
+      for (let j = 0; j < firstOrderPaths.length; j++) {
+        let lenFirstOrd = firstOrderPaths[j].length;
+        focusNodePathType = firstOrderPaths[j][lenFirstOrd-2][1];
+      }
+
+      let relCurrPathWithFocusNodePath = classifyBNStructure(focusNodePathType, pathWithRelationship[i][lenPathRel-2][1]);
+      if (!isBlockedByBNStructure(relCurrPathWithFocusNodePath)) {
+        secondOrderPaths.push(pathNoRelationship[i]);
+      }
+    }
+    
+    return {
+      firstOrderPaths: firstOrderPaths,
+      secondOrderPaths: secondOrderPaths
+    };
 }
 
 
