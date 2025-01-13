@@ -1210,13 +1210,10 @@ module.exports = {
 
 							let testRel = activePathWithRelationships(activePaths, relationships)
 							// console.log('testRel:', testRel)
-							pathWithRelationship.push(testRel)
-							console.log('pathWithRelationship:', pathWithRelationship)	
-							
-
+							pathWithRelationship.push(testRel)														
 
 							if (focusEvidence !== 'null'){
-								console.log('pathWithRelationship2:', pathWithRelationship)	
+								console.log('pathWithRelationship:', pathWithRelationship)	
 								console.log('bn.activePaths:', bn.activePaths)
 								console.log('focusEvidence:', focusEvidence)
 								console.log('targetNodeName:', targetNodeName)								
@@ -1224,8 +1221,7 @@ module.exports = {
 								const {firstOrderPaths, secondOrderPaths} = testTest
 								console.log('firstOrderPaths:', firstOrderPaths)
 								console.log('secondOrderPaths:', secondOrderPaths)
-							}
-							
+							}							
 						}					
 						// console.log('evidence:', evidence)
 						// console.log('evidence.getT:', evidence['T'])				

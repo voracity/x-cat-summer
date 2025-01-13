@@ -172,17 +172,16 @@ function classifyPaths(pathWithRelationship, pathNoRelationship, focusNode, targ
       if (pathWithRelationship[i][0][0] == focusNode && pathWithRelationship[i][lenPathRel-1][0] == targetNode) {
         continue;
       }
-      
-      let focusNodePathType = null;
+            
       for (let j = 0; j < firstOrderPaths.length; j++) {
         let lenFirstOrd = firstOrderPaths[j].length;
-        focusNodePathType = firstOrderPaths[j][lenFirstOrd-2][1];
-      }
-
-      let relCurrPathWithFocusNodePath = classifyBNStructure(focusNodePathType, pathWithRelationship[i][lenPathRel-2][1]);
-      if (!isBlockedByBNStructure(relCurrPathWithFocusNodePath)) {
-        secondOrderPaths.push(pathNoRelationship[i]);
-      }
+        let focusNodePathType = firstOrderPaths[j][lenFirstOrd-2][1];
+        
+        let relCurrPathWithFocusNodePath = classifyBNStructure(focusNodePathType, pathWithRelationship[i][lenPathRel-2][1]);
+        if (!isBlockedByBNStructure(relCurrPathWithFocusNodePath)) {
+          secondOrderPaths.push(pathNoRelationship[i]);
+        }
+      }      
     }
     
     return {
