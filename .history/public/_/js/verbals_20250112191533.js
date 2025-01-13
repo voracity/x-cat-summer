@@ -164,6 +164,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
 }
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
+  verbalListDisplay.innerHTML = '';
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
@@ -181,7 +182,7 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
   // Now call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
     console.log("normalPaths: ", normalPaths)
-    buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
+    buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay);
   }
 
   if (colliderPaths.length > 0) {

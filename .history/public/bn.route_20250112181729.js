@@ -2,7 +2,6 @@ var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
-var {findAllColliders} = require("./_/js/verbals")
 
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
@@ -921,8 +920,7 @@ class BnDetail {
 						// console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
 							console.log('colliders:', m.colliders)
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay );
+							generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
 						}
 					}
 				})
@@ -1427,6 +1425,28 @@ module.exports = {
 	
 					// }
 
+					function findAllColliders(relationships) {
+						// Map each child node -> a set of its distinct parents
+						const childToParents = {};
+					  
+						// Build up the sets of parents
+						relationships.forEach(({ from, to }) => {
+						  if (!childToParents[to]) {
+							childToParents[to] = new Set();
+						  }
+						  childToParents[to].add(from);
+						});
+					  
+						// A node is a collider if it has >=2 distinct parents
+						const colliders = [];
+						for (const node in childToParents) {
+						  if (childToParents[node].size >= 2) {
+							colliders.push(node);
+						  }
+						}
+						return colliders;
+					  }
+					
 					function isActivePath(path, relationships, evidence) {
 						// Helper function to check if a node is a collider
 						function isCollider(node, prevNode, nextNode) {

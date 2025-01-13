@@ -79,7 +79,26 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
             );
             sentence.appendChild(n('span', ','));
           } 
-        } else {  
+          // else {
+          //   // Intermediate steps
+          //   sentence.appendChild(n('span', ' which in turn '));
+          //   sentence.appendChild(
+          //     n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' })
+          //   );
+          //   sentence.appendChild(n('span', ' the probability that '));
+          //   sentence.appendChild(
+          //     n('span', arc.to, { class: 'verbalTextBold' })
+          //   );
+          //   sentence.appendChild(n('span', ' was '));
+          //   sentence.appendChild(
+          //     n('span', arc.toState, { class: 'verbalTextItalic' })
+          //   );
+          //   sentence.appendChild(n('span', ','));
+          // }
+        } else {
+          // Last step in the path  
+          // console.log('path[i]', path[i]); 
+          
           sentence.appendChild(n('span', ' which in turn '));
           sentence.appendChild(
             n('span', colorToVerbal(arc.color), { class: 'verbalText' })
@@ -98,7 +117,8 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 }
 
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  verbalListDisplay.innerHTML = '';
+  // // 1) Clear any previous content
+  // verbalListDisplay.innerHTML = '';
 
   if (!arcsContribution || arcsContribution.length === 0) {
     // If no arcs, just exit or show something minimal
@@ -163,7 +183,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
 
 }
 
-function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
+function generateDetailedExplanations({activePaths,arcsContribution,colliderNodes,verbalListDisplay,}) {
+  // verbalListDisplay.innerHTML = '';
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
@@ -177,15 +198,15 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
       normalPaths.push(path);
     }
   });
-  
+  console.log("colliderPaths: ", colliderPaths)
+  console.log("normalPaths: ", normalPaths)
+
   // Now call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
-    console.log("normalPaths: ", normalPaths)
-    buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
+    buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay);
   }
 
   if (colliderPaths.length > 0) {
-    console.log("colliderPaths: ", colliderPaths)
     buildDetailCombinedExplanation(arcsContribution, verbalListDisplay);
   }
 }

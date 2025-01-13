@@ -2,7 +2,6 @@ var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var fs = require('fs');
-var {findAllColliders} = require("./_/js/verbals")
 
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
@@ -921,8 +920,7 @@ class BnDetail {
 						// console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
 							console.log('colliders:', m.colliders)
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay );
+							generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
 						}
 					}
 				})

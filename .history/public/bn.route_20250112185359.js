@@ -921,8 +921,8 @@ class BnDetail {
 						// console.log('verbalListDisplay:', verbalListDisplay)
 						if (displayDetail) {
 							console.log('colliders:', m.colliders)
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay );
+							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+							// generateDetailedExplanations({ activePaths: m.activePaths, arcsContribution: arcsContribution, colliders: m.colliders, verbalListDisplay: verbalListDisplay });
 						}
 					}
 				})
