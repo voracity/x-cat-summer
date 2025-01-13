@@ -810,8 +810,8 @@ class BnDetail {
 						});
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
+							buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+							// generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
 						}
 					}
 				})

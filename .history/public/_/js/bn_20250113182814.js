@@ -70,7 +70,6 @@ var bn = {
 					this.arcInfluence = reqData.arcInfluence;
 					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
 					// console.log('reqData.activePaths:', reqData.activePaths);
-					console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
 					this.activePaths = reqData.activePaths;
 				} else {

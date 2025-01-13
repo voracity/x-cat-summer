@@ -810,7 +810,6 @@ class BnDetail {
 						});
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
 							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
 						}
 					}
@@ -1142,7 +1141,7 @@ module.exports = {
 
 						const colliders = findAllColliders(relationships);
 						bn.colliders = colliders;
-						console.log('Collider:', bn.colliders);
+						// console.log('Collider nodes:', bn.colliders);
 
 
 						// Ensure only one selected target node

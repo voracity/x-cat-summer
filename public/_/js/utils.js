@@ -1,5 +1,4 @@
-var { getColor } = require('./utils.js');
-
+var {Net} = require('../../../bni_smile');
 document.addEventListener('DOMContentLoaded', event => {
 	document.addEventListener('click', event => {
 		if (event.target.matches('button[href]')) {
@@ -8,6 +7,95 @@ document.addEventListener('DOMContentLoaded', event => {
 		}
 	});
 });
+
+function addJointChild(net, parentNames, tempNodeName = null) {
+	let stateList = [];
+	let stateIndexes = parentNames.map(_=>0);
+	do {
+		stateList.push('s'+stateIndexes.join('_'));
+	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
+	/// XXX: Add support to bni_smile for deterministic nodes
+	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
+	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	net
+		.addNode(tempNodeName, null, stateList)
+		.addParents(parentNames)
+		/// Essentially, create an identity matrix for now (later, replace with det node)
+		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
+	return tempNodeName;
+}
+
+
+function marginalizeParentArc(child, parentToRemove, reduce = false) {
+	function getRowIndex(parIndexes) {
+		let rowIndex = 0;
+		for (let i=0; i<parIndexes.length; i++) {
+			if (i!=0)  rowIndex *= pars[i].states().length;
+			rowIndex += parIndexes[i];
+		}
+		return rowIndex;
+	}
+	
+	function addWeightedVec(vec1, vec2, weight) {
+		return vec1.map((v,i) => v + vec2[i]*weight);
+	}
+
+	let net = child.net;
+	
+	/// The CPT (we'll modify in place)
+	let cpt = child.cpt();
+	
+	let pars = child.parents();
+	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
+	
+	let marginals = parentToRemove.beliefs();
+	
+	let parIndexes = pars.map(_=>0);
+	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
+	do {
+		let row = child.states().map(_=>0);
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			//console.log(parIndexes, rowI);
+			row = addWeightedVec(row, cpt[rowI], marginals[i]);
+		}
+		let marginalizedRow = row;
+		
+		/// Replace all the matching rows with the weighted combination
+		for (let i=0; i<marginals.length; i++) {
+			parIndexes[toRemoveIndex] = i;
+			let rowI = getRowIndex(parIndexes);
+			cpt[rowI] = marginalizedRow;
+		}
+	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+	
+	if (reduce) {
+		/// Resize the CPT (i.e. remove the redundant rows)
+		let parIndexes = pars.map(_=>0);
+		let newCpt = [];
+		do {
+			newCpt.push(cpt[getRowIndex(parIndexes)]);
+		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
+		
+		return newCpt;
+	}
+	else {
+		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
+		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
+		return cpt;
+	}
+}
+
+function pick(obj, keys) {
+	let newObj = {};
+	for (let key of keys) {
+		if (key in obj) {
+			newObj[key] = obj[key];
+		}
+	}
+	return newObj;
+}
 
 function getQs(searchStr) {
 	searchStr = searchStr || window.location.search;
@@ -22,12 +110,6 @@ function getQs(searchStr) {
 		}
 	}
 	return params;
-}
-
-function getTargetStateColor(baseBelief, currentBelief) {
-  let diff = currentBelief - baseBelief;
-  let color = getColor(diff);
-  return color
 }
 
 function getColor(changerate) {
@@ -46,251 +128,15 @@ function getColor(changerate) {
   else if (0.3 < changerate)
     return "influence-idx0";
 }
-// ---------------------------------------
 
-// Verbal
-function mapInfluencePercentageToScale(influencePercentage) {
-  const absPercentage = Math.abs(influencePercentage);
-  let scale = 0;
-
-  if (absPercentage >= 0 && absPercentage <= 0.01) {
-    scale = 0;
-  } else if (absPercentage > 0.01 && absPercentage <= 0.15) {
-    scale = 1;
-  } else if (absPercentage > 0.15 && absPercentage <= 0.3) {
-    scale = 2;
-  } else if (absPercentage > 0.3) {
-    scale = 3;
-  }
-
-  // Adjust sign based on influence percentage
-  if (influencePercentage < 0) {
-    scale = -scale;
-  }
-
-  return scale;
-}
-
-// Define calculateInfluenceBetweenNodes function
-function calculateInfluenceBetweenNodes(parentNodeName, childNodeName) {
-  // Create a new network instance to avoid altering the main network
-  let tempNet = new Net(bnKey);
-
-  // Get nodes
-  let parentNode = tempNet.node(parentNodeName);
-  let childNode = tempNet.node(childNodeName);
-
-  // Update the network without any findings to get baseline beliefs
-  tempNet.update();
-  let baselineBelief = childNode.beliefs();
-
-  // Initialize variables to track maximum influence
-  let maxInfluence = 0;
-
-  // Iterate over all states of the parent node
-  let parentStates = parentNode.states();
-  for (let parentStateIndex = 0; parentStateIndex < parentStates.length; parentStateIndex++) {
-    // Set parent node to a specific state
-    parentNode.finding(parentStateIndex);
-    tempNet.update();
-    let beliefGivenParentState = childNode.beliefs();
-
-    // Calculate the difference in the child's beliefs
-    for (let childStateIndex = 0; childStateIndex < childNode.states().length; childStateIndex++) {
-      let baselineProb = baselineBelief[childStateIndex];
-      let newProb = beliefGivenParentState[childStateIndex];
-      let diff = Math.abs(newProb - baselineProb);
-
-      if (diff > maxInfluence) {
-        maxInfluence = diff;
-      }
-    }
-
-    // Reset the parent node's finding
-    parentNode.retractFindings();
-  }
-
-  // Return the maximum observed influence (a value between 0 and 1)
-  return maxInfluence;
-}
-
-function calculateIndirectInfluence(nonActiveNodeName, targetNodeName) {
-  // Create a new network instance to avoid altering the main network
-  let tempNet = new Net(bnKey);
-  tempNet.compile();
-
-  // Ensure the network is initialized correctly
-  if (!tempNet || typeof tempNet.node !== 'function') {
-    console.error("Network instance not initialized correctly.");
-    return 0;
-  }
-
-  // Get the parent and target nodes
-  let nonActiveNode = tempNet.node(nonActiveNodeName);
-  if (!nonActiveNode) {
-    console.error(`Node ${nonActiveNodeName} not found in the network.`);
-    return 0;
-  }
-
-  let targetNode = tempNet.node(targetNodeName);
-  if (!targetNode) {
-    console.error(`Target node ${targetNodeName} not found in the network.`);
-    return 0;
-  }
-
-  // Get the state index for the parent node
-  let nonActiveNodeStateIndex = evidence[nonActiveNodeName];
-  if (nonActiveNodeStateIndex === null || nonActiveNodeStateIndex === undefined) {
-    console.error(`State index for node ${nonActiveNodeName} is undefined.`);
-    return 0;
-  }
-
-  // Get the state index for the target node
-  let targetStateIndexArray = selectedStates[targetNodeName];
-  if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
-    console.error(`No selected states for target node ${targetNodeName}`);
-    return 0;
-  }
-  let targetStateIndex = targetStateIndexArray[0];
-
-  // Set evidence for all nodes except the nonActiveNodeName
-  for (let [nodeName, stateI] of Object.entries(evidence)) {
-    if (nodeName != nonActiveNodeName) {
-      tempNet.node(nodeName).finding(Number(stateI));
-    }
-  }
-
-  // Update the network to get the baseline belief
-  tempNet.update();
-  let baselineBelief = targetNode.beliefs()[targetStateIndex];
-
-  // Set the nonActiveNode to the specific state
-  try {
-    nonActiveNode.finding(Number(nonActiveNodeStateIndex));
-  } catch (error) {
-    console.error(`Error setting finding for node ${nonActiveNodeName}:`, error);
-    return 0;
-  }
-
-  tempNet.update();
-
-  // Get the target node's belief after setting the nonActiveNode's state
-  let beliefGivenParentState = targetNode.beliefs()[targetStateIndex];
-
-  // Calculate the influence percentage
-  let influencePercentage = (beliefGivenParentState - baselineBelief) / baselineBelief;
-
-  // Return the influence percentage
-  return influencePercentage; 
-}
-  
-
-function calculatePathContribution(path) {
-  let totalInfluence = 0;
-  for (let i = 0; i < path.length - 1; i++) {
-    const fromNode = path[i];
-    const toNode = path[i + 1];
-    const influence = calculateIndirectInfluence(fromNode, toNode);
-
-    totalInfluence += influence;
-  }
-  console.log(`totalInfluence for path ${path.join(' -> ')}:`, totalInfluence);
-
-  // Map the total influence to the scale
-  let scale = mapInfluencePercentageToScale(totalInfluence);
-
-  return scale;
-}
-
-
-// Build the undirectedGraph
-function buildUndirectedGraph(relationships) {
-  const graph = {};
-  relationships.forEach(rel => {
-    if (!graph[rel.from]) {
-      graph[rel.from] = [];
-    }
-    if (!graph[rel.to]) {
-      graph[rel.to] = [];
-    }
-    graph[rel.from].push(rel.to);
-    graph[rel.to].push(rel.from); 
-  });
-  return graph;
-}
-
-function findAllPaths(graph, startNode, endNode) {
-  const allPaths = [];
-
-  function dfs(currentNode, endNode, path, visited) {
-
-    visited.add(currentNode);
-    path.push(currentNode);
-
-    if (currentNode === endNode) {
-      allPaths.push([...path]);
-    } else if (graph[currentNode]) {
-      for (const neighbor of graph[currentNode]) {
-        if (!visited.has(neighbor)) {
-          dfs(neighbor, endNode, path, visited);
-        }
-      }
-    }
-
-    path.pop();
-    visited.delete(currentNode);
-  }
-
-  dfs(startNode, endNode, [], new Set());
-
-  return allPaths;
-}
-
-
-function getAttribute(nodeName) {
-  let node = net.node(nodeName);
-  let state = node.states();
-  let stateNames = node._stateNames;
-  let NodeAttribute = ""
-  if(evidence[nodeName] != null){
-  NodeAttribute = stateNames[evidence[nodeName]];
-  }
-  else{
-    NodeAttribute = stateNames[0]
-  }
-  console.log(stateNames)
-  return NodeAttribute
-
-}
-
-function filterPathsByDirectConnection(allPaths) {
-  let pathGroups = {};
-  for (let path of allPaths) {
-    if (path.length < 2) {
-      continue;
-    }
-    let fromNode = path[0];
-    let toNode = path[path.length - 1];
-    let key = `${fromNode}|${toNode}`;
-    if (!pathGroups[key]) {
-      pathGroups[key] = [];
-    }
-    pathGroups[key].push(path);
-  }
-
-  let filteredPaths = [];
-
-  // Find the shortest path for each group
-  for (let key in pathGroups) {
-    let paths = pathGroups[key];
-    
-    paths.sort((a, b) => a.length - b.length);
-    filteredPaths.push(paths[0]);
-  }
-
-  return filteredPaths;
+function getTargetStateColor(baseBelief, currentBelief) {
+  let diff = currentBelief - baseBelief;
+  let color = getColor(diff);
+  return color
 }
 
 module.exports = {
+  addJointChild,
+  marginalizeParentArc,
   getColor,
 };
