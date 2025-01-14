@@ -25,7 +25,7 @@ function buildUndirectedGraph(relationships) {
 
 
 function findAllPaths(graph, startNode, endNode) {
-  let allPaths = null;
+  const allPaths = [];
 
   function dfs(currentNode, endNode, path, visited) {
 
@@ -33,7 +33,7 @@ function findAllPaths(graph, startNode, endNode) {
     path.push(currentNode);
 
     if (currentNode === endNode) {
-      allPaths = [...path];
+      allPaths.push([...path]);
     } else if (graph[currentNode]) {
       for (const neighbor of graph[currentNode]) {
         if (!visited.has(neighbor)) {
@@ -47,7 +47,7 @@ function findAllPaths(graph, startNode, endNode) {
   }
 
   dfs(startNode, endNode, [], new Set());
-  console.log('allPaths:', allPaths)						
+  // console.log('allPaths:', allPaths)						
 
   return allPaths;
 }

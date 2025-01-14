@@ -1203,10 +1203,10 @@ module.exports = {
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							// for (const path of activePaths) {
-							bn.activePaths.push(activePaths)				
-								// console.log('bn.activePaths:', bn.activePaths)					
-							// }
+							for (const path of activePaths) {
+								bn.activePaths.push(path)				
+								console.log('bn.activePaths:', bn.activePaths)					
+							}
 
 							// evidenceList = Object.keys(evidence)
 
