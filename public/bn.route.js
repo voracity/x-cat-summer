@@ -2,7 +2,7 @@ var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
-var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships, classifyBNStructure} = require('./_/js/nodepath');
+var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
 const path = require('path');
 
@@ -1163,7 +1163,7 @@ module.exports = {
 
 						let pathWithRelationship = []
 
-						for (let nonActiveNodeName of Object.keys(evidence)) {
+						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
 							// let nodeSentences = [];
 						
@@ -1171,9 +1171,9 @@ module.exports = {
 							let netWithoutOneEvidence = new Net(bnKey);
 							netWithoutOneEvidence.compile();					
 						
-							// Set all evidence except the one corresponding to the current nonActiveNodeName.
+							// Set all evidence except the one corresponding to the current evidenceNodeName.
 							for (let [nodeName, stateI] of Object.entries(evidence)) {
-								if (nodeName != nonActiveNodeName) {
+								if (nodeName != evidenceNodeName) {
 									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
 								}
 							}
@@ -1181,15 +1181,17 @@ module.exports = {
 							// Update the network to propagate the changes in evidence and compute new beliefs.
 							netWithoutOneEvidence.update();
 						
-							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
-							let influenceData = bn.influences[nonActiveNodeName];
+							bn.influences[evidenceNodeName] = { targetBeliefs: {} };
+							let influenceData = bn.influences[evidenceNodeName];
 							// console.log('influenceData:', influenceData)
 							
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
+
+							console.log('evidenceNodeName:', evidenceNodeName)
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);						
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);						
 						
 							// filterActivePaths
 							let activePaths = filterActivePaths(allPaths,relationships,evidence);		
@@ -1223,18 +1225,6 @@ module.exports = {
 								console.log('secondOrderPaths:', secondOrderPaths)
 							}							
 						}					
-						// console.log('evidence:', evidence)
-						// console.log('evidence.getT:', evidence['T'])				
-						
-						// console.log('pathWithRelationship:', pathWithRelationship)
-						// classifyPaths(pathWithRelationship, evidence, focusEvidence, targetNodeName)
-
-						// pathWithRelationship.forEach((path) => {
-						// 	console.log('---------------------------')	
-						// 	for (let [node, type] of path) {															
-						// 		console.log('node:', node, 'type:', type)								
-						// 	}
-						// })
 
 						// calculate arc importances
 						let arcs = []
