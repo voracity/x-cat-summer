@@ -79,7 +79,8 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
             );
             sentence.appendChild(n('span', ','));
           } 
-        } else {  
+
+        } else {        
           sentence.appendChild(n('span', ' which in turn '));
           sentence.appendChild(
             n('span', colorToVerbal(arc.color), { class: 'verbalText' })
@@ -98,6 +99,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 }
 
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
+  // 1) Clear any previous content
   verbalListDisplay.innerHTML = '';
 
   if (!arcsContribution || arcsContribution.length === 0) {
@@ -163,7 +165,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
 
 }
 
-function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
+function generateDetailedExplanations({activePaths,arcsContribution,colliderNodes,verbalListDisplay,}) {
+  verbalListDisplay.innerHTML = '';
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
@@ -177,15 +180,15 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
       normalPaths.push(path);
     }
   });
-  
+  console.log("colliderPaths: ", colliderPaths)
+  console.log("normalPaths: ", normalPaths)
+
   // Now call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
-    console.log("normalPaths: ", normalPaths)
     buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
   }
 
   if (colliderPaths.length > 0) {
-    console.log("colliderPaths: ", colliderPaths)
     buildDetailCombinedExplanation(arcsContribution, verbalListDisplay);
   }
 }

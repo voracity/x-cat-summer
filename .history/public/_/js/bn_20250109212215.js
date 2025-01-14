@@ -9,9 +9,7 @@ var bn = {
 	selectedStates: {},
 	beliefs: {},
 	activePaths: {},
-	colliders: {},
 	ciTableEnabled: false,
-	focusEvidence: null,
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
 		for (let node of bn.model) {
@@ -38,8 +36,7 @@ var bn = {
 	
 	
 	async update(evidence = {}) {
-		// console.log('-----------bn.js evidence:', evidence);
-		// console.log('-----------Object.entries():', Object.entries());
+		console.log(evidence);
 		for (let [k,v] of Object.entries(evidence)) {
 			if (v === null) {
 				delete this.evidence[k];
@@ -52,14 +49,12 @@ var bn = {
 		/// er, not quite yet...
 		await (async _=>{
 			let reqData;
-
-			if (this.calculateTargetChange) {										
-				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=targetInfluence&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates)+'&focusEvidence='+this.focusEvidence)).json();				
-			}
+			if (this.calculateTargetChange)
+				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=targetInfluence&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
 			else
 				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=beliefs&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
 			//let nodeBeliefs = {};
-			// console.log('reqData:', reqData)
+			console.log('reqData:', reqData)
 			if (reqData.model) {
 				for (let node of reqData.model) {
 					this.beliefs[node.name] = node.beliefs;
@@ -68,8 +63,8 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
-					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
-					// console.log('reqData.activePaths:', reqData.activePaths);
+					console.log('reqData.arcInfluence:', reqData.arcInfluence);
+					console.log('reqData.activePaths:', reqData.activePaths);
 					console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
 					this.activePaths = reqData.activePaths;
@@ -83,7 +78,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths});
 	},
 
 	guiUpdateInfoWindows() {
@@ -339,17 +334,13 @@ class Node {
 				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px rgba(255,0,0,0.9)' : '';
 				count--;
 				setTimeout(toggleFlash, flashDuration);
-			} 
-			else {
+			} else {
 				nodeElement.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)"
 			}
 		}
-		toggleFlash(); 		
-	}
 
-	static setFocusEvidence(nodeElement, bn) {
-		nodeElement.classList.add("focusEvidence");		
-		bn.focusEvidence = nodeElement.dataset.name;			
+		toggleFlash(); 
+		
 	}
 
 	static guiSetupEvents() {
@@ -359,7 +350,7 @@ class Node {
 			console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
-			let focusEvidenceNode =  event.target.closest('.node');
+			let evidenceNodeShining =  event.target.closest('.node');
 
 			document.querySelectorAll(".node h3").forEach((nodeHeader) => {
 				nodeHeader.addEventListener("mouseenter", () => {
@@ -393,15 +384,13 @@ class Node {
 				playButton.style.top = "55%"; 
 				playButton.style.transform = "translateY(-50%)";
 				evidenceNodeTitle.appendChild(playButton);
-				Node.flashNode(focusEvidenceNode);
-				Node.setFocusEvidence(focusEvidenceNode, bn);
-				// focusEvidenceNode.classList.add("focusEvidence");		
-				console.log('--------------asdfasdf------------focusEvidenceNode:', this.focusEvidence);
+				Node.flashNode(evidenceNodeShining);
+				evidenceNodeShining.classList.add("shining");		
 				
-				const node = refs.Node(focusEvidenceNode)
+				const node = refs.Node(evidenceNodeShining)
 				node.bn.update();
 				
-					// console.log("focusEvidenceNode:", focusEvidenceNode);
+					// console.log("evidenceNodeShining:", evidenceNodeShining);
 								
 			}
 				
@@ -452,7 +441,7 @@ class Node {
 			setMoveEl.addEventListener("mousedown", (event) => {
 				console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
-				console.log('target:', target);
+				console.log(target);
 				
 
 				if (target) {
@@ -592,13 +581,6 @@ document.addEventListener('DOMContentLoaded', event => {
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
 				return;
-
-			document.querySelectorAll('.node.istargetnode').forEach(node => {
-				node.classList.remove('istargetnode');
-				node.querySelectorAll('.state.istarget').forEach(state => {
-					state.classList.remove('istarget');
-				})
-			})
 
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
@@ -791,4 +773,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	verbalBox.onmouseup = handleDragLeave
 	verbalBox.onmouseleave = handleDragLeave
 	verbalBox.onmousemove = handleDragMove
+
+
+
   });

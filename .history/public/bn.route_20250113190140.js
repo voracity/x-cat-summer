@@ -1171,7 +1171,7 @@ module.exports = {
 
 						let pathWithRelationship = []
 
-						for (let evidenceNodeName of Object.keys(evidence)) {
+						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
 							// let nodeSentences = [];
 						
@@ -1179,9 +1179,9 @@ module.exports = {
 							let netWithoutOneEvidence = new Net(bnKey);
 							netWithoutOneEvidence.compile();					
 						
-							// Set all evidence except the one corresponding to the current evidenceNodeName.
+							// Set all evidence except the one corresponding to the current nonActiveNodeName.
 							for (let [nodeName, stateI] of Object.entries(evidence)) {
-								if (nodeName != evidenceNodeName) {
+								if (nodeName != nonActiveNodeName) {
 									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
 								}
 							}

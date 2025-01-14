@@ -98,7 +98,8 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 }
 
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  verbalListDisplay.innerHTML = '';
+  // // 1) Clear any previous content
+  // verbalListDisplay.innerHTML = '';
 
   if (!arcsContribution || arcsContribution.length === 0) {
     // If no arcs, just exit or show something minimal
@@ -163,7 +164,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
 
 }
 
-function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
+function generateDetailedExplanations({activePaths,arcsContribution,colliderNodes,verbalListDisplay,}) {
+  // verbalListDisplay.innerHTML = '';
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];

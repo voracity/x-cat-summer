@@ -79,7 +79,26 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
             );
             sentence.appendChild(n('span', ','));
           } 
-        } else {  
+          // else {
+          //   // Intermediate steps
+          //   sentence.appendChild(n('span', ' which in turn '));
+          //   sentence.appendChild(
+          //     n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' })
+          //   );
+          //   sentence.appendChild(n('span', ' the probability that '));
+          //   sentence.appendChild(
+          //     n('span', arc.to, { class: 'verbalTextBold' })
+          //   );
+          //   sentence.appendChild(n('span', ' was '));
+          //   sentence.appendChild(
+          //     n('span', arc.toState, { class: 'verbalTextItalic' })
+          //   );
+          //   sentence.appendChild(n('span', ','));
+          // }
+        } else {
+          // Last step in the path  
+          // console.log('path[i]', path[i]); 
+          
           sentence.appendChild(n('span', ' which in turn '));
           sentence.appendChild(
             n('span', colorToVerbal(arc.color), { class: 'verbalText' })
@@ -165,7 +184,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
 
-  // We'll sort them into two categories: colliderPaths and normalPaths
+  // sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
   const normalPaths   = [];
 
@@ -178,7 +197,7 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
     }
   });
   
-  // Now call the detail function for normal vs. collider paths
+  // call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
     console.log("normalPaths: ", normalPaths)
     buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
@@ -192,13 +211,13 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
 
 
 function pathHasCollider(path, colliderNodes) {
-  // If you specifically don't want first or last node to count, you can slice(1, -1)
+
   const middleNodes = path.slice(1, -1);
   return middleNodes.some(node => colliderNodes.includes(node));
 }
 
 function findAllColliders(relationships) {
-  // 1) childToParents: for each child, a set of distinct parents
+  //childToParents: for each child, a set of distinct parents
   const childToParents = {};
   relationships.forEach(({ from, to }) => {
     if (!childToParents[to]) {
@@ -207,8 +226,8 @@ function findAllColliders(relationships) {
     childToParents[to].add(from);
   });
 
-  // 2) adjacency for forward edges: parent->child
-  //    to let us check if there's a path from one parent to another
+
+  //check if there's a path from one parent to another
   const adjacency = {};
   relationships.forEach(({ from, to }) => {
     if (!adjacency[from]) {
@@ -217,7 +236,7 @@ function findAllColliders(relationships) {
     adjacency[from].push(to);
   });
 
-  // Helper: check if there's a path from nodeA to nodeB using DFS
+  // check if there's a path from nodeA to nodeB using DFS
   function canReach(nodeA, nodeB) {
     // If adjacency[nodeA] is empty or undefined, no path
     if (!adjacency[nodeA]) return false;
@@ -243,18 +262,17 @@ function findAllColliders(relationships) {
 
   const finalColliders = [];
 
-  // 3) check each possible child that has 2+ parents
+
   for (const child in childToParents) {
     const parents = Array.from(childToParents[child]);
     if (parents.length < 2) continue;  // not a collider candidate
 
-    // We only keep 'child' if no two parents are connected
+    // only keep 'child' if no two parents are connected
     let keepNode = true;
     for (let i = 0; i < parents.length && keepNode; i++) {
       for (let j = i + 1; j < parents.length && keepNode; j++) {
         const p1 = parents[i];
         const p2 = parents[j];
-        // If p1->...->p2 or p2->...->p1, they're connected => exclude
         if (canReach(p1, p2) || canReach(p2, p1)) {
           keepNode = false;
           break;
@@ -302,8 +320,4 @@ function numberToWord(num) {
   if (num == 9) return "nine";
   if (num == 10) return "ten";
   return num;
-}
-
-module.exports = {
-  findAllColliders
 }

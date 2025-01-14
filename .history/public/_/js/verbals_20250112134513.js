@@ -79,7 +79,26 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
             );
             sentence.appendChild(n('span', ','));
           } 
-        } else {  
+          // else {
+          //   // Intermediate steps
+          //   sentence.appendChild(n('span', ' which in turn '));
+          //   sentence.appendChild(
+          //     n('span', colorToVerbalShorten(arc.color), { class: 'verbalText' })
+          //   );
+          //   sentence.appendChild(n('span', ' the probability that '));
+          //   sentence.appendChild(
+          //     n('span', arc.to, { class: 'verbalTextBold' })
+          //   );
+          //   sentence.appendChild(n('span', ' was '));
+          //   sentence.appendChild(
+          //     n('span', arc.toState, { class: 'verbalTextItalic' })
+          //   );
+          //   sentence.appendChild(n('span', ','));
+          // }
+        } else {
+          // Last step in the path  
+          // console.log('path[i]', path[i]); 
+          
           sentence.appendChild(n('span', ' which in turn '));
           sentence.appendChild(
             n('span', colorToVerbal(arc.color), { class: 'verbalText' })
@@ -97,73 +116,31 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   });
 }
 
-function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  verbalListDisplay.innerHTML = '';
+function buildDetailColliderSentenceList(colliderPaths, arcsContribution, verbalListDisplay) {
+  // We'll call it with "colliderPaths" if we detect any path is a collider path
 
-  if (!arcsContribution || arcsContribution.length === 0) {
-    // If no arcs, just exit or show something minimal
-    const p = n('p', '(No arcs to explain.)');
-    verbalListDisplay.appendChild(p);
-    return;
-  }
+  colliderPaths.forEach((path, index) => {
+    const arcInfo = arcsContribution[index];
+    if (!arcInfo) return;
 
-  const introSpans = [];
-  arcsContribution.forEach((arc, i) => {
-    // For each arc: “the presence of Dermascare”, or “inheriting the Mutation”
-    const chunk = n('span', 
-      n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
-      n('span', arc.from, { class: 'verbalTextBold' })
-    );
-    introSpans.push(chunk);
-    // if not the last item, insert “ or ”
-    if (i < arcsContribution.length - 1) {
-      introSpans.push(' or ');
-    }
-  });
-
-  // Combine them into one sentence
-  const firstParagraph = n('p',
-    'Either ',
-    ...introSpans,
-    ' can directly cause ',
-    n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
-    n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
-    '.'
-  );
-
-  verbalListDisplay.appendChild(firstParagraph);
-
-
-  arcsContribution.forEach((arc, index) => {
-    // We'll create a bullet like “1.”, “2.”, etc. 
-
-    const bulletNumber = (index + 1) + '.';
- 
-    const colorPhrase = colorToVerbal(arc.color);
-
-    // Construct the paragraph
-    const bulletParagraph = n('p',
-      n('span', bulletNumber, { style: 'font-weight:bold' }), ' ',
-      `If we didn't know about `,
-      n('span', arc.to, { class: 'verbalTextBold' }),
-      `, finding out the `,
-      n('span', arc.fromState, { class: 'verbalTextItalic' }),
-      ' of ',
-      n('span', arc.from, { class: 'verbalTextBold' }),
-      ' would ',
-      n('span', colorPhrase, { class: 'verbalTextUnderline' }),
-      ' the probability of ',
-      n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
-      n('span', arc.to, { class: 'verbalTextBold' }),
-      '.'
+    const { from, to, color } = arcInfo;
+    
+    // Example text focusing on the idea that the path includes a collider
+    const sentenceEl = n(
+      'p',
+      '● Collider path found: ',
+      n('span', path.join(' → '), { class: 'verbalTextBold' }),
+      '. Observing a collider in this path ',
+      n('span', colorToVerbal(color), { class: 'verbalTextUnderline' }),
+      ' the probability for the target.'
     );
 
-    verbalListDisplay.appendChild(bulletParagraph);
+    verbalListDisplay.appendChild(sentenceEl);
   });
-
 }
 
-function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
+function generateDetailedExplanations({activePaths,arcsContribution,colliderNodes,verbalListDisplay,}) {
+  verbalListDisplay.innerHTML = '';
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
@@ -177,16 +154,14 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
       normalPaths.push(path);
     }
   });
-  
+
   // Now call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
-    console.log("normalPaths: ", normalPaths)
     buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
   }
 
   if (colliderPaths.length > 0) {
-    console.log("colliderPaths: ", colliderPaths)
-    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay);
+    buildDetailColliderSentenceList(colliderPaths, arcsContribution, verbalListDisplay);
   }
 }
 
@@ -198,77 +173,26 @@ function pathHasCollider(path, colliderNodes) {
 }
 
 function findAllColliders(relationships) {
-  // 1) childToParents: for each child, a set of distinct parents
+  // Map each child node -> a set of its distinct parents
   const childToParents = {};
+  
+  // Build up the sets of parents
   relationships.forEach(({ from, to }) => {
     if (!childToParents[to]) {
-      childToParents[to] = new Set();
+    childToParents[to] = new Set();
     }
     childToParents[to].add(from);
   });
-
-  // 2) adjacency for forward edges: parent->child
-  //    to let us check if there's a path from one parent to another
-  const adjacency = {};
-  relationships.forEach(({ from, to }) => {
-    if (!adjacency[from]) {
-      adjacency[from] = [];
-    }
-    adjacency[from].push(to);
-  });
-
-  // Helper: check if there's a path from nodeA to nodeB using DFS
-  function canReach(nodeA, nodeB) {
-    // If adjacency[nodeA] is empty or undefined, no path
-    if (!adjacency[nodeA]) return false;
-    const stack = [nodeA];
-    const visited = new Set([nodeA]);
-
-    while (stack.length > 0) {
-      const current = stack.pop();
-      // if current can go directly to nodeB
-      if (adjacency[current]?.includes(nodeB)) {
-        return true;
-      }
-      // push children not visited
-      for (const nxt of (adjacency[current] || [])) {
-        if (!visited.has(nxt)) {
-          visited.add(nxt);
-          stack.push(nxt);
-        }
-      }
-    }
-    return false;
-  }
-
-  const finalColliders = [];
-
-  // 3) check each possible child that has 2+ parents
-  for (const child in childToParents) {
-    const parents = Array.from(childToParents[child]);
-    if (parents.length < 2) continue;  // not a collider candidate
-
-    // We only keep 'child' if no two parents are connected
-    let keepNode = true;
-    for (let i = 0; i < parents.length && keepNode; i++) {
-      for (let j = i + 1; j < parents.length && keepNode; j++) {
-        const p1 = parents[i];
-        const p2 = parents[j];
-        // If p1->...->p2 or p2->...->p1, they're connected => exclude
-        if (canReach(p1, p2) || canReach(p2, p1)) {
-          keepNode = false;
-          break;
-        }
-      }
-    }
-    // if keepNode is still true => no parents are connected
-    if (keepNode) {
-      finalColliders.push(child);
+  
+  // A node is a collider if it has >=2 distinct parents
+  const colliders = [];
+  for (const node in childToParents) {
+    if (childToParents[node].size >= 2) {
+    colliders.push(node);
     }
   }
-
-  return finalColliders;
-}
+  return colliders;
+  }
   
 function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
   let findings = numsFinding == 2 ? 'Both' : 'All';
