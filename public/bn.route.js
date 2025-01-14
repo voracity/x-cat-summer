@@ -2,9 +2,8 @@ var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
-var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships, classifyBNStructure} = require('./_/js/nodepath');
+var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-const path = require('path');
 var {findAllColliders} = require("./_/js/verbals")
 
 var measurePlugins = {
@@ -1189,15 +1188,15 @@ module.exports = {
 							// Update the network to propagate the changes in evidence and compute new beliefs.
 							netWithoutOneEvidence.update();
 						
-							bn.influences[nonActiveNodeName] = { targetBeliefs: {} };
-							let influenceData = bn.influences[nonActiveNodeName];
+							bn.influences[evidenceNodeName] = { targetBeliefs: {} };
+							let influenceData = bn.influences[evidenceNodeName];
 							// console.log('influenceData:', influenceData)
 							
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, nonActiveNodeName, targetNodeName);						
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);						
 						
 							// filterActivePaths
 							let activePaths = filterActivePaths(allPaths,relationships,evidence);		
@@ -1209,10 +1208,10 @@ module.exports = {
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							// for (const path of activePaths) {
-							bn.activePaths.push(activePaths)				
-								// console.log('bn.activePaths:', bn.activePaths)					
-							// }
+							for (const path of activePaths) {
+								bn.activePaths.push(path)				
+								console.log('bn.activePaths:', bn.activePaths)					
+							}
 
 							// evidenceList = Object.keys(evidence)
 
