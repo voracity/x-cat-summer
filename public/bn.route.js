@@ -925,6 +925,13 @@ module.exports = {
 	component: BnDetail,
 	noUserRequired: true,
 	async prepareData(req,res,db,cache) {
+
+		const isLimitedMode = req.query.limitedMode === 'true';
+
+		if (isLimitedMode) {
+			console.log("Limited mode is enabled on the server side.");
+		}
+	
 		// Probably don't need to get this as in server already
 		let userInfo = await db.get('select userId from user_sessions where sessionId = ?', req.cookies.sessionId);
 		console.log('x');

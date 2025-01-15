@@ -12,6 +12,8 @@ var bn = {
 	colliders: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
+	dragFunc:null,
+	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
 		for (let node of bn.model) {
@@ -35,7 +37,29 @@ var bn = {
 			this['gui'+method](...args);
 		}
 	},
-	
+	initialize() {
+        const urlParams = new URLSearchParams(window.location.search);
+        this.limitedMode = urlParams.get('limitedMode') === 'true';
+
+        if (this.limitedMode) {
+            console.log("Limited mode is enabled");
+            this.enableLimitedMode(); 
+        }
+		else{
+            console.log("Limited mode is disabled");
+            this.disableLimitedMode(); 
+		}
+    },
+
+    enableLimitedMode() {
+        console.log("Limited mode activated");
+		dragFunc = false
+    },
+	disableLimitedMode() {
+        console.log("Limited mode removed");
+		this.dragFunc = true
+    },
+
 	
 	async update(evidence = {}) {
 		// console.log('-----------bn.js evidence:', evidence);
@@ -353,9 +377,9 @@ class Node {
 	}
 
 	static guiSetupEvents() {
-		
-
+		bn.initialize();
 		q(".bnView").addEventListener("click", (event) => {
+
 			console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
@@ -446,10 +470,16 @@ class Node {
 
 	
 
-
-
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
+
+
+
 			setMoveEl.addEventListener("mousedown", (event) => {
+				if (!dragFunc){
+					console.log('Drag func disbaled')
+					return
+				}
+
 				console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
 				console.log('target:', target);
