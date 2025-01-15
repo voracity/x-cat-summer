@@ -263,6 +263,7 @@ class BnDetail {
 		})
 	}
 	make(root) {
+		
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),
@@ -925,6 +926,13 @@ module.exports = {
 	component: BnDetail,
 	noUserRequired: true,
 	async prepareData(req,res,db,cache) {
+
+		const isLimitedMode = req.query.limitedMode === 'true';
+
+		if (isLimitedMode) {
+			console.log("Limited mode is enabled on the server side.");
+		}
+	
 		// Probably don't need to get this as in server already
 		let userInfo = await db.get('select userId from user_sessions where sessionId = ?', req.cookies.sessionId);
 		console.log('x');

@@ -12,6 +12,9 @@ var bn = {
 	colliders: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
+	dragFunc:true,
+	showMenu:null,
+	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
 		for (let node of bn.model) {
@@ -35,7 +38,38 @@ var bn = {
 			this['gui'+method](...args);
 		}
 	},
-	
+	initialize() {
+        const urlParams = new URLSearchParams(window.location.search);
+        this.limitedMode = urlParams.get('limitedmode') === 'true';
+		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+
+        if (this.limitedMode) {
+            this.enableLimitedMode(); 
+        }
+		else{
+            this.disableLimitedMode(); 
+		}
+
+		if (this.MenuDisplay) {
+			ShowMenu = false
+            console.log("Menu disbaled");
+
+        }
+		else{
+            console.log("Menu abled");
+			ShowMenu = true
+		}
+    },
+
+    enableLimitedMode() {
+        console.log("Limited mode");
+		dragFunc = false
+    },
+	disableLimitedMode() {
+        console.log("Func mode");
+		dragFunc = true
+    },
+
 	
 	async update(evidence = {}) {
 		// console.log('-----------bn.js evidence:', evidence);
@@ -352,8 +386,21 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;			
 	}
 
+
+	
 	static guiSetupEvents() {
-		
+		bn.initialize();
+
+		const controlsDiv = document.querySelector('.controls');
+		const headerDiv = document.querySelector('.header')
+
+		if (!ShowMenu) {
+			controlsDiv.style.display = 'none';
+			headerDiv.style.display = 'none';
+		} else {
+			controlsDiv.style.display = 'block'; 
+			headerDiv.style.removeProperty('display')
+		}
 
 		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
@@ -365,7 +412,7 @@ class Node {
 				nodeHeader.addEventListener("mouseenter", () => {
 					nodeHeader.style.cursor = "pointer"; 
 				});
-			
+
 				nodeHeader.addEventListener("mouseleave", () => {
 					nodeHeader.style.cursor = "default"; 
 				});
@@ -441,10 +488,14 @@ class Node {
 
 	
 
-
-
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
+				console.log('dragfunc:',dragFunc)
+				if (!dragFunc){
+					console.log('Drag func disbaled')
+					return
+				}
+
 				console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
 				console.log('target:', target);
@@ -576,6 +627,18 @@ function setupScenarioEvents() {
 }
 
 document.addEventListener('DOMContentLoaded', event => {
+	let showMenu = false; 
+
+	const siteLinksDiv = document.querySelector('.siteLinks');
+
+	if (!showMenu) {
+		siteLinksDiv.remove(); // 从 DOM 中移除
+	} else {
+		const header = document.querySelector('.header');
+		const newDiv = document.createElement('div');
+		newDiv.className = 'siteLinks';
+		header.appendChild(newDiv); // 重新插入
+	}
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
