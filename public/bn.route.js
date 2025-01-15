@@ -965,6 +965,7 @@ module.exports = {
 			let origNet = null;
 			try {
 				console.log('prepareData');
+
 				/// tbd
 				let bnKey;
 				let bn =  {};
@@ -1173,20 +1174,10 @@ module.exports = {
 						const baselineProb = baselineBelief[targetStateIndex];
 						console.log('baselineProb:', baselineProb)
 
-						let pathWithRelationship = []
+						let sentences = [];
+						let totalInfluencePercentage = 0; 
 
-						const collider = analyzeColliders(
-							net,
-							relationships,
-							evidence,
-							targetNodeName,
-							targetStateIndex,
-							bnKey
-						);
-						
-						console.log("Detected Colliders and Differences:", collider);
-
-						for (let evidenceNodeName of Object.keys(evidence)) {
+						for (let nonActiveNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
 							// let nodeSentences = [];
 						
@@ -1219,9 +1210,8 @@ module.exports = {
 											
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
-							// const nonActiveNodes = Object.keys(evidence);
-							console.log("activePaths: ", activePaths);
-
+							const nonActiveNodes = Object.keys(evidence);
+							console.log("ActivePaths: ", activePaths);
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of activePaths) {
