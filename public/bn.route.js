@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders} = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -915,7 +915,6 @@ class BnDetail {
 		], {buttons:[btnOK, btnCANCEL]})
 		document.getElementById("snapshotname").focus()
 		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
-		
 	}
 
 }
@@ -1150,7 +1149,6 @@ module.exports = {
 						bn.colliders = colliders;
 						console.log('Collider:', bn.colliders);
 
-
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
 						if (targetNames.length !== 1) {
@@ -1176,6 +1174,17 @@ module.exports = {
 						console.log('baselineProb:', baselineProb)
 
 						let pathWithRelationship = []
+
+						const collider = analyzeColliders(
+							net,
+							relationships,
+							evidence,
+							targetNodeName,
+							targetStateIndex,
+							bnKey
+						);
+						
+						console.log("Detected Colliders and Differences:", collider);
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
