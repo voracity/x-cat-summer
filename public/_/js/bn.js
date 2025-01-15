@@ -395,14 +395,9 @@ class Node {
 				evidenceNodeTitle.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
 				Node.setFocusEvidence(focusEvidenceNode, bn);
-				// focusEvidenceNode.classList.add("focusEvidence");		
-				console.log('--------------asdfasdf------------focusEvidenceNode:', this.focusEvidence);
 				
 				const node = refs.Node(focusEvidenceNode)
-				node.bn.update();
-				
-					// console.log("focusEvidenceNode:", focusEvidenceNode);
-								
+				node.bn.update();																	
 			}
 				
 			
