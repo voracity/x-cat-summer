@@ -652,25 +652,32 @@ document.addEventListener('DOMContentLoaded', event => {
 			if (possibleEvidenceNode)
 				return;
 
-			target.closest('.state').classList.toggle('istarget');
-			target.closest('.node').classList.toggle('istargetnode');
-			
-			// Hide all other checkboxes when one is selected
+			// Add event listener to checkboxes
 			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
-				checkbox.addEventListener('change', function() {
+				checkbox.addEventListener('change', function () {
 						if (this.checked) {
+								// Toggle 'istarget' and 'istargetnode' for the corresponding state and node
+								this.closest('.state').classList.add('istarget');
+								this.closest('.node').classList.add('istargetnode');
+		
+								// Add 'not-checked' class to other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
 										if (cb !== this) {
 												cb.classList.add('not-checked');
 										}
 								});
 						} else {
+								// Remove 'istarget' and 'istargetnode' when unchecked
+								this.closest('.state').classList.remove('istarget');
+								this.closest('.node').classList.remove('istargetnode');
+		
+								// Remove 'not-checked' class from other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
 										cb.classList.remove('not-checked');
 								});
 						}
 				});
-			});
+		});
 
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
