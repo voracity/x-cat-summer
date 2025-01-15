@@ -263,6 +263,7 @@ class BnDetail {
 		})
 	}
 	make(root) {
+		
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),

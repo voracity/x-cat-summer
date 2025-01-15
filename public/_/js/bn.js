@@ -12,7 +12,8 @@ var bn = {
 	colliders: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
-	dragFunc:null,
+	dragFunc:true,
+	showMenu:null,
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -39,25 +40,34 @@ var bn = {
 	},
 	initialize() {
         const urlParams = new URLSearchParams(window.location.search);
-        this.limitedMode = urlParams.get('limitedMode') === 'true';
+        this.limitedMode = urlParams.get('limitedmode') === 'true';
+		this.MenuDisplay = urlParams.get('showmenu') === 'false';
 
         if (this.limitedMode) {
-            console.log("Limited mode is enabled");
             this.enableLimitedMode(); 
         }
 		else{
-            console.log("Limited mode is disabled");
             this.disableLimitedMode(); 
+		}
+
+		if (this.MenuDisplay) {
+			ShowMenu = false
+            console.log("Menu disbaled");
+
+        }
+		else{
+            console.log("Menu abled");
+			ShowMenu = true
 		}
     },
 
     enableLimitedMode() {
-        console.log("Limited mode activated");
+        console.log("Limited mode");
 		dragFunc = false
     },
 	disableLimitedMode() {
-        console.log("Limited mode removed");
-		this.dragFunc = true
+        console.log("Func mode");
+		dragFunc = true
     },
 
 	
@@ -376,10 +386,23 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;			
 	}
 
+
+	
 	static guiSetupEvents() {
 		bn.initialize();
-		q(".bnView").addEventListener("click", (event) => {
 
+		const controlsDiv = document.querySelector('.controls');
+		const headerDiv = document.querySelector('.header')
+
+		if (!ShowMenu) {
+			controlsDiv.style.display = 'none';
+			headerDiv.style.display = 'none';
+		} else {
+			controlsDiv.style.display = 'block'; 
+			headerDiv.style.removeProperty('display')
+		}
+
+		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
@@ -389,7 +412,7 @@ class Node {
 				nodeHeader.addEventListener("mouseenter", () => {
 					nodeHeader.style.cursor = "pointer"; 
 				});
-			
+
 				nodeHeader.addEventListener("mouseleave", () => {
 					nodeHeader.style.cursor = "default"; 
 				});
@@ -471,10 +494,8 @@ class Node {
 	
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
-
-
-
 			setMoveEl.addEventListener("mousedown", (event) => {
+				console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
 					return
@@ -611,6 +632,18 @@ function setupScenarioEvents() {
 }
 
 document.addEventListener('DOMContentLoaded', event => {
+	let showMenu = false; 
+
+	const siteLinksDiv = document.querySelector('.siteLinks');
+
+	if (!showMenu) {
+		siteLinksDiv.remove(); // 从 DOM 中移除
+	} else {
+		const header = document.querySelector('.header');
+		const newDiv = document.createElement('div');
+		newDiv.className = 'siteLinks';
+		header.appendChild(newDiv); // 重新插入
+	}
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {

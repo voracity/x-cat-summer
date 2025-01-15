@@ -109,7 +109,7 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 .form { display: grid; grid-template-columns: auto 1fr; max-width: 30em; }
 .form .field { display: contents; }
 
-.userLogin .register.form, .userLogin .login.form { display: none; }
+.userLogin .regisvoter.form, .userLogin .login.form { display: none; }
 .userLogin .form.active { display: grid; }
 
 .bnView { position: relative;}
