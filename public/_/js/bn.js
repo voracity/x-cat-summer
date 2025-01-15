@@ -279,7 +279,8 @@ class Node {
 		}
 		/// Update selected states
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
-		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));
+		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
+	
 		//this.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
@@ -660,6 +661,24 @@ document.addEventListener('DOMContentLoaded', event => {
 
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
+			
+			// Hide all other checkboxes when one is selected
+			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
+				checkbox.addEventListener('change', function() {
+						if (this.checked) {
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										if (cb !== this) {
+												cb.classList.add('not-checked');
+										}
+								});
+						} else {
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										cb.classList.remove('not-checked');
+								});
+						}
+				});
+			});
+
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
@@ -849,4 +868,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	verbalBox.onmouseup = handleDragLeave
 	verbalBox.onmouseleave = handleDragLeave
 	verbalBox.onmousemove = handleDragMove
-  });
+});
+

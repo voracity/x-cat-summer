@@ -391,6 +391,7 @@ class BnDetail {
 						n('div.cellProbability',
 							n('div.propWrapper',
 
+								// This show the checkbox
 								n('div.hiddencheckboxcontainer.target', 
 									n('input', {type: 'checkbox'},{class:`hiddencheckbox`})
 								),

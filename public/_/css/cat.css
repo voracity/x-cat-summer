@@ -229,7 +229,9 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 	opacity: 1;
 	/* display:inline; */
 }
-
+.hiddencheckbox.not-checked {
+	opacity: 0 !important;
+}
 
 .node .controls { position: absolute; padding: 0; margin: -4px -4px 0 -4px; bottom: 100%; text-align: right; width: 100%; }
 .node .controls a { color: #777; font-size: 10pt; }
