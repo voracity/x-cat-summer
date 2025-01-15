@@ -80,36 +80,6 @@ function isCollider(node, prevNode, nextNode, parentMap) {
   return parents.includes(prevNode) && parents.includes(nextNode);
 }
 
-function getDescendants(node, adjacencyMap) {
-  const visited = new Set();
-  const descendants = new Set();
-  const stack = [node];
-
-  while (stack.length > 0) {
-    const current = stack.pop();
-    if (!adjacencyMap[current]) continue;
-
-    for (const child of adjacencyMap[current]) {
-      if (!visited.has(child)) {
-        visited.add(child);
-        descendants.add(child);
-        stack.push(child);
-      }
-    }
-  }
-  return descendants;
-}
-
-function hasDescendantInEvidence(node, adjacencyMap, evidence) {
-  const ds = getDescendants(node, adjacencyMap);
-  for (const d of ds) {
-    if (Object.prototype.hasOwnProperty.call(evidence, d)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function isActivePath(path, relationships, evidence) {
   // Build helper maps. If you call isActivePath repeatedly,
   const parentMap = buildParentMap(relationships);
@@ -121,6 +91,7 @@ function isActivePath(path, relationships, evidence) {
     const prevNode = path[i - 1];
     const nextNode = path[i + 1];
 
+    // Check if 'node' is a collider in the context of [prevNode,node,nextNode]
     if (isCollider(node, prevNode, nextNode, parentMap)) {
       // A collider requires: node ∈ evidence OR at least one descendant in evidence
       const isNodeInEvidence = Object.prototype.hasOwnProperty.call(evidence, node);
@@ -138,6 +109,7 @@ function isActivePath(path, relationships, evidence) {
     }
   }
 
+  // If we never returned false, the path is considered active
   return true;
 }
 

@@ -121,6 +121,7 @@ function isActivePath(path, relationships, evidence) {
     const prevNode = path[i - 1];
     const nextNode = path[i + 1];
 
+    // Check if 'node' is a collider in the context of [prevNode,node,nextNode]
     if (isCollider(node, prevNode, nextNode, parentMap)) {
       // A collider requires: node ∈ evidence OR at least one descendant in evidence
       const isNodeInEvidence = Object.prototype.hasOwnProperty.call(evidence, node);
@@ -138,6 +139,7 @@ function isActivePath(path, relationships, evidence) {
     }
   }
 
+  // If we never returned false, the path is considered active
   return true;
 }
 
