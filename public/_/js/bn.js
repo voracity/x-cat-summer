@@ -651,14 +651,18 @@ document.addEventListener('DOMContentLoaded', event => {
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
 				return;
+			
+
+			target.closest('.state').classList.toggle('istarget');
+			target.closest('.node').classList.toggle('istargetnode');
 
 			// Add event listener to checkboxes
 			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
 				checkbox.addEventListener('change', function () {
 						if (this.checked) {
-								// Toggle 'istarget' and 'istargetnode' for the corresponding state and node
-								this.closest('.state').classList.add('istarget');
-								this.closest('.node').classList.add('istargetnode');
+								
+								target.closest('.state').classList.add('istarget');
+								target.closest('.node').classList.add('istargetnode');
 		
 								// Add 'not-checked' class to other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
@@ -667,9 +671,8 @@ document.addEventListener('DOMContentLoaded', event => {
 										}
 								});
 						} else {
-								// Remove 'istarget' and 'istargetnode' when unchecked
-								this.closest('.state').classList.remove('istarget');
-								this.closest('.node').classList.remove('istargetnode');
+								target.closest('.state').classList.remove('istarget');
+								target.closest('.node').classList.remove('istargetnode');
 		
 								// Remove 'not-checked' class from other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
@@ -677,7 +680,7 @@ document.addEventListener('DOMContentLoaded', event => {
 								});
 						}
 				});
-		});
+			});
 
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
