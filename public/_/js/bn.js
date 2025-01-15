@@ -652,13 +652,6 @@ document.addEventListener('DOMContentLoaded', event => {
 			if (possibleEvidenceNode)
 				return;
 
-			document.querySelectorAll('.node.istargetnode').forEach(node => {
-				node.classList.remove('istargetnode');
-				node.querySelectorAll('.state.istarget').forEach(state => {
-					state.classList.remove('istarget');
-				})
-			})
-
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
 			
