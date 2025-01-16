@@ -660,9 +660,6 @@ document.addEventListener('DOMContentLoaded', event => {
 			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
 				checkbox.addEventListener('change', function () {
 						if (this.checked) {
-								
-								target.closest('.state').classList.add('istarget');
-								target.closest('.node').classList.add('istargetnode');
 		
 								// Add 'not-checked' class to other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
@@ -671,9 +668,6 @@ document.addEventListener('DOMContentLoaded', event => {
 										}
 								});
 						} else {
-								target.closest('.state').classList.remove('istarget');
-								target.closest('.node').classList.remove('istargetnode');
-		
 								// Remove 'not-checked' class from other checkboxes
 								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
 										cb.classList.remove('not-checked');
