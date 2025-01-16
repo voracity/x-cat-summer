@@ -333,71 +333,120 @@ function findColliders(net, relationships) {
 }
 
 function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
-    const baselineNet = new Net(bnKey);
-    const evidenceNet = new Net(bnKey);
-    evidenceNet.compile();
+  const baselineNet = new Net(bnKey);
+  const evidenceNet = new Net(bnKey);
+  evidenceNet.compile();
 
-    Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
-        if (baselineNet.node(nodeName)) baselineNet.node(nodeName).finding(Number(stateIndex));
-        if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
-    });
+  // Apply evidence only to evidenceNet
+  Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
+      if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
+  });
 
-    evidenceNet.node(targetNode).finding(targetStateIndex);
-    let baseDiff = Infinity;
+  evidenceNet.node(targetNode).finding(targetStateIndex);
+  evidenceNet.update();
 
-    parents.forEach(parent => {
-        const parentNode = evidenceNet.node(parent);
-        if (!parentNode) return;
+  const probWithEvidence = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
 
-        parentNode.states().forEach((_, stateIndex) => {
-            parentNode.finding(stateIndex);
-            evidenceNet.update();
+  // Baseline without evidence
+  baselineNet.node(targetNode).finding(targetStateIndex);
+  baselineNet.update();
 
-            const probWithEvidence = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
-            const probWithoutEvidence = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
+  const probWithoutEvidence = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
 
-            const diff = Math.abs(probWithEvidence - probWithoutEvidence);
-            baseDiff = Math.min(baseDiff, diff);
-        });
-
-        parentNode.retractFindings();
-    });
-
-    return baseDiff;
+  return Math.abs(probWithEvidence - probWithoutEvidence);
 }
 
 function calculatePowerDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
-    const evidenceNet = new Net(bnKey);
-    evidenceNet.compile();
+  const evidenceNet = new Net(bnKey);
+  evidenceNet.compile();
 
-    evidenceNet.node(targetNode).finding(targetStateIndex);
-    Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
-        if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
-    });
+  // Apply evidence to evidenceNet
+  Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
+      if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
+  });
 
-    evidenceNet.update();
+  evidenceNet.node(targetNode).finding(targetStateIndex);
+  evidenceNet.update();
 
-    let powerDiff = 0;
+  let cumulativeDiff = 0;
 
-    parents.forEach(parent => {
-        const parentNode = evidenceNet.node(parent);
-        if (!parentNode) return;
+  parents.forEach(parent => {
+      const parentNode = evidenceNet.node(parent);
+      if (!parentNode) return;
 
-        parentNode.states().forEach((_, stateIndex) => {
-            parentNode.finding(stateIndex);
-            evidenceNet.update();
+      parentNode.states().forEach((_, stateIndex) => {
+          parentNode.finding(stateIndex);
+          evidenceNet.update();
 
-            const beliefs = evidenceNet.node(colliderNode).beliefs();
-            const probWithEvidence = beliefs[targetStateIndex];
-            const probWithoutEvidence = 1 - probWithEvidence;
+          const beliefs = evidenceNet.node(colliderNode).beliefs();
+          const probWithEvidence = beliefs[targetStateIndex];
+          const probWithoutEvidence = 1 - probWithEvidence;
 
-            powerDiff += Math.abs(probWithEvidence - probWithoutEvidence);
-        });
+          cumulativeDiff += Math.abs(probWithEvidence - probWithoutEvidence);
+      });
 
-        parentNode.retractFindings();
-    });
+      parentNode.retractFindings();
+  });
 
-    return powerDiff;
+  return cumulativeDiff;
+}
+
+
+function calculateOddsRatio(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
+  const baselineNet = new Net(bnKey);
+  const evidenceNet = new Net(bnKey);
+  baselineNet.compile();
+  evidenceNet.compile();
+
+  // Apply evidence to evidenceNet
+  Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
+      if (baselineNet.node(nodeName)) baselineNet.node(nodeName).finding(Number(stateIndex));
+      if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
+  });
+
+  let P_v_t = 0, P_v_not_t = 0, P_v_t_e = 0, P_v_not_t_e = 0;
+
+  parents.forEach(parent => {
+      const parentNode = evidenceNet.node(parent);
+      if (!parentNode) return;
+
+      parentNode.states().forEach((_, stateIndex) => {
+          parentNode.finding(stateIndex);
+
+          // P(v | t)
+          baselineNet.node(targetNode).finding(targetStateIndex);
+          baselineNet.update();
+          P_v_t = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
+
+          // P(v | ~t)
+          baselineNet.node(targetNode).finding(1 - targetStateIndex);
+          baselineNet.update();
+          P_v_not_t = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
+
+          // P(v | t, e)
+          evidenceNet.node(targetNode).finding(targetStateIndex);
+          evidenceNet.update();
+          P_v_t_e = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
+
+          // P(v | ~t, e)
+          evidenceNet.node(targetNode).finding(1 - targetStateIndex);
+          evidenceNet.update();
+          P_v_not_t_e = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
+      });
+
+      parentNode.retractFindings();
+  });
+
+  // Normalize and calculate Odds Ratio
+  const oddsRatio = (P_v_not_t * P_v_t_e) / (P_v_t * P_v_not_t_e + 1e-9);
+
+  return {
+      oddsRatio,
+      P_v_t,
+      P_v_not_t,
+      P_v_t_e,
+      P_v_not_t_e
+  };
 }
 
 function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
@@ -425,7 +474,22 @@ function analyzeColliders(net, relationships, evidence, targetNode, targetStateI
           bnKey
       );
 
-      results.push({ colliderNode: collider.node, baseDiff, powerDiff });
+      const { oddsRatio } = calculateOddsRatio(
+          net,
+          collider.node,
+          collider.parents,
+          targetNode,
+          evidence,
+          targetStateIndex,
+          bnKey
+      );
+
+      results.push({ 
+          colliderNode: collider.node, 
+          baseDiff, 
+          powerDiff, 
+          oddsRatio 
+      });
   });
 
   return results;
