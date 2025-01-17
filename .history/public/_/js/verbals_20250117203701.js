@@ -1,5 +1,4 @@
 var {n} = require('htm');
-var {Net} = require('../../../bni_smile');
 
 function colorToVerbal(color) {
   if (color == "influence-idx6")

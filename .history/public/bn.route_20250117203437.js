@@ -1158,7 +1158,8 @@ module.exports = {
 
 						const colliders = findAllColliders(net,relationships);
 						bn.colliders = colliders;
-						
+						console.log('Collider:', bn.colliders);
+
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1186,18 +1187,14 @@ module.exports = {
 
 						let pathWithRelationship = []
 
-						const collider = analyzeColliders(
-							net,
-							relationships,
-							evidence,
-							targetNodeName,
-							targetStateIndex,
-							bnKey
-						);
-
-						// console.log("net, relationships, evidence, targetNodeName, targetStateIndex, bnKey");
-						// console.log(net, relationships, evidence, targetNodeName, targetStateIndex, bnKey);
-
+						// const collider = analyzeColliders(
+						// 	net,
+						// 	relationships,
+						// 	evidence,
+						// 	targetNodeName,
+						// 	targetStateIndex,
+						// 	bnKey
+						// );
 						
 						console.log("Detected Colliders and Differences:", collider);
 

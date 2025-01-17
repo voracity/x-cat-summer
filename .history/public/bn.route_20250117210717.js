@@ -1186,20 +1186,18 @@ module.exports = {
 
 						let pathWithRelationship = []
 
-						const collider = analyzeColliders(
-							net,
-							relationships,
-							evidence,
-							targetNodeName,
-							targetStateIndex,
-							bnKey
-						);
-
-						// console.log("net, relationships, evidence, targetNodeName, targetStateIndex, bnKey");
-						// console.log(net, relationships, evidence, targetNodeName, targetStateIndex, bnKey);
+						// const collider = analyzeColliders(
+						// 	net,
+						// 	relationships,
+						// 	evidence,
+						// 	targetNodeName,
+						// 	targetStateIndex,
+						// 	bnKey
+						// );
+						console.log(net, relationships, evidence, targetNodeName, targetStateIndex, bnKey);
 
 						
-						console.log("Detected Colliders and Differences:", collider);
+						// console.log("Detected Colliders and Differences:", collider);
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
