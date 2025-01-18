@@ -172,7 +172,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
     return;
   }
 
-  // 2) Quick intro (assuming arcsContribution has 2 arcs: arc0=Mutation→Peeling, arc1=Dermascare→Peeling)
+  // 3) Quick intro (assuming arcsContribution has 2 arcs: arc0=Mutation→Peeling, arc1=Dermascare→Peeling)
+  // e.g. "Either inherited Mutation or present Dermascare can directly cause persistent Peeling."
   const arc0 = arcsContribution[0];
   const arc1 = arcsContribution[1];
   // If arcsContribution has only 1 or more than 2, you'd adapt the logic below accordingly.
@@ -191,8 +192,9 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
   );
   verbalListDisplay.appendChild(introParagraph);
 
-
-  // 3) Explain the first arc (arc0: Mutation -> Peeling)
+  // -------------------------------
+  // 4) Explain the first arc (arc0: Mutation -> Peeling)
+  // -------------------------------
   // 1.
   const step1Arc0 = n('p',
     n('span','1.',{style:'fontWeight: '}),
@@ -245,7 +247,9 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
   verbalListDisplay.appendChild(step2bArc0);
 
 
-  // 4) Explain the second arc (arc1: Dermascare -> Peeling)
+  // -------------------------------
+  // 5) Explain the second arc (arc1: Dermascare -> Peeling)
+  // -------------------------------
   // 1.
   const step1Arc1 = n('p',
     n('span','1.',{style:'fontWeight:'}),
@@ -289,7 +293,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
   );
   verbalListDisplay.appendChild(step2bArc1);
 
-  // 5) Pattern paragraph
+  // 6) Pattern paragraph
   const patternParagraph = n('p',
     'Because we see an ',
     n('span','explaining away',{class:'verbalTextBold'}),
@@ -299,7 +303,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
   );
   verbalListDisplay.appendChild(patternParagraph);
 
-  // 6) Final overall line
+  // 7) Final overall line
   const finalOverall = n('p',
     'Overall, the findings ',
     n('span','moderately reduces',{class:'verbalTextUnderline'}),

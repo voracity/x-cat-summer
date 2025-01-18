@@ -96,218 +96,70 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   });
 }
 
-// function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-//   verbalListDisplay.innerHTML = '';
-
-//   if (!arcsContribution || arcsContribution.length === 0) {
-//     // If no arcs, just exit or show something minimal
-//     const p = n('p', '(No arcs to explain.)');
-//     verbalListDisplay.appendChild(p);
-//     return;
-//   }
-
-//   const introSpans = [];
-//   arcsContribution.forEach((arc, i) => {
-//     // For each arc: “the presence of Dermascare”, or “inheriting the Mutation”
-//     const chunk = n('span', 
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.from, { class: 'verbalTextBold' })
-//     );
-//     introSpans.push(chunk);
-//     // if not the last item, insert “ or ”
-//     if (i < arcsContribution.length - 1) {
-//       introSpans.push(' or ');
-//     }
-//   });
-
-//   // Combine them into one sentence
-//   const firstParagraph = n('p',
-//     'Either ',
-//     ...introSpans,
-//     ' can directly cause ',
-//     n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
-//     n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
-//     '.'
-//   );
-
-//   verbalListDisplay.appendChild(firstParagraph);
-
-
-//   arcsContribution.forEach((arc, index) => {
-//     // We'll create a bullet like “1.”, “2.”, etc. 
-
-//     const bulletNumber = (index + 1) + '.';
- 
-//     const colorPhrase = colorToVerbal(arc.color);
-
-//     // Construct the paragraph
-//     const bulletParagraph = n('p',
-//       n('span', bulletNumber, { style: 'font-weight:bold' }), ' ',
-//       `If we didn't know about `,
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       `, finding out the `,
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }),
-//       ' of ',
-//       n('span', arc.from, { class: 'verbalTextBold' }),
-//       ' would ',
-//       n('span', colorPhrase, { class: 'verbalTextUnderline' }),
-//       ' the probability of ',
-//       n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       '.'
-//     );
-
-//     verbalListDisplay.appendChild(bulletParagraph);
-//   });
-
-// }
-
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  // 1) Clear any existing content
   verbalListDisplay.innerHTML = '';
 
   if (!arcsContribution || arcsContribution.length === 0) {
+    // If no arcs, just exit or show something minimal
     const p = n('p', '(No arcs to explain.)');
     verbalListDisplay.appendChild(p);
     return;
   }
 
-  // 2) Quick intro (assuming arcsContribution has 2 arcs: arc0=Mutation→Peeling, arc1=Dermascare→Peeling)
-  const arc0 = arcsContribution[0];
-  const arc1 = arcsContribution[1];
-  // If arcsContribution has only 1 or more than 2, you'd adapt the logic below accordingly.
+  const introSpans = [];
+  arcsContribution.forEach((arc, i) => {
+    // For each arc: “the presence of Dermascare”, or “inheriting the Mutation”
+    const chunk = n('span', 
+      n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
+      n('span', arc.from, { class: 'verbalTextBold' })
+    );
+    introSpans.push(chunk);
+    // if not the last item, insert “ or ”
+    if (i < arcsContribution.length - 1) {
+      introSpans.push(' or ');
+    }
+  });
 
-  const introParagraph = n('p',
+  // Combine them into one sentence
+  const firstParagraph = n('p',
     'Either ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
-    ' or the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    ...introSpans,
     ' can directly cause ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
+    n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
     '.'
   );
-  verbalListDisplay.appendChild(introParagraph);
+
+  verbalListDisplay.appendChild(firstParagraph);
 
 
-  // 3) Explain the first arc (arc0: Mutation -> Peeling)
-  // 1.
-  const step1Arc0 = n('p',
-    n('span','1.',{style:'fontWeight: '}),
-    ' If we didn’t know about ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}),
-    ' of ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
-    ' would be enough to increase the probability of ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ', even without ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '. This alone wouldn’t change the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step1Arc0);
+  arcsContribution.forEach((arc, index) => {
+    // We'll create a bullet like “1.”, “2.”, etc. 
 
-  // 2a.
-  const step2aArc0 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
-    'But first knowing ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ' is ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),
-    ' greatly increases the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2aArc0);
+    const bulletNumber = (index + 1) + '.';
+ 
+    const colorPhrase = colorToVerbal(arc.color);
 
-  // 2b.
-  const step2bArc0 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
-    'Now finding out the ',
-    n('span', arc0.fromState,{class:'verbalTextItalic'}),' of ',
-    n('span', arc0.from,{class:'verbalTextBold'}),
-    ' only slightly increases the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '. By making ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    "'s contribution smaller, the ",
-    n('span', arc0.from,{class:'verbalTextBold'}),
-    ' finding moderately reduces the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2bArc0);
+    // Construct the paragraph
+    const bulletParagraph = n('p',
+      n('span', bulletNumber, { style: 'font-weight:bold' }), ' ',
+      `If we didn't know about `,
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      `, finding out the `,
+      n('span', arc.fromState, { class: 'verbalTextItalic' }),
+      ' of ',
+      n('span', arc.from, { class: 'verbalTextBold' }),
+      ' would ',
+      n('span', colorPhrase, { class: 'verbalTextUnderline' }),
+      ' the probability of ',
+      n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      '.'
+    );
 
+    verbalListDisplay.appendChild(bulletParagraph);
+  });
 
-  // 4) Explain the second arc (arc1: Dermascare -> Peeling)
-  // 1.
-  const step1Arc1 = n('p',
-    n('span','1.',{style:'fontWeight:'}),
-    ' If we didn’t know about ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}),
-    ' of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    ' wouldn’t change ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    '’s probability.'
-  );
-  verbalListDisplay.appendChild(step1Arc1);
-
-  // 2a.
-  const step2aArc1 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
-    'But we already know ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' is ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),
-    ', which has ',
-    n('span','increases',{class:'verbalTextUnderline'}), // or use colorToVerbalShorten(arc1.color)
-    ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2aArc1);
-
-  // 2b.
-  const step2bArc1 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
-    'Now finding out the ',
-    n('span', arc1.fromState,{class:'verbalTextItalic'}), ' of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    ' slightly increases the probability that ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),' ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' occurs.'
-  );
-  verbalListDisplay.appendChild(step2bArc1);
-
-  // 5) Pattern paragraph
-  const patternParagraph = n('p',
-    'Because we see an ',
-    n('span','explaining away',{class:'verbalTextBold'}),
-    ' pattern, the net effect on ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ' is that the probability is reduced overall.'
-  );
-  verbalListDisplay.appendChild(patternParagraph);
-
-  // 6) Final overall line
-  const finalOverall = n('p',
-    'Overall, the findings ',
-    n('span','moderately reduces',{class:'verbalTextUnderline'}),
-    ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(finalOverall);
 }
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
@@ -338,44 +190,83 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
 }
 
 
-function pathHasCollider(path, colliderObjs) {
+function pathHasCollider(path, colliderNodes) {
+  // If you specifically don't want first or last node to count, you can slice(1, -1)
   const middleNodes = path.slice(1, -1);
-  return middleNodes.some(node =>
-    colliderObjs.some(colliderObj => colliderObj.node === node)
-  );
+  return middleNodes.some(node => colliderNodes.includes(node));
 }
 
 function findAllColliders(relationships) {
-  const colliders = [];
-  const incomingEdges = {};
-  relationships.forEach(rel => {
-    if (!incomingEdges[rel.to]) {
-      incomingEdges[rel.to] = [];
+  // 1) childToParents: for each child, a set of distinct parents
+  const childToParents = {};
+  relationships.forEach(({ from, to }) => {
+    if (!childToParents[to]) {
+      childToParents[to] = new Set();
     }
-    incomingEdges[rel.to].push(rel.from);
+    childToParents[to].add(from);
   });
 
-  for (const [node, parents] of Object.entries(incomingEdges)) {
-    if (parents.length > 1) {
-      // Check if any two parents are directly connected in 'relationships'
-      const hasDirectPath = parents.some(parentA =>
-        parents.some(parentB =>
-          relationships.some(rel =>
-            (rel.from === parentA && rel.to === parentB) ||
-            (rel.from === parentB && rel.to === parentA)
-          )
-        )
-      );
+  // 2) adjacency for forward edges: parent->child
+  //    to let us check if there's a path from one parent to another
+  const adjacency = {};
+  relationships.forEach(({ from, to }) => {
+    if (!adjacency[from]) {
+      adjacency[from] = [];
+    }
+    adjacency[from].push(to);
+  });
 
-      // If no direct edge among parents => node is a collider
-      if (!hasDirectPath) {
-        colliders.push({ node, parents });
+  // Helper: check if there's a path from nodeA to nodeB using DFS
+  function canReach(nodeA, nodeB) {
+    // If adjacency[nodeA] is empty or undefined, no path
+    if (!adjacency[nodeA]) return false;
+    const stack = [nodeA];
+    const visited = new Set([nodeA]);
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      // if current can go directly to nodeB
+      if (adjacency[current]?.includes(nodeB)) {
+        return true;
+      }
+      // push children not visited
+      for (const nxt of (adjacency[current] || [])) {
+        if (!visited.has(nxt)) {
+          visited.add(nxt);
+          stack.push(nxt);
+        }
       }
     }
+    return false;
   }
-  console.log("colliders------------",colliders)
 
-  return colliders;
+  const finalColliders = [];
+
+  // 3) check each possible child that has 2+ parents
+  for (const child in childToParents) {
+    const parents = Array.from(childToParents[child]);
+    if (parents.length < 2) continue;  // not a collider candidate
+
+    // We only keep 'child' if no two parents are connected
+    let keepNode = true;
+    for (let i = 0; i < parents.length && keepNode; i++) {
+      for (let j = i + 1; j < parents.length && keepNode; j++) {
+        const p1 = parents[i];
+        const p2 = parents[j];
+        // If p1->...->p2 or p2->...->p1, they're connected => exclude
+        if (canReach(p1, p2) || canReach(p2, p1)) {
+          keepNode = false;
+          break;
+        }
+      }
+    }
+    // if keepNode is still true => no parents are connected
+    if (keepNode) {
+      finalColliders.push(child);
+    }
+  }
+
+  return finalColliders;
 }
   
 function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
@@ -410,6 +301,34 @@ function numberToWord(num) {
   if (num == 9) return "nine";
   if (num == 10) return "ten";
   return num;
+}
+
+function findColliders(net,relationships) {
+  const colliders = [];
+    const incomingEdges = {};
+
+    relationships.forEach(rel => {
+        if (!incomingEdges[rel.to]) incomingEdges[rel.to] = [];
+        incomingEdges[rel.to].push(rel.from);
+    });
+
+    for (const [node, parents] of Object.entries(incomingEdges)) {
+        if (parents.length > 1) {
+            const hasDirectPath = parents.some(parentA =>
+                parents.some(parentB =>
+                    relationships.some(rel => 
+                        (rel.from === parentA && rel.to === parentB) || 
+                        (rel.from === parentB && rel.to === parentA)
+                    )
+                )
+            );
+
+            if (!hasDirectPath) colliders.push({ node, parents });
+        }
+    }
+
+    return colliders;
+
 }
 
 function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
@@ -530,7 +449,7 @@ function calculateOddsRatio(net, colliderNode, parents, targetNode, evidence, ta
 }
 
 function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
-  const colliders = findAllColliders(relationships);
+  const colliders = findColliders(net, relationships);
   const results = [];
 
   colliders.forEach(collider => {

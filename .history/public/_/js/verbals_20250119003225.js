@@ -1,5 +1,4 @@
 var {n} = require('htm');
-var {Net} = require('../../../bni_smile');
 
 function colorToVerbal(color) {
   if (color == "influence-idx6")
@@ -162,8 +161,8 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 
 // }
 
-function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  // 1) Clear any existing content
+function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, options = {}) {
+  // Clear any old content
   verbalListDisplay.innerHTML = '';
 
   if (!arcsContribution || arcsContribution.length === 0) {
@@ -172,142 +171,113 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
     return;
   }
 
-  // 2) Quick intro (assuming arcsContribution has 2 arcs: arc0=Mutation→Peeling, arc1=Dermascare→Peeling)
-  const arc0 = arcsContribution[0];
-  const arc1 = arcsContribution[1];
-  // If arcsContribution has only 1 or more than 2, you'd adapt the logic below accordingly.
+  // 0) Suppose we allow a final "summary" line referencing e.g. "explaining away" or "empowering"
+  // We'll detect them from options or arcsContribution
+  const { effectType = 'explaining away' } = options;
+  // e.g. effectType could be 'explaining away' or 'empowering' or 'mixed', etc.
 
-  const introParagraph = n('p',
+  // 1) Build an "intro" sentence enumerating arcs with “or”
+  //    e.g. “Either inherited Mutation or present Dermascare can directly cause persistent Peeling.”
+  const introSpans = [];
+  arcsContribution.forEach((arc, i) => {
+    const chunk = n('span',
+      n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
+      n('span', arc.from, { class: 'verbalTextBold' })
+    );
+    introSpans.push(chunk);
+    if (i < arcsContribution.length - 1) {
+      introSpans.push(' or ');
+    }
+  });
+
+  // Combine them into one paragraph
+  const firstParagraph = n('p',
     'Either ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
-    ' or the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    ...introSpans,
     ' can directly cause ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
+    n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
     '.'
   );
-  verbalListDisplay.appendChild(introParagraph);
+  verbalListDisplay.appendChild(firstParagraph);
 
+  // 2) For each arc, produce a multi-step explanation in "1., 2a., 2b." style
+  arcsContribution.forEach((arc, index) => {
+    // let bulletNumber = index + 1; // or do "1, 2, 3" if you want
+    // but if you want "2a/2b", you might do something different
 
-  // 3) Explain the first arc (arc0: Mutation -> Peeling)
-  // 1.
-  const step1Arc0 = n('p',
-    n('span','1.',{style:'fontWeight: '}),
-    ' If we didn’t know about ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}),
-    ' of ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
-    ' would be enough to increase the probability of ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ', even without ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '. This alone wouldn’t change the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '.'
+    // A) Step 1: “If we didn’t know about X, finding out Y wouldn't change Z's probability.”
+    const step1 = n('p',
+      n('span', (index + 1) + '.', { style: 'font-weight:bold' }), ' ',
+      `If we didn't know about `,
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      `, finding out the `,
+      n('span', arc.fromState, { class: 'verbalTextItalic' }),
+      ' of ',
+      n('span', arc.from, { class: 'verbalTextBold' }),
+      ` wouldn't change `,
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      `'s probability.`
+    );
+    verbalListDisplay.appendChild(step1);
+
+    // B) Step 2a: “But we do already know X=someState, which has moderately increased the probability of Z.”
+    const step2a = n('p',
+      n('span', (index + 1) + 'a.', { style: 'font-weight:bold' }), ' ',
+      `But we already know `,
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      ' is ',
+      n('span', arc.toState, { class: 'verbalTextItalic' }),
+      `, which has `,
+      n('span', colorToVerbalShorten(arc.color), { class: 'verbalTextUnderline' }),
+      ` the probability of `,
+      n('span', arc.from, { class: 'verbalTextBold' }),
+      '.'
+    );
+    verbalListDisplay.appendChild(step2a);
+
+    // C) Step 2b: “Now finding out the (arc.fromState arc.from) [slightly/greatly] changes probability...”
+    const colorPhrase = colorToVerbal(arc.color); // e.g. "moderately increases"
+    const step2b = n('p',
+      n('span', (index + 1) + 'b.', { style: 'font-weight:bold' }), ' ',
+      'Now finding out the ',
+      n('span', arc.fromState, { class: 'verbalTextItalic' }),
+      ' of ',
+      n('span', arc.from, { class: 'verbalTextBold' }),
+      ' ',
+      n('span', colorPhrase, { class: 'verbalTextUnderline' }),
+      ' the probability that ',
+      n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
+      n('span', arc.to, { class: 'verbalTextBold' }),
+      ' occurs.'
+    );
+    verbalListDisplay.appendChild(step2b);
+
+    // D) Maybe an overall statement for each arc
+    // e.g. “Overall, finding out the [Mutation was inherited] slightly reduces the probability of [Dermascare], by making the increase from [Peeling=persistent] smaller.”
+    const finalLine = n('p',
+      'Overall, finding out the ',
+      n('span', `${arc.fromState} ${arc.from}`, { class: 'verbalTextBold' }),
+      ' ',
+      n('span', colorPhrase, { class: 'verbalTextUnderline' }),
+      ' the probability of ',
+      n('span', `${arc.toState} ${arc.to}`, { class: 'verbalTextBold' }),
+      ', by making the contribution from the other cause ',
+      (effectType === 'explaining away' ? 'smaller.' : 'larger.')
+    );
+    verbalListDisplay.appendChild(finalLine);
+  });
+
+  // 3) You might add a final paragraph summarizing whether it’s “explaining away” or “empowering”
+  const finalParagraph = n('p',
+    'Because we see a ',
+    n('span', effectType, { style: 'font-weight:bold' }),
+    ` pattern, the net effect on ${arcsContribution[0].to} is that `,
+    (effectType === 'explaining away'
+      ? 'the probability is reduced overall.'
+      : 'the probability is increased overall.')
   );
-  verbalListDisplay.appendChild(step1Arc0);
-
-  // 2a.
-  const step2aArc0 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
-    'But first knowing ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ' is ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),
-    ' greatly increases the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2aArc0);
-
-  // 2b.
-  const step2bArc0 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
-    'Now finding out the ',
-    n('span', arc0.fromState,{class:'verbalTextItalic'}),' of ',
-    n('span', arc0.from,{class:'verbalTextBold'}),
-    ' only slightly increases the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '. By making ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    "'s contribution smaller, the ",
-    n('span', arc0.from,{class:'verbalTextBold'}),
-    ' finding moderately reduces the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2bArc0);
-
-
-  // 4) Explain the second arc (arc1: Dermascare -> Peeling)
-  // 1.
-  const step1Arc1 = n('p',
-    n('span','1.',{style:'fontWeight:'}),
-    ' If we didn’t know about ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}),
-    ' of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    ' wouldn’t change ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    '’s probability.'
-  );
-  verbalListDisplay.appendChild(step1Arc1);
-
-  // 2a.
-  const step2aArc1 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
-    'But we already know ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' is ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),
-    ', which has ',
-    n('span','increases',{class:'verbalTextUnderline'}), // or use colorToVerbalShorten(arc1.color)
-    ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2aArc1);
-
-  // 2b.
-  const step2bArc1 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
-    'Now finding out the ',
-    n('span', arc1.fromState,{class:'verbalTextItalic'}), ' of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    ' slightly increases the probability that ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),' ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' occurs.'
-  );
-  verbalListDisplay.appendChild(step2bArc1);
-
-  // 5) Pattern paragraph
-  const patternParagraph = n('p',
-    'Because we see an ',
-    n('span','explaining away',{class:'verbalTextBold'}),
-    ' pattern, the net effect on ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ' is that the probability is reduced overall.'
-  );
-  verbalListDisplay.appendChild(patternParagraph);
-
-  // 6) Final overall line
-  const finalOverall = n('p',
-    'Overall, the findings ',
-    n('span','moderately reduces',{class:'verbalTextUnderline'}),
-    ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(finalOverall);
+  verbalListDisplay.appendChild(finalParagraph);
 }
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {

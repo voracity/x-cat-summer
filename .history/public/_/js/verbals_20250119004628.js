@@ -162,152 +162,95 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 
 // }
 
-function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-  // 1) Clear any existing content
-  verbalListDisplay.innerHTML = '';
+function buildPodunkAExplanation(arcsContribution, containerEl) {
+  // 1) Clear container
+  containerEl.innerHTML = '';
 
-  if (!arcsContribution || arcsContribution.length === 0) {
-    const p = n('p', '(No arcs to explain.)');
-    verbalListDisplay.appendChild(p);
-    return;
-  }
+  // 2) Title
+  const title = n('h3', 'Detail: How finding out the Mutation was ', n('span','inherited',{class:'verbalTextItalic'}), ' contributes');
+  containerEl.appendChild(title);
 
-  // 2) Quick intro (assuming arcsContribution has 2 arcs: arc0=Mutation→Peeling, arc1=Dermascare→Peeling)
-  const arc0 = arcsContribution[0];
-  const arc1 = arcsContribution[1];
-  // If arcsContribution has only 1 or more than 2, you'd adapt the logic below accordingly.
-
-  const introParagraph = n('p',
+  // 3) Intro paragraph
+  // e.g. “Either inheriting the Mutation or the presence of Dermascare can directly cause persistent Peeling.”
+  const intro = n('p',
     'Either ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
-    ' or the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].fromState, {class:'verbalTextItalic'}),' ',
+    n('span', arcsContribution[0].from, {class:'verbalTextBold'}),' or the ',
+    n('span', arcsContribution[1].fromState, {class:'verbalTextItalic'}),' ',
+    n('span', arcsContribution[1].from, {class:'verbalTextBold'}),
     ' can directly cause ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].toState,{class:'verbalTextItalic'}),' ',
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
     '.'
   );
-  verbalListDisplay.appendChild(introParagraph);
+  containerEl.appendChild(intro);
 
-
-  // 3) Explain the first arc (arc0: Mutation -> Peeling)
-  // 1.
-  const step1Arc0 = n('p',
-    n('span','1.',{style:'fontWeight: '}),
-    ' If we didn’t know about ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}),
+  // 4) Step 1
+  // “If we didn't know about Peeling, finding out the Mutation was inherited would be enough ... This alone wouldn't change the probability of Dermascare.”
+  const step1 = n('p',
+    n('span','1.',{style:'font-weight:bold'}),' ',
+    `If we didn't know about `, 
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
+    `, finding out the `,
+    n('span', arcsContribution[0].fromState,{class:'verbalTextItalic'}),
     ' of ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].from,{class:'verbalTextBold'}),
     ' would be enough to increase the probability of ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].toState,{class:'verbalTextItalic'}),' ',
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
     ', even without ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '. This alone wouldn’t change the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '.'
   );
-  verbalListDisplay.appendChild(step1Arc0);
+  containerEl.appendChild(step1);
 
-  // 2a.
-  const step2aArc0 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
+  // 5) Step 2a
+  // “But first knowing Peeling is persistent greatly increases the probability of Dermascare.”
+  const step2a = n('p',
+    n('span','2a.',{style:'font-weight:bold'}),' ',
     'But first knowing ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
     ' is ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}),
+    n('span', arcsContribution[0].toState,{class:'verbalTextItalic'}),
     ' greatly increases the probability of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '.'
   );
-  verbalListDisplay.appendChild(step2aArc0);
+  containerEl.appendChild(step2a);
 
-  // 2b.
-  const step2bArc0 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
+  // 6) Step 2b
+  // “Now finding out the Mutation was inherited means persistent Peeling only slightly increases the probability of Dermascare. By making Peeling's contribution smaller, the Mutation finding moderately reduces the probability of Dermascare.”
+  const step2b = n('p',
+    n('span','2b.',{style:'font-weight:bold'}),' ',
     'Now finding out the ',
-    n('span', arc0.fromState,{class:'verbalTextItalic'}),' of ',
-    n('span', arc0.from,{class:'verbalTextBold'}),
+    n('span', arcsContribution[0].fromState,{class:'verbalTextItalic'}),' of ',
+    n('span', arcsContribution[0].from,{class:'verbalTextBold'}),
+    ' means ',
+    n('span', arcsContribution[0].toState,{class:'verbalTextItalic'}),' ',
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
     ' only slightly increases the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '. By making ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    "'s contribution smaller, the ",
-    n('span', arc0.from,{class:'verbalTextBold'}),
+    n('span', arcsContribution[0].to,{class:'verbalTextBold'}),
+    `'s contribution smaller, the `,
+    n('span', arcsContribution[0].from,{class:'verbalTextBold'}),
     ' finding moderately reduces the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '.'
   );
-  verbalListDisplay.appendChild(step2bArc0);
+  containerEl.appendChild(step2b);
 
-
-  // 4) Explain the second arc (arc1: Dermascare -> Peeling)
-  // 1.
-  const step1Arc1 = n('p',
-    n('span','1.',{style:'fontWeight:'}),
-    ' If we didn’t know about ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    ', finding out the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}),
-    ' of ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    ' wouldn’t change ',
-    n('span', arc1.to, {class:'verbalTextBold'}),
-    '’s probability.'
-  );
-  verbalListDisplay.appendChild(step1Arc1);
-
-  // 2a.
-  const step2aArc1 = n('p',
-    n('span','2a.',{style:'fontWeight:'}), ' ',
-    'But we already know ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' is ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),
-    ', which has ',
-    n('span','increases',{class:'verbalTextUnderline'}), // or use colorToVerbalShorten(arc1.color)
-    ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '.'
-  );
-  verbalListDisplay.appendChild(step2aArc1);
-
-  // 2b.
-  const step2bArc1 = n('p',
-    n('span','2b.',{style:'fontWeight:'}), ' ',
-    'Now finding out the ',
-    n('span', arc1.fromState,{class:'verbalTextItalic'}), ' of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    ' slightly increases the probability that ',
-    n('span', arc1.toState,{class:'verbalTextItalic'}),' ',
-    n('span', arc1.to,{class:'verbalTextBold'}),
-    ' occurs.'
-  );
-  verbalListDisplay.appendChild(step2bArc1);
-
-  // 5) Pattern paragraph
-  const patternParagraph = n('p',
-    'Because we see an ',
-    n('span','explaining away',{class:'verbalTextBold'}),
-    ' pattern, the net effect on ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ' is that the probability is reduced overall.'
-  );
-  verbalListDisplay.appendChild(patternParagraph);
-
-  // 6) Final overall line
-  const finalOverall = n('p',
+  // 7) Overall final line
+  const finalLine = n('p',
     'Overall, the findings ',
     n('span','moderately reduces',{class:'verbalTextUnderline'}),
     ' the probability of ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
+    n('span', arcsContribution[1].from,{class:'verbalTextBold'}),
     '.'
   );
-  verbalListDisplay.appendChild(finalOverall);
+  containerEl.appendChild(finalLine);
 }
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay) {
