@@ -12,7 +12,11 @@ var bn = {
 	colliders: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
-	dragFunc:null,
+	dragFunc:true,
+	showMenu:null,
+	verbal:null,
+	animation:null,
+
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -39,25 +43,59 @@ var bn = {
 	},
 	initialize() {
         const urlParams = new URLSearchParams(window.location.search);
-        this.limitedMode = urlParams.get('limitedMode') === 'true';
+        this.limitedMode = urlParams.get('limitedmode') === 'true';
+		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+		this.verbalMode = urlParams.get('verbal') === 'false';
+		this.animationMode = urlParams.get('animation') === 'false';
 
+		// limited mode
         if (this.limitedMode) {
-            console.log("Limited mode is enabled");
             this.enableLimitedMode(); 
         }
 		else{
-            console.log("Limited mode is disabled");
             this.disableLimitedMode(); 
+		}
+		// menu Dispaly
+		if (this.MenuDisplay) {
+			ShowMenu = false
+            console.log("Menu disbaled");
+
+        }
+		else{
+            console.log("Menu abled");
+			ShowMenu = true
+		}
+	
+		// verbal mode
+		if (this.verbalMode) {
+			verbal = false
+            console.log("Verbal mode disabled");
+
+        }
+		else{
+            console.log("Verbal mode enabled");
+			verbal = true
+		}
+
+		// animaton mode
+		if (this.animationMode) {
+			animation = false
+            console.log("Animation mode disbaled");
+
+        }
+		else{
+            console.log("Animation mode enabaled");
+			animation = true
 		}
     },
 
     enableLimitedMode() {
-        console.log("Limited mode activated");
+        console.log("Limited mode");
 		dragFunc = false
     },
 	disableLimitedMode() {
-        console.log("Limited mode removed");
-		this.dragFunc = true
+        console.log("Func mode");
+		dragFunc = true
     },
 
 	
@@ -269,7 +307,8 @@ class Node {
 		}
 		/// Update selected states
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
-		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));
+		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
+	
 		//this.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
@@ -376,10 +415,32 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;			
 	}
 
+
+	
 	static guiSetupEvents() {
 		bn.initialize();
-		q(".bnView").addEventListener("click", (event) => {
 
+		const controlsDiv = document.querySelector('.controls');
+		const headerDiv = document.querySelector('.header')
+		const verbalPart = document.querySelector('#verbalBox')
+
+		if (!ShowMenu) {
+			controlsDiv.style.display = 'none';
+			headerDiv.style.display = 'none';
+		} else {
+			controlsDiv.style.display = 'block'; 
+			headerDiv.style.removeProperty('display')
+		}
+
+		if (!verbal) {
+
+			verbalPart.style.display = 'none';
+
+		} else {
+			verbalPart.style.display = 'block'; 
+		}
+
+		q(".bnView").addEventListener("click", (event) => {
 			console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
@@ -389,7 +450,7 @@ class Node {
 				nodeHeader.addEventListener("mouseenter", () => {
 					nodeHeader.style.cursor = "pointer"; 
 				});
-			
+
 				nodeHeader.addEventListener("mouseleave", () => {
 					nodeHeader.style.cursor = "default"; 
 				});
@@ -419,14 +480,9 @@ class Node {
 				evidenceNodeTitle.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
 				Node.setFocusEvidence(focusEvidenceNode, bn);
-				// focusEvidenceNode.classList.add("focusEvidence");		
-				console.log('--------------asdfasdf------------focusEvidenceNode:', this.focusEvidence);
 				
 				const node = refs.Node(focusEvidenceNode)
-				node.bn.update();
-				
-					// console.log("focusEvidenceNode:", focusEvidenceNode);
-								
+				node.bn.update();																	
 			}
 				
 			
@@ -471,10 +527,8 @@ class Node {
 	
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
-
-
-
 			setMoveEl.addEventListener("mousedown", (event) => {
+				console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
 					return
@@ -611,6 +665,22 @@ function setupScenarioEvents() {
 }
 
 document.addEventListener('DOMContentLoaded', event => {
+	let showMenu = false; 
+	let verbal = false;
+	let animation = false;
+
+	const siteLinksDiv = document.querySelector('.siteLinks');
+
+	if (!showMenu) {
+		siteLinksDiv.remove(); 
+	} else {
+		const header = document.querySelector('.header');
+		const newDiv = document.createElement('div');
+		newDiv.className = 'siteLinks';
+		header.appendChild(newDiv); 
+	}
+
+
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
@@ -622,16 +692,31 @@ document.addEventListener('DOMContentLoaded', event => {
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
 				return;
-
-			document.querySelectorAll('.node.istargetnode').forEach(node => {
-				node.classList.remove('istargetnode');
-				node.querySelectorAll('.state.istarget').forEach(state => {
-					state.classList.remove('istarget');
-				})
-			})
+			
 
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
+
+			// Add event listener to checkboxes
+			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
+				checkbox.addEventListener('change', function () {
+						if (this.checked) {
+		
+								// Add 'not-checked' class to other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										if (cb !== this) {
+												cb.classList.add('not-checked');
+										}
+								});
+						} else {
+								// Remove 'not-checked' class from other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										cb.classList.remove('not-checked');
+								});
+						}
+				});
+			});
+
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
@@ -821,4 +906,5 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	verbalBox.onmouseup = handleDragLeave
 	verbalBox.onmouseleave = handleDragLeave
 	verbalBox.onmousemove = handleDragMove
-  });
+});
+

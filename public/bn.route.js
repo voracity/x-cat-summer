@@ -263,6 +263,7 @@ class BnDetail {
 		})
 	}
 	make(root) {
+		
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),
@@ -390,6 +391,7 @@ class BnDetail {
 						n('div.cellProbability',
 							n('div.propWrapper',
 
+								// This show the checkbox
 								n('div.hiddencheckboxcontainer.target', 
 									n('input', {type: 'checkbox'},{class:`hiddencheckbox`})
 								),
@@ -500,16 +502,17 @@ class BnDetail {
 		})
 		
 		// NODES
-		if (m.influences) {			
+		if (m.influences) {
 			let asFrame = true;
 			console.log("updating influences");
 			let listTargetNodes = {}			
 			let entries = Object.entries(m.influences)
-			console.log('m.influences', m.influences)		
-			console.log('entries', entries)		
+			console.log('m.influences', m.influences)					
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
-			verbalBox.style.display = 'block';
+			if (verbal){
+				verbalBox.style.display = 'block';
+			}
 			let verbalIntroSentence = this.root.querySelector('.introSentence');
 			let verbalListDisplay = this.root.querySelector('.influenceList');
 			let displayDetail = false;
@@ -676,14 +679,14 @@ class BnDetail {
 						console.log('m.activePaths:', m.activePaths)
 						console.log('m.activePaths length:', m.activePaths.length)
 
-						let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
+						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
-						// console.log('bnView:', this.bnView)
+						// console.log('evidenceNodeName:', evidenceNodeName)
 						// console.log('activeNodes: ', activeNodes)
+						
+						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							// console.log('node:', node)
-							let nodeName = node.getAttribute('data-name')
-							if (!activeNodes.has(nodeName)) {
+							if (!activeNodes.has(evidenceNodeName) & verbal) {
 								node.style.opacity = 0.3
 							}
 						})						
