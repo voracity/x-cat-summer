@@ -502,7 +502,7 @@ class BnDetail {
 		})
 		
 		// NODES
-		if (m.influences) {			
+		if (m.influences) {
 			let asFrame = true;
 			console.log("updating influences");
 			let listTargetNodes = {}			
@@ -510,7 +510,9 @@ class BnDetail {
 			console.log('m.influences', m.influences)					
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
-			verbalBox.style.display = 'block';
+			if (verbal){
+				verbalBox.style.display = 'block';
+			}
 			let verbalIntroSentence = this.root.querySelector('.introSentence');
 			let verbalListDisplay = this.root.querySelector('.influenceList');
 			let displayDetail = false;
@@ -684,7 +686,7 @@ class BnDetail {
 						
 						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							if (!activeNodes.has(evidenceNodeName)) {
+							if (!activeNodes.has(evidenceNodeName) & verbal) {
 								node.style.opacity = 0.3
 							}
 						})						
