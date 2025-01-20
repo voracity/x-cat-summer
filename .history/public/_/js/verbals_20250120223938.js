@@ -187,6 +187,16 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   const arc0 = arcsContribution[0];
   const arc1 = arcsContribution[1];
 
+  // Title
+  const title = n('h3',
+    'Detail: How finding out the ',
+    n('span','Mutation',{class:'verbalTextBold'}),
+    ' was ',
+    n('span','inherited',{class:'verbalTextItalic'}),
+    ' contributes'
+  );
+  verbalListDisplay.appendChild(title);
+
   // Intro
   const introParagraph = n('p',
     'Either ',

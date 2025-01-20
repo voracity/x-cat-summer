@@ -163,6 +163,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 // }
 
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs = []) {
+  // 1) Clear existing content
   verbalListDisplay.innerHTML = '';
 
   // Basic check
@@ -172,20 +173,37 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
     return;
   }
 
-  // Figure out if we see "explaining away" or "empowering" from colliderDiffs.
+  // 2) Figure out if we see "explaining away" or "empowering" from colliderDiffs.
+  //    For simplicity, assume we only have 1 collider object: colliderDiffs[0]
   let effectType = 'explaining away'; // default
   let baseDiff = 0, powerDiff = 0;
   if (colliderDiffs.length > 0) {
-    const c = colliderDiffs[0]; 
+    const c = colliderDiffs[0]; // e.g. {colliderNode:'Peeling', baseDiff:0.606, powerDiff:4,...}
     baseDiff  = c.baseDiff;
     powerDiff = c.powerDiff;
+    // Simple rule: if powerDiff > baseDiff => "empowering", else "explaining away"
     if (powerDiff > baseDiff) {
       effectType = 'empowering';
     }
   }
 
+  // 3) We'll handle arcs:
+  //    arcsContribution[0] => e.g. Mutation->Peeling
+  //    arcsContribution[1] => e.g. Dermascare->Peeling
+  //    If you only want to focus on arc0, you can skip arc1 or integrate them in the same text.
+
   const arc0 = arcsContribution[0];
   const arc1 = arcsContribution[1];
+
+  // Title
+  const title = n('h3',
+    'Detail: How finding out the ',
+    n('span','Mutation',{class:'verbalTextBold'}),
+    ' was ',
+    n('span','inherited',{class:'verbalTextItalic'}),
+    ' contributes'
+  );
+  verbalListDisplay.appendChild(title);
 
   // Intro
   const introParagraph = n('p',
@@ -235,7 +253,10 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   );
   verbalListDisplay.appendChild(step2a);
 
-  // Step 2b 
+  // Step 2b => We incorporate baseDiff/powerDiff in text
+  // e.g. "Now finding out the Mutation was inherited only slightly increases..."
+  // if effectType=='explaining away' => "By making Peeling's contribution smaller..."
+  // if effectType=='empowering' => "By making Peeling's contribution bigger..."
   let step2bText = '';
   if (effectType === 'explaining away') {
     step2bText = ` only slightly increases the probability of ${arc1.from}. By making ${arc0.to}'s contribution smaller, the ${arc0.from} finding moderately reduces the probability of ${arc1.from}. (baseDiff = ${baseDiff.toFixed(2)}) `;
@@ -252,6 +273,9 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   );
   verbalListDisplay.appendChild(step2b);
 
+  // 4) If you also want to talk about arc1, you can add additional lines,
+  //    or keep it minimal for a single scenario
+
   // Pattern paragraph
   const patternParagraph = n('p',
     'Because we see an ',
@@ -263,18 +287,18 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   );
   verbalListDisplay.appendChild(patternParagraph);
 
-  // // Final line
-  // const finalOverall = n('p',
-  //   'Overall, the findings ',
-  //   (effectType === 'explaining away'
-  //     ? n('span','moderately reduces',{class:'verbalTextUnderline'})
-  //     : n('span','slightly increases',{class:'verbalTextUnderline'})
-  //   ),
-  //   ' the probability of ',
-  //   n('span', arc1.from,{class:'verbalTextBold'}),
-  //   '.'
-  // );
-  // verbalListDisplay.appendChild(finalOverall);
+  // Final line
+  const finalOverall = n('p',
+    'Overall, the findings ',
+    (effectType === 'explaining away'
+      ? n('span','moderately reduces',{class:'verbalTextUnderline'})
+      : n('span','slightly increases',{class:'verbalTextUnderline'})
+    ),
+    ' the probability of ',
+    n('span', arc1.from,{class:'verbalTextBold'}),
+    '.'
+  );
+  verbalListDisplay.appendChild(finalOverall);
 }
 
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay,colliderDiffs) {
