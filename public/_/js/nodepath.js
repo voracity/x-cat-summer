@@ -117,8 +117,7 @@ function activePathWithRelationships(paths, relationships) {
   let result = [];
   let len = paths.length;
   for (let i = 0; i < len; i++) {
-    let rel = null;
-    console.log('activePathWithRelationships - paths[i]:', paths[i]);
+    let rel = null;    
     for (let j = 0; j < relationships.length; j++) {
       let r = relationships[j];
       if (i + 1 === len) {
