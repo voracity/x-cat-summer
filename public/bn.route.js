@@ -686,7 +686,8 @@ class BnDetail {
 						
 						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							if (!activeNodes.has(evidenceNodeName) & verbal) {
+							let nodeName = node.getAttribute('data-name');
+							if (!activeNodes.has(nodeName) && verbal) {
 								node.style.opacity = 0.3
 							}
 							// console.log('node:', node)	
