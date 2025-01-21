@@ -14,6 +14,9 @@ var bn = {
 	focusEvidence: null,
 	dragFunc:true,
 	showMenu:null,
+	verbal:null,
+	animation:null,
+
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -42,14 +45,17 @@ var bn = {
         const urlParams = new URLSearchParams(window.location.search);
         this.limitedMode = urlParams.get('limitedmode') === 'true';
 		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+		this.verbalMode = urlParams.get('verbal') === 'false';
+		this.animationMode = urlParams.get('animation') === 'false';
 
+		// limited mode
         if (this.limitedMode) {
             this.enableLimitedMode(); 
         }
 		else{
             this.disableLimitedMode(); 
 		}
-
+		// menu Dispaly
 		if (this.MenuDisplay) {
 			ShowMenu = false
             console.log("Menu disbaled");
@@ -58,6 +64,28 @@ var bn = {
 		else{
             console.log("Menu abled");
 			ShowMenu = true
+		}
+	
+		// verbal mode
+		if (this.verbalMode) {
+			verbal = false
+            console.log("Verbal mode disabled");
+
+        }
+		else{
+            console.log("Verbal mode enabled");
+			verbal = true
+		}
+
+		// animaton mode
+		if (this.animationMode) {
+			animation = false
+            console.log("Animation mode disbaled");
+
+        }
+		else{
+            console.log("Animation mode enabaled");
+			animation = true
 		}
     },
 
@@ -394,6 +422,7 @@ class Node {
 
 		const controlsDiv = document.querySelector('.controls');
 		const headerDiv = document.querySelector('.header')
+		const verbalPart = document.querySelector('#verbalBox')
 
 		if (!ShowMenu) {
 			controlsDiv.style.display = 'none';
@@ -401,6 +430,14 @@ class Node {
 		} else {
 			controlsDiv.style.display = 'block'; 
 			headerDiv.style.removeProperty('display')
+		}
+
+		if (!verbal) {
+
+			verbalPart.style.display = 'none';
+
+		} else {
+			verbalPart.style.display = 'block'; 
 		}
 
 		q(".bnView").addEventListener("click", (event) => {
@@ -629,17 +666,21 @@ function setupScenarioEvents() {
 
 document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
+	let verbal = false;
+	let animation = false;
 
 	const siteLinksDiv = document.querySelector('.siteLinks');
 
 	if (!showMenu) {
-		siteLinksDiv.remove(); // 从 DOM 中移除
+		siteLinksDiv.remove(); 
 	} else {
 		const header = document.querySelector('.header');
 		const newDiv = document.createElement('div');
 		newDiv.className = 'siteLinks';
-		header.appendChild(newDiv); // 重新插入
+		header.appendChild(newDiv); 
 	}
+
+
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {

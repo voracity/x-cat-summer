@@ -46,15 +46,19 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 
 
 .influenceContainer {
-	border: 1.5px solid black; 
-	display: inline-block; 
-	width: 400px;
-	/* height: 500px; */
-	box-sizing: border-box; 
-	padding: 12px; 
-	margin-top: 12px; 	
-	margin-left: 60%; 
+    position: fixed; 
+    top: 12px; 
+    right: 12px; 
+    border: 1.5px solid black;
+    display: inline-block;
+    width: 400px;
+    /* height: 500px; */
+    box-sizing: border-box;
+    padding: 12px;
+    margin-top: 0; 
+    margin-left: 0; 
 }
+
 
 .influenceContainer:hover {
 	cursor: move;
@@ -336,7 +340,7 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 .bnPage .bnDetail > .controls { grid-column: 1 / span 2; padding: 8px; background: var(--back-color2); border-bottom: solid 1px black; }
 
 /* Hao delete height:100%*/
-.bnPage .bnView {overflow: auto; }
+.bnPage .bnView {overflow: None; }
 
 .influencelegend {
 	padding:3px;
@@ -352,11 +356,16 @@ path[marker-end="url(#arrowheadBlocked)"] { opacity: 0.3; }
 	cursor: move;
 }
 .evidence-scale {
-	font-size: 0.8em;
-	display:inline-block;
-	border: 1px solid black;
-	background-color: #fff;
-	user-select: none;
+    position: fixed;
+    bottom: 12px;
+    right: 12px; 
+    font-size: 0.8em;
+    display: inline-block;
+    border: 1px solid black;
+    background-color: #fff;
+    user-select: none;
+    padding: 10px; 
+    z-index: 1000;
 }
 
 .evidence-scale-header{
