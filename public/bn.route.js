@@ -680,11 +680,12 @@ class BnDetail {
 						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
 						// console.log('evidenceNodeName:', evidenceNodeName)
-						// console.log('activeNodes: ', activeNodes)
+						console.log('activeNodes: ', activeNodes)
 						
 						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							if (!activeNodes.has(evidenceNodeName)) {
+							console.log('node:', node)	
+							if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
 								node.style.opacity = 0.3
 							}
 						})						
