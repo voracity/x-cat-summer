@@ -684,10 +684,14 @@ class BnDetail {
 						
 						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							console.log('node:', node)	
-							if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
-								node.style.opacity = 0.3
+							let nodeName = node.getAttribute('data-name');
+							if (!activeNodes.has(nodeName)) {
+								node.style.opacity = 0.3;
 							}
+							// console.log('node:', node)	
+							// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
+							// 	node.style.opacity = 0.3
+							// }
 						})						
 						// console.log('AAAAAAA---------------------------------------')
 					
@@ -741,7 +745,7 @@ class BnDetail {
 							
 
 							// coloring order of arrows
-							if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
 								arcsContribution.push({
 									from: arcEntry.parent,
 									fromState: parentNodeState,
@@ -1205,26 +1209,27 @@ module.exports = {
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);						
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
+							console.log('allPaths:', allPaths)					
 						
 							// filterActivePaths
-							let activePaths = filterActivePaths(allPaths,relationships,evidence);		
+							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
 											
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
 							// const nonActiveNodes = Object.keys(evidence);
-							console.log("activePaths: ", activePaths);
+							// console.log("activePaths: ", activePaths);
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							for (const path of activePaths) {
+							for (const path of allPaths) {
 								bn.activePaths.push(path)				
 								console.log('bn.activePaths:', bn.activePaths)					
 							}
 
 							// evidenceList = Object.keys(evidence)
 
-							let testRel = activePathWithRelationships(activePaths, relationships)
+							let testRel = activePathWithRelationships(allPaths, relationships)
 							// console.log('testRel:', testRel)
 							pathWithRelationship.push(testRel)														
 
