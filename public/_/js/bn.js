@@ -13,8 +13,7 @@ var bn = {
 	collider: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
-	dragFunc:true,
-	showMenu:null,
+	dragFunc:null,
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -41,34 +40,25 @@ var bn = {
 	},
 	initialize() {
         const urlParams = new URLSearchParams(window.location.search);
-        this.limitedMode = urlParams.get('limitedmode') === 'true';
-		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+        this.limitedMode = urlParams.get('limitedMode') === 'true';
 
         if (this.limitedMode) {
+            console.log("Limited mode is enabled");
             this.enableLimitedMode(); 
         }
 		else{
+            console.log("Limited mode is disabled");
             this.disableLimitedMode(); 
-		}
-
-		if (this.MenuDisplay) {
-			ShowMenu = false
-            console.log("Menu disbaled");
-
-        }
-		else{
-            console.log("Menu abled");
-			ShowMenu = true
 		}
     },
 
     enableLimitedMode() {
-        console.log("Limited mode");
+        console.log("Limited mode activated");
 		dragFunc = false
     },
 	disableLimitedMode() {
-        console.log("Func mode");
-		dragFunc = true
+        console.log("Limited mode removed");
+		this.dragFunc = true
     },
 
 	
@@ -392,19 +382,8 @@ class Node {
 	
 	static guiSetupEvents() {
 		bn.initialize();
-
-		const controlsDiv = document.querySelector('.controls');
-		const headerDiv = document.querySelector('.header')
-
-		if (!ShowMenu) {
-			controlsDiv.style.display = 'none';
-			headerDiv.style.display = 'none';
-		} else {
-			controlsDiv.style.display = 'block'; 
-			headerDiv.style.removeProperty('display')
-		}
-
 		q(".bnView").addEventListener("click", (event) => {
+
 			console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
@@ -496,8 +475,10 @@ class Node {
 	
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
+
+
+
 			setMoveEl.addEventListener("mousedown", (event) => {
-				console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
 					return

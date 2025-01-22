@@ -357,6 +357,33 @@ function numberToWord(num) {
   return num;
 }
 
+function findColliders(net, relationships) {
+    const colliders = [];
+    const incomingEdges = {};
+
+    relationships.forEach(rel => {
+        if (!incomingEdges[rel.to]) incomingEdges[rel.to] = [];
+        incomingEdges[rel.to].push(rel.from);
+    });
+
+    for (const [node, parents] of Object.entries(incomingEdges)) {
+        if (parents.length > 1) {
+            const hasDirectPath = parents.some(parentA =>
+                parents.some(parentB =>
+                    relationships.some(rel => 
+                        (rel.from === parentA && rel.to === parentB) || 
+                        (rel.from === parentB && rel.to === parentA)
+                    )
+                )
+            );
+
+            if (!hasDirectPath) colliders.push({ node, parents });
+        }
+    }
+
+    return colliders;
+}
+
 function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
   const baselineNet = new Net(bnKey);
   const evidenceNet = new Net(bnKey);
@@ -475,7 +502,7 @@ function calculateOddsRatio(net, colliderNode, parents, targetNode, evidence, ta
 }
 
 function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
-  const colliders = findAllColliders(relationships);
+  const colliders = findColliders(net, relationships);
   const results = [];
 
   colliders.forEach(collider => {
