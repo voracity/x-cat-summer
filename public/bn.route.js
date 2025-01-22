@@ -1215,31 +1215,30 @@ module.exports = {
 							console.log('allPaths:', allPaths)					
 						
 							// filterActivePaths
-							let activePaths = filterActivePaths(allPaths,relationships,evidence);		
+							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
 											
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
 							// const nonActiveNodes = Object.keys(evidence);
-							console.log("activePaths: ", activePaths);
+							// console.log("activePaths: ", activePaths);
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of allPaths) {
 								bn.activePaths.push(path)				
-								console.log('bn.activePaths:', bn.activePaths)					
+								// console.log('bn.activePaths:', bn.activePaths)					
 							}
+							
 
-							// evidenceList = Object.keys(evidence)
-
-							let pathRel = activePathWithRelationships(activePaths[0], relationships)
-							console.log('pathRel:', pathRel)
+							let pathRel = activePathWithRelationships(allPaths[0], relationships)
+							// console.log('pathRel:', pathRel)
 							pathWithRelationship.push(pathRel)														
 
 							if (focusEvidence !== 'null'){
-								console.log('pathWithRelationship:', pathWithRelationship)	
-								console.log('bn.activePaths:', bn.activePaths)
-								console.log('focusEvidence:', focusEvidence)
-								console.log('targetNodeName:', targetNodeName)								
+								// console.log('pathWithRelationship:', pathWithRelationship)	
+								// console.log('bn.activePaths:', bn.activePaths)
+								// console.log('focusEvidence:', focusEvidence)
+								// console.log('targetNodeName:', targetNodeName)								
 								let pathClassified = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
 								const {firstOrderPaths, secondOrderPaths} = pathClassified
 								console.log('firstOrderPaths:', firstOrderPaths)
