@@ -15,6 +15,7 @@ var bn = {
 	dragFunc:true,
 	showMenu:null,
 	verbal:null,
+	detail:false,
 
 	
 	drawArcs() {
@@ -46,7 +47,6 @@ var bn = {
 		this.MenuDisplay = urlParams.get('showmenu') === 'false';
 		this.verbalMode = urlParams.get('verbal') === 'false';
 		this.animationMode = urlParams.get('animation') === 'false';
-
 		// limited mode
         if (this.limitedMode) {
             this.enableLimitedMode(); 
@@ -412,7 +412,12 @@ class Node {
 
 	static setFocusEvidence(nodeElement, bn) {
 		nodeElement.classList.add("focusEvidence");		
-		bn.focusEvidence = nodeElement.dataset.name;			
+		bn.focusEvidence = nodeElement.dataset.name;
+	}
+
+	static moveFocusEvidence(nodeElement,bn){
+		nodeElement.classList.remove("focusEvidence");		
+		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
 
@@ -480,7 +485,18 @@ class Node {
 				playButton.style.transform = "translateY(-50%)";
 				evidenceNodeTitle.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
-				Node.setFocusEvidence(focusEvidenceNode, bn);
+
+				console.log('-----DEtail:---',bn.detail)
+
+				if (bn.detail === false){
+					console.log('CHANGING--------')
+					Node.setFocusEvidence(focusEvidenceNode, bn);
+					bn.detail = true
+				}
+				else{
+					Node.moveFocusEvidence(focusEvidenceNode, bn);
+					bn.detail = false
+				}
 				
 				const node = refs.Node(focusEvidenceNode)
 				node.bn.update();																	

@@ -548,6 +548,7 @@ class BnDetail {
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
+					console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
@@ -559,9 +560,15 @@ class BnDetail {
 						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
-						// console.log('focusEvidence:', focusEvidence)
-						
-						// console.log('focusEvidenceState:', focusEvidenceState)
+					}
+					else if (focusEvidence === null){
+						verbalTitle.innerHTML = ''; 
+						verbalTitle.appendChild(
+							n(
+								'p', 
+								'Summary: What all the findings contribute'
+							)
+						);
 					}
 
 					let targetBeliefs = value['targetBeliefs'];
