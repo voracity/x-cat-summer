@@ -1,6 +1,7 @@
 var {n} = require('htm');
 var {Net} = require('../../../bni_smile');
 
+// Converts color codes to verbal descriptions indicating the effect magnitude (e.g., increases, reduces).
 function colorToVerbal(color) {
   if (color == "influence-idx6")
     return "greatly reduces";
@@ -18,6 +19,7 @@ function colorToVerbal(color) {
     return "greatly increases";
 }
 
+// Simplifies color descriptions into general categories like "increases" or "reduces".
 function colorToVerbalShorten(color) {
   if (color == "influence-idx6" || color == "influence-idx5" || color == "influence-idx4")
     return "reduces";
@@ -27,6 +29,7 @@ function colorToVerbalShorten(color) {
     return "increases";
 }
 
+// Constructs a detailed sentence explaining the influence of evidence on a target node.
 function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState, detail=false) {    
   let findingSentence = n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
     n('span', evidenceNodeName, {class: 'verbalTextBold'}), ' was ', 
@@ -38,6 +41,7 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
   return findingSentence;
 }
 
+// Generates 2 dot points explanations of how active paths and arcs contribute to the target node's belief.
 function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
   let index = 0;
   const seen = new Set();
@@ -140,6 +144,8 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 
 // }
 
+// Creates combined explanations for contributions in collider scenarios, identifying patterns like 
+// "explaining away" and "empowering way".
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs = []) {
   verbalListDisplay.innerHTML = '';
 
@@ -255,6 +261,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   // verbalListDisplay.appendChild(finalOverall);
 }
 
+// Generates both normal and collider-specific detailed explanations based on active paths.
 function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay,colliderDiffs) {
 
   // We'll sort them into two categories: colliderPaths and normalPaths
@@ -282,7 +289,7 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
   }
 }
 
-
+// Checks if a path contains any collider nodes based on the provided collider objects.
 function pathHasCollider(path, colliderObjs) {
   const middleNodes = path.slice(1, -1);
   return middleNodes.some(node =>
@@ -290,6 +297,7 @@ function pathHasCollider(path, colliderObjs) {
   );
 }
 
+// Identifies collider nodes in the network by analyzing relationships among parents.
 function findAllColliders(relationships) {
   const colliders = [];
   const incomingEdges = {};
@@ -322,7 +330,8 @@ function findAllColliders(relationships) {
 
   return colliders;
 }
-  
+ 
+// Builds a summary sentence for the combined effect of multiple findings on a target node.
 function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
   let findings = numsFinding == 2 ? 'Both' : 'All';
   return n('p', 
@@ -342,6 +351,7 @@ function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targ
    )
 }
 
+// Converts numerical values to their corresponding word representations.
 function numberToWord(num) {
   if (num == 0) return "zero";
   if (num == 1) return "one";
@@ -357,6 +367,7 @@ function numberToWord(num) {
   return num;
 }
 
+// Identifies collider nodes in the network relationships (alternative method).
 function findColliders(net, relationships) {
     const colliders = [];
     const incomingEdges = {};
@@ -384,6 +395,7 @@ function findColliders(net, relationships) {
     return colliders;
 }
 
+// Calculates the baseline difference in probability for collider nodes without additional evidence.
 function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
   const baselineNet = new Net(bnKey);
   const evidenceNet = new Net(bnKey);
@@ -408,6 +420,7 @@ function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, tar
   return Math.abs(probWithEvidence - probWithoutEvidence);
 }
 
+// Calculates the cumulative difference in probability for collider nodes under specific evidence conditions.
 function calculatePowerDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
   const evidenceNet = new Net(bnKey);
   evidenceNet.compile();
@@ -443,7 +456,7 @@ function calculatePowerDiff(net, colliderNode, parents, targetNode, evidence, ta
   return cumulativeDiff;
 }
 
-
+// Computes the odds ratio for collider nodes given evidence and target states.
 function calculateOddsRatio(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
   const baselineNet = new Net(bnKey);
   const evidenceNet = new Net(bnKey);
@@ -501,6 +514,7 @@ function calculateOddsRatio(net, colliderNode, parents, targetNode, evidence, ta
   };
 }
 
+// Analyzes colliders to calculate differences in probability, power, and odds ratios under varying evidence scenarios.
 function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
   const colliders = findColliders(net, relationships);
   const results = [];
