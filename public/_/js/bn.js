@@ -15,7 +15,6 @@ var bn = {
 	dragFunc:true,
 	showMenu:null,
 	verbal:null,
-	animation:null,
 
 	
 	drawArcs() {
@@ -79,14 +78,15 @@ var bn = {
 
 		// animaton mode
 		if (this.animationMode) {
-			animation = false
+			window.animation = false
             console.log("Animation mode disbaled");
 
         }
 		else{
             console.log("Animation mode enabaled");
-			animation = true
+			window.animation = true
 		}
+
     },
 
     enableLimitedMode() {
@@ -423,6 +423,7 @@ class Node {
 		const controlsDiv = document.querySelector('.controls');
 		const headerDiv = document.querySelector('.header')
 		const verbalPart = document.querySelector('#verbalBox')
+
 
 		if (!ShowMenu) {
 			controlsDiv.style.display = 'none';
@@ -907,4 +908,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	verbalBox.onmouseleave = handleDragLeave
 	verbalBox.onmousemove = handleDragMove
 });
+
+
 

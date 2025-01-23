@@ -576,7 +576,6 @@ class BnDetail {
 					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {	
 												
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
-
 						let targetStateElem = targetNode.querySelector(".state.istarget");
 						let targetStateIdx = targetStateElem.dataset.index;
 
@@ -745,9 +744,8 @@ class BnDetail {
 							let childNodeState = childNode.querySelector('.label').textContent;
 
 							
-
 							// coloring order of arrows
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
 								arcsContribution.push({
 									from: arcEntry.parent,
 									fromState: parentNodeState,
