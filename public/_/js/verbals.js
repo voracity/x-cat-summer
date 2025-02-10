@@ -74,71 +74,6 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   });
 }
 
-// function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-//   verbalListDisplay.innerHTML = '';
-
-//   if (!arcsContribution || arcsContribution.length === 0) {
-//     // If no arcs, just exit or show something minimal
-//     const p = n('p', '(No arcs to explain.)');
-//     verbalListDisplay.appendChild(p);
-//     return;
-//   }
-
-//   const introSpans = [];
-//   arcsContribution.forEach((arc, i) => {
-//     // For each arc: “the presence of Dermascare”, or “inheriting the Mutation”
-//     const chunk = n('span', 
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.from, { class: 'verbalTextBold' })
-//     );
-//     introSpans.push(chunk);
-//     // if not the last item, insert “ or ”
-//     if (i < arcsContribution.length - 1) {
-//       introSpans.push(' or ');
-//     }
-//   });
-
-//   // Combine them into one sentence
-//   const firstParagraph = n('p',
-//     'Either ',
-//     ...introSpans,
-//     ' can directly cause ',
-//     n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
-//     n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
-//     '.'
-//   );
-
-//   verbalListDisplay.appendChild(firstParagraph);
-
-
-//   arcsContribution.forEach((arc, index) => {
-//     // We'll create a bullet like “1.”, “2.”, etc. 
-
-//     const bulletNumber = (index + 1) + '.';
- 
-//     const colorPhrase = colorToVerbal(arc.color);
-
-//     // Construct the paragraph
-//     const bulletParagraph = n('p',
-//       n('span', bulletNumber, { style: 'font-weight:bold' }), ' ',
-//       `If we didn't know about `,
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       `, finding out the `,
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }),
-//       ' of ',
-//       n('span', arc.from, { class: 'verbalTextBold' }),
-//       ' would ',
-//       n('span', colorPhrase, { class: 'verbalTextUnderline' }),
-//       ' the probability of ',
-//       n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       '.'
-//     );
-
-//     verbalListDisplay.appendChild(bulletParagraph);
-//   });
-
-// }
 
 function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs = []) {
   verbalListDisplay.innerHTML = '';
@@ -230,16 +165,6 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   );
   verbalListDisplay.appendChild(step2b);
 
-  // Pattern paragraph
-  const patternParagraph = n('p',
-    'Because we see an ',
-    n('span', effectType,{class:'verbalTextBold'}),
-    ' pattern, the net effect on ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ' is that the probability is ',
-    (effectType === 'explaining away' ? 'reduced overall.' : 'increased overall.')
-  );
-  verbalListDisplay.appendChild(patternParagraph);
 
   // // Final line
   // const finalOverall = n('p',
@@ -318,7 +243,7 @@ function findAllColliders(relationships) {
       }
     }
   }
-  console.log("colliders------------",colliders)
+  // console.log("colliders------------",colliders)
 
   return colliders;
 }
