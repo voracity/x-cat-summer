@@ -238,8 +238,6 @@ var render = {
 				node.style[key] == '' ? node.style[key] = style[key] : undefined)			
 		})
 
-		
-
 		// Move network right of the legend
 		let networktop = legendHeight > networkHeight ? -miny+(legendHeight - networkHeight) / 2 : -miny;
 		networktop += highlightFrame;

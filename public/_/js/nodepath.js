@@ -2,11 +2,14 @@ const e = require("express");
 
 class NodePath {
   constructor(nodeName, pathType) {
+    // Represents a node in a path with a specific type (e.g., parent, child, etc.)    
     this.nodeName = nodeName;
     this.pathType = pathType;
   }
 }
 
+// Builds an undirected graph from a list of relationships.
+// Each node is connected to its parent and child nodes.
 function buildUndirectedGraph(relationships) {
   const graph = {};
   relationships.forEach(rel => {
@@ -23,7 +26,7 @@ function buildUndirectedGraph(relationships) {
   return graph;
 }
 
-
+// Finds all possible paths between two nodes in a graph using Depth First Search (DFS).
 function findAllPaths(graph, startNode, endNode) {
   const allPaths = [];
 
@@ -52,6 +55,7 @@ function findAllPaths(graph, startNode, endNode) {
   return allPaths;
 }
 
+// Builds a mapping of nodes to their parent nodes.
 function buildParentMap(relationships) {
   const parentMap = {};
   relationships.forEach(({ from, to }) => {
@@ -63,6 +67,7 @@ function buildParentMap(relationships) {
   return parentMap;
 }
 
+// Builds a mapping of nodes to their child nodes (directed graph).
 function buildAdjacencyMap(relationships) {
   const adjacencyMap = {};
   relationships.forEach(({ from, to }) => {
@@ -74,12 +79,14 @@ function buildAdjacencyMap(relationships) {
   return adjacencyMap;
 }
 
+// Determines if a node is a collider (both incoming edges) based on its parent relationships.
 function isCollider(node, prevNode, nextNode, parentMap) {
   if (!parentMap[node]) return false;
   const parents = parentMap[node];
   return parents.includes(prevNode) && parents.includes(nextNode);
 }
 
+// Retrieves all descendants of a node in the graph.
 function getDescendants(node, adjacencyMap) {
   const visited = new Set();
   const descendants = new Set();
@@ -100,6 +107,7 @@ function getDescendants(node, adjacencyMap) {
   return descendants;
 }
 
+// Checks if any descendants of a node are in the evidence set.
 function hasDescendantInEvidence(node, adjacencyMap, evidence) {
   const ds = getDescendants(node, adjacencyMap);
   for (const d of ds) {
@@ -110,6 +118,7 @@ function hasDescendantInEvidence(node, adjacencyMap, evidence) {
   return false;
 }
 
+// Determines if a given path is active based on colliders, evidence, and descendants.
 function isActivePath(path, relationships, evidence) {
   // Build helper maps. If you call isActivePath repeatedly,
   const parentMap = buildParentMap(relationships);
@@ -141,10 +150,12 @@ function isActivePath(path, relationships, evidence) {
   return true;
 }
 
+// Filters a list of paths to return only the active ones.
 function filterActivePaths(allPaths, relationships, evidence) {
   return allPaths.filter(path => isActivePath(path, relationships, evidence));
 }
 
+// Associates paths with their relationship types (parent, child, target).
 function activePathWithRelationships(paths, relationships) {
   let result = [];
   let len = paths.length;
@@ -171,6 +182,7 @@ function activePathWithRelationships(paths, relationships) {
   return result;
 }
 
+// Classifies the Bayesian Network structure into v-structure, chain, or common-cause.
 function classifyBNStructure(first2MiddleNodeType, third2MiddleNodeType) {
   if (first2MiddleNodeType == 'parent' && third2MiddleNodeType == 'parent') {
     return 'v-structure';
@@ -181,6 +193,7 @@ function classifyBNStructure(first2MiddleNodeType, third2MiddleNodeType) {
   }
 }
 
+// Determines if a Bayesian Network structure is blocked (true for common-cause or chain).
 function isBlockedByBNStructure(structure) {
   if (structure === 'v-structure') {
     return false;
@@ -188,6 +201,7 @@ function isBlockedByBNStructure(structure) {
   return true;
 }
 
+// Classifies paths into first-order and second-order paths based on their relationship with focus and target nodes.
 function classifyPaths(pathWithRelationship, pathNoRelationship, focusNode, targetNode) {
     let firstOrderPaths = [];
     let secondOrderPaths = [];
@@ -220,8 +234,6 @@ function classifyPaths(pathWithRelationship, pathNoRelationship, focusNode, targ
       secondOrderPaths: secondOrderPaths
     };
 }
-
-
 
 module.exports = {
   isActivePath,

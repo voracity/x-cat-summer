@@ -6,6 +6,14 @@ var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activ
 var fs = require('fs');
 var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
 
+// This object encapsulates multiple calculation methods for assessing relationships within Bayesian Networks. 
+// Each plugin, such as do, ci, mi, cheng, and far, performs specific types of computations.
+// do: Placeholder calculation returning 0.
+// ci: Computes causal information between causes and effects.
+// mi: Computes MI between cause and effect.
+// cheng: Evaluates causal power based on change in belief.
+// far: Computes the fraction of risk attributable to a cause.
+
 var measurePlugins = {
 	do: {
 		calculate(nets, roles, selectedStates) {
@@ -249,6 +257,7 @@ var measurePlugins = {
 	},
 };
 
+// This class handles visualization and interaction for Bayesian Network details in a user interface.
 class BnDetail {
 	constructor(drawOptions = {}) {
 		
@@ -352,9 +361,6 @@ class BnDetail {
 
 	$handleUpdate(m) {
 		let barMax = 100; //px
-		// console.log('---------------------------------------')
-		// console.log('m:', m)
-		// console.log('---------------------------------------')
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
 			console.log('m.title:', m.title)
@@ -367,7 +373,6 @@ class BnDetail {
 		}
 		
 		if (m.model) {
-			// console.log('m.model:', m.model)
 			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
@@ -416,6 +421,12 @@ class BnDetail {
 				bn.drawArcs();
 			`));
 		}
+
+		// This code updates the probability values and visual bar widths for each state of the nodes in the Bayesian 
+		// Network view (`bnView`) based on the belief data provided in `m.nodeBeliefs`. 
+		// It iterates through each node's beliefs, finds the corresponding HTML element, and adjusts its text and visual 
+		// representation accordingly.
+
 		if (m.nodeBeliefs) {
 			for (let [nodeName,beliefs] of Object.entries(m.nodeBeliefs)) {
 				let nodeEl = this.bnView.querySelector(`div.node[data-name=${nodeName}]`);
@@ -523,7 +534,7 @@ class BnDetail {
 			// Changed to fixed arc size
 			let arcSize = 8;			
 			
-			// console.log('entries.length:', entries.length)
+			// The verbal part of the BNs begin here
 			if (entries.length == 0) {
 				verbalListDisplay.innerHTML = '';
 				verbalIntroSentence.innerHTML = '';
@@ -540,9 +551,7 @@ class BnDetail {
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
-					if (evidenceNodeName == 'overall') return;
-					console.log('-------------------------------------')
-					// console.log('evidenceNodeName:', evidenceNodeName)			
+					if (evidenceNodeName == 'overall') return;		
 					console.log('this.bnView:', this.bnView)		
 
 					// Activate Evidence - Flash Node - Shining Node
@@ -589,6 +598,7 @@ class BnDetail {
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+						
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
@@ -632,15 +642,11 @@ class BnDetail {
 							));
 						}
 
-						// console.log('colorClass:', colorClass)
-						console.log('-------------------------------------')
 						// set colour and width of the barchange element
-
 						if (this.drawOptions.drawChangeBar) {
 							barchangeElem.style.width = absChange+"%";
 							barchangeElem.style.marginLeft = "-"+absChange+"%";
 							// barchangeElem.style.left = `${100 - absChange}%`;
-	
 	
 							Array.from(barchangeElem.classList).forEach(classname => {
 								if (classname.indexOf("influence-idx") == 0) {
@@ -671,11 +677,15 @@ class BnDetail {
 					})
 				
 					// ARCS && Fade Nodes && Arrow Animation
-					// console.log('---------------------------------------AAAAAArcInfluence')
+					// 1. Resets arc influences and prepares the visualization for active paths.
+					// 2. Identifies active nodes from `m.activePaths` and fades out inactive nodes by reducing opacity.
+					// 3. Sorts arcs by influence difference to determine priority for visualization.
+					// 4. Highlights and animates active arcs with directional coloring (normal/reverse) based on their influence.
+					// 5. Fades inactive arcs by altering their stroke and fill properties.
+					// 6. Collects and stores arc contributions for further explanation and analysis.
+					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
 					if (m.arcInfluence && m.activePaths) {
-						let delay = 0;
-						// console.log("arcInfluence:", m.arcInfluence);			
-					
+						let delay = 0;					
 						reset(m.arcInfluence, bn, this.bnView);
 
 						// console.log('---------------------------------------AAAAAAactivePaths')
@@ -702,9 +712,7 @@ class BnDetail {
 							// 	node.style.opacity = 0.3
 							// }
 						})						
-						// console.log('AAAAAAA---------------------------------------')
 					
-						// console.log("evidenceNodeName:", evidenceNodeName);
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
 							m.nodeBeliefs,													
@@ -751,7 +759,6 @@ class BnDetail {
 							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
 							let childNodeState = childNode.querySelector('.label').textContent;
 
-							
 							// coloring order of arrows
 							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
 								arcsContribution.push({
@@ -829,6 +836,9 @@ class BnDetail {
 					}
 				})
 			}
+
+			// Computes belief differences for target nodes, updates belief bar widths and positions to represent changes, 
+			// and applies color classes to visually highlight the magnitude and direction of the differences.
 			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
 				let baseBelief = data.model.beliefs[data.index];
 				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
@@ -940,6 +950,7 @@ module.exports = {
 	noUserRequired: true,
 	async prepareData(req,res,db,cache) {
 
+		// limitedMode is where user can select either verbal or visual or both.
 		const isLimitedMode = req.query.limitedMode === 'true';
 
 		if (isLimitedMode) {
@@ -1048,7 +1059,6 @@ module.exports = {
 						for (let nodeName of nodeNames) {
 							if (role == 'cause') {
 								let orig = net.node(nodeName).cpt1d().slice();
-								// console.log('---------------------------- Cause role ----------------------------')
 								console.log('orig', orig);
 								backupCpts[nodeName] = orig;
 								let numStates = net.node(nodeName).states().length;
@@ -1061,7 +1071,14 @@ module.exports = {
 						addJointChild(origNet, roles.cause, calculateOpts.jointCause);
 					}
 				}
-				
+
+				// Computes the influence of evidence on a target node in a Bayesian Network by:
+				// 1. Applying evidence and calculating baseline beliefs.
+				// 2. Building relationships and identifying active paths, colliders, and their contributions.
+				// 3. Filtering and classifying paths based on focus evidence.
+				// 4. Calculating arc-level influences by marginalizing parent-child relationships to determine their 
+				// impact on the target.
+
 				if (req.query.returnType == 'targetInfluence') {
 
 					// Initialize 'evidence' variable
@@ -1142,7 +1159,6 @@ module.exports = {
 						}
 
 						// the selected state is our Target
-						
 						if (req.query.selectedStates) {
 							selectedStates = JSON.parse(req.query.selectedStates);
 						}
@@ -1154,7 +1170,6 @@ module.exports = {
 							// origNet.node(nodeName).finding(Number(stateI));
 						}
 					
-						
 						console.time('update');
 						net.update();
 						baselineModel = net.nodes().map(n => ({name: n.name(), beliefs: n.beliefs()}));
@@ -1200,6 +1215,7 @@ module.exports = {
 
 						let pathWithRelationship = []
 
+						// Finding the colliders and printing them
 						const collider = analyzeColliders(
 							net,
 							relationships,
