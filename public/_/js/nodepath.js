@@ -52,55 +52,87 @@ function findAllPaths(graph, startNode, endNode) {
   return allPaths;
 }
 
+function buildParentMap(relationships) {
+  const parentMap = {};
+  relationships.forEach(({ from, to }) => {
+    if (!parentMap[to]) {
+      parentMap[to] = [];
+    }
+    parentMap[to].push(from);
+  });
+  return parentMap;
+}
 
+function buildAdjacencyMap(relationships) {
+  const adjacencyMap = {};
+  relationships.forEach(({ from, to }) => {
+    if (!adjacencyMap[from]) {
+      adjacencyMap[from] = [];
+    }
+    adjacencyMap[from].push(to);
+  });
+  return adjacencyMap;
+}
 
-function isActivePath(path, relationships, evidence) {
-  // Helper function to check if a node is a collider
-  function isCollider(node, prevNode, nextNode) {
-    const incomingToNode = relationships.filter(rel => rel.to === node);
-    return incomingToNode.some(rel => rel.from === prevNode) && incomingToNode.some(rel => rel.from === nextNode);
-  }
+function isCollider(node, prevNode, nextNode, parentMap) {
+  if (!parentMap[node]) return false;
+  const parents = parentMap[node];
+  return parents.includes(prevNode) && parents.includes(nextNode);
+}
 
-  // Helper function to get all descendants of a node
-  function getDescendants(node) {
-    const descendants = [];
-    const stack = [node];
+function getDescendants(node, adjacencyMap) {
+  const visited = new Set();
+  const descendants = new Set();
+  const stack = [node];
 
-    while (stack.length > 0) {
-      const current = stack.pop();
-      const children = relationships.filter(rel => rel.from === current).map(rel => rel.to);
+  while (stack.length > 0) {
+    const current = stack.pop();
+    if (!adjacencyMap[current]) continue;
 
-      for (const child of children) {
-        if (!descendants.includes(child)) {
-          descendants.push(child);
-          stack.push(child);
-        }
+    for (const child of adjacencyMap[current]) {
+      if (!visited.has(child)) {
+        visited.add(child);
+        descendants.add(child);
+        stack.push(child);
       }
     }
-
-    return descendants;
   }
+  return descendants;
+}
 
-  // Helper function to check if a node has a descendant in the evidence
-  function hasDescendantInEvidence(node) {
-    const descendants = getDescendants(node);
-    return descendants.some(descendant => evidence.hasOwnProperty(descendant));
+function hasDescendantInEvidence(node, adjacencyMap, evidence) {
+  const ds = getDescendants(node, adjacencyMap);
+  for (const d of ds) {
+    if (Object.prototype.hasOwnProperty.call(evidence, d)) {
+      return true;
+    }
   }
+  return false;
+}
 
-  // Check the path step by step, excluding the start and end nodes
+function isActivePath(path, relationships, evidence) {
+  // Build helper maps. If you call isActivePath repeatedly,
+  const parentMap = buildParentMap(relationships);
+  const adjacencyMap = buildAdjacencyMap(relationships);
+
+  // Iterate over the "middle" nodes in the path
   for (let i = 1; i < path.length - 1; i++) {
-    const current = path[i];
+    const node = path[i];
     const prevNode = path[i - 1];
     const nextNode = path[i + 1];
 
-    if (isCollider(current, prevNode, nextNode)) {
-      // If the current node is a collider, it must be in the evidence or have a descendant in the evidence
-      if (!evidence.hasOwnProperty(current) && !hasDescendantInEvidence(current)) {
-        return false;
+    if (isCollider(node, prevNode, nextNode, parentMap)) {
+      // A collider requires: node ∈ evidence OR at least one descendant in evidence
+      const isNodeInEvidence = Object.prototype.hasOwnProperty.call(evidence, node);
+      if (!isNodeInEvidence) {
+        // Then check the descendants
+        if (!hasDescendantInEvidence(node, adjacencyMap, evidence)) {
+          return false; 
+        }
       }
     } else {
-      // If the current node is not a collider, it must not be in the evidence
-      if (evidence.hasOwnProperty(current)) {
+      // If it's not a collider, 'node' must NOT be in evidence
+      if (Object.prototype.hasOwnProperty.call(evidence, node)) {
         return false;
       }
     }

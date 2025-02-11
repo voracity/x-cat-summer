@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders} = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -263,6 +263,7 @@ class BnDetail {
 		})
 	}
 	make(root) {
+		
 		
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
@@ -823,7 +824,7 @@ class BnDetail {
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
 							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
+							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider);
 						}
 					}
 				})
@@ -1112,7 +1113,16 @@ module.exports = {
 
 					// console.log("relationships",relationships)					
 
-					const graph = buildUndirectedGraph(relationships);
+					if (!cache.undirectedGraphs) {
+						cache.undirectedGraphs = {};
+					  }
+					if (!cache.undirectedGraphs[bnKey]) {
+						console.log(`Building undirectedGraph for: ${bnKey}`);
+						cache.undirectedGraphs[bnKey] = buildUndirectedGraph(relationships);
+					} else {
+						console.log(`Reusing cached undirectedGraph for: ${bnKey}`);
+					}
+					const graph = cache.undirectedGraphs[bnKey];
 
 					// Edge map for contribute values
 					const edgeMap = {};
@@ -1157,12 +1167,12 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.colliders = {};
+						bn.collider = {};
 
 
 						const colliders = findAllColliders(relationships);
 						bn.colliders = colliders;
-						console.log('Collider:', bn.colliders);
-
+						
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1189,6 +1199,18 @@ module.exports = {
 						console.log('baselineProb:', baselineProb)
 
 						let pathWithRelationship = []
+
+						const collider = analyzeColliders(
+							net,
+							relationships,
+							evidence,
+							targetNodeName,
+							targetStateIndex,
+							bnKey
+						);
+				
+						console.log("Detected Colliders and Differences:", collider);
+						bn.collider = collider;
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
