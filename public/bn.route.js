@@ -548,6 +548,7 @@ class BnDetail {
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
+					console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
@@ -559,9 +560,15 @@ class BnDetail {
 						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
-						// console.log('focusEvidence:', focusEvidence)
-						
-						// console.log('focusEvidenceState:', focusEvidenceState)
+					}
+					else if (focusEvidence === null){
+						verbalTitle.innerHTML = ''; 
+						verbalTitle.appendChild(
+							n(
+								'p', 
+								'Summary: What all the findings contribute'
+							)
+						);
 					}
 
 					let targetBeliefs = value['targetBeliefs'];
@@ -576,7 +583,6 @@ class BnDetail {
 					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {	
 												
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
-
 						let targetStateElem = targetNode.querySelector(".state.istarget");
 						let targetStateIdx = targetStateElem.dataset.index;
 
@@ -682,13 +688,18 @@ class BnDetail {
 						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
 						// console.log('evidenceNodeName:', evidenceNodeName)
-						// console.log('activeNodes: ', activeNodes)
+						console.log('activeNodes: ', activeNodes)
 						
 						// Node Fading
 						this.bnView.querySelectorAll('div.node').forEach(node => {
-							if (!activeNodes.has(evidenceNodeName) & verbal) {
+							let nodeName = node.getAttribute('data-name');
+							if (!activeNodes.has(nodeName) && verbal) {
 								node.style.opacity = 0.3
 							}
+							// console.log('node:', node)	
+							// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
+							// 	node.style.opacity = 0.3
+							// }
 						})						
 						// console.log('AAAAAAA---------------------------------------')
 					
@@ -740,9 +751,8 @@ class BnDetail {
 							let childNodeState = childNode.querySelector('.label').textContent;
 
 							
-
 							// coloring order of arrows
-							if (arcEntry.color != 'influence-idx3' && activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
 								arcsContribution.push({
 									from: arcEntry.parent,
 									fromState: parentNodeState,
@@ -1215,36 +1225,36 @@ module.exports = {
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);						
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
+							console.log('allPaths:', allPaths)					
 						
 							// filterActivePaths
-							let activePaths = filterActivePaths(allPaths,relationships,evidence);		
+							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
 											
 							// activePaths = filterShortestPaths(ActivePaths);							
 						
 							// const nonActiveNodes = Object.keys(evidence);
-							console.log("activePaths: ", activePaths);
+							// console.log("activePaths: ", activePaths);
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							for (const path of activePaths) {
+							for (const path of allPaths) {
 								bn.activePaths.push(path)				
-								console.log('bn.activePaths:', bn.activePaths)					
+								// console.log('bn.activePaths:', bn.activePaths)					
 							}
+							
 
-							// evidenceList = Object.keys(evidence)
-
-							let testRel = activePathWithRelationships(activePaths, relationships)
-							// console.log('testRel:', testRel)
-							pathWithRelationship.push(testRel)														
+							let pathRel = activePathWithRelationships(allPaths[0], relationships)
+							// console.log('pathRel:', pathRel)
+							pathWithRelationship.push(pathRel)														
 
 							if (focusEvidence !== 'null'){
-								console.log('pathWithRelationship:', pathWithRelationship)	
-								console.log('bn.activePaths:', bn.activePaths)
-								console.log('focusEvidence:', focusEvidence)
-								console.log('targetNodeName:', targetNodeName)								
-								let testTest = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
-								const {firstOrderPaths, secondOrderPaths} = testTest
+								// console.log('pathWithRelationship:', pathWithRelationship)	
+								// console.log('bn.activePaths:', bn.activePaths)
+								// console.log('focusEvidence:', focusEvidence)
+								// console.log('targetNodeName:', targetNodeName)								
+								let pathClassified = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
+								const {firstOrderPaths, secondOrderPaths} = pathClassified
 								console.log('firstOrderPaths:', firstOrderPaths)
 								console.log('secondOrderPaths:', secondOrderPaths)
 							}							
