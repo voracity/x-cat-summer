@@ -43,64 +43,67 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
 
 // Generates 2 dot points explanations of how active paths and arcs contribute to the target node's belief.
 function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
-  const describedDirectConnections = new Set();
-  const seenPaths = new Set();
+  let index = 0;
+  const seen = new Set();
+  const directPathCounts = new Map();
 
-  const allSentences = [];
-
+  // First pass: Count all direct paths for each node pair
   activePaths.forEach((path) => {
-    const pathKey = path.join('->');
-    if (seenPaths.has(pathKey)) {
-      return;
-    }
-    seenPaths.add(pathKey);
-
     if (path.length === 2) {
-      const [nodeA, nodeB] = path;
-      const arc = arcsContribution.find(
-        (a) =>
-          (a.from === nodeA && a.to === nodeB) ||
-          (a.from === nodeB && a.to === nodeA)
-      );
-      if (arc) {
-        const sentence = `● By direct connection, it ${colorToVerbal(arc.color)} the probability of ${nodeB}.`;
-        allSentences.push(sentence);
-      } else {
-        const sentence = `● By direct connection, it doesn't change the probability of ${nodeB}.`;
-        allSentences.push(sentence);
-      }
-
-    } else {
-
-      const chainEffects = [];
-      for (let i = 0; i < path.length - 1; i++) {
-        const fromNode = path[i];
-        const toNode = path[i + 1];
-        const arc = arcsContribution.find(
-          (a) =>
-            (a.from === fromNode && a.to === toNode) ||
-            (a.from === toNode && a.to === fromNode)
-        );
-        if (arc) {
-          chainEffects.push(`it ${colorToVerbal(arc.color)} the probability of ${toNode}`);
-        } else {
-          chainEffects.push(`it doesn't change the probability of ${toNode}`);
-        }
-      }
-      const chainSentence = chainEffects.join(', which in turn ');
-      const sentence = `● ${chainSentence}.`;
-      allSentences.push(sentence);
+      const key = `${path[0]}->${path[1]}`;
+      directPathCounts.set(key, (directPathCounts.get(key) || 0) + 1);
     }
   });
 
-  const usedTexts = new Set();
-  allSentences.forEach((sentence) => {
-    if (!usedTexts.has(sentence)) {
-      usedTexts.add(sentence);
-      verbalListDisplay.appendChild(n('p', sentence));
+  activePaths.forEach((path) => {
+    const arc = arcsContribution[index];
+    let text = '';
+
+    if (path.length === 2) {
+      const key = `${path[0]}->${path[1]}`;
+      const hasMultiplePaths = activePaths.some(p => p.includes(path[0]) && p.includes(path[1]) && p.length > 2);
+
+      // Only one direct path and no other paths → Full explanation sentence
+      if (directPathCounts.get(key) === 1 && !hasMultiplePaths) {
+        let impactText = colorToVerbal(arc.color);
+
+        // Special handling for "not visible" to ensure "only slightly reduces"
+        if (arc.toState.toLowerCase() === "not visible" || arc.fromState.toLowerCase() === "not visible") {
+          impactText = `only ${impactText}`;
+        }
+
+        text = `Finding out ${path[0]} is ${arc.toState} ${impactText} the probability of ${path[1]}, by direct connection.`;
+      
+      // Direct connection exists, but indirect paths also exist → Short explanation sentence
+      } else {
+        text = `● By direct connection, it ${colorToVerbal(arc.color)} the probability of ${path[1]}.`;
+      }
+    } else {
+      text = '● It ';
+      for (let i = 0; i < path.length; i++) {
+        if (i < path.length - 1) {
+          if (i === 0) {
+            const toState = (path[index + 1] === arc.to) ? arc.toState : arc.fromState;
+            text += `${colorToVerbalShorten(arc.color)} the probability that ${path[index + 1]} was ${toState},`;
+          }
+        } else {
+          text += ` which in turn ${colorToVerbal(arc.color)} the probability of ${path[i]}.`;
+        }
+      }
+    }
+
+    if (!seen.has(text)) {
+      seen.add(text);
+      const sentenceEl = n('p', text);
+      verbalListDisplay.appendChild(sentenceEl);
+    }
+
+    if (path.length > 2) {
+      index++;
     }
   });
 }
+
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
 // "explaining away" and "empowering way".
