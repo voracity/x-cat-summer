@@ -43,106 +43,64 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
 
 // Generates 2 dot points explanations of how active paths and arcs contribute to the target node's belief.
 function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
-  let index = 0;
-  const seen = new Set();
+  const describedDirectConnections = new Set();
+  const seenPaths = new Set();
+
+  const allSentences = [];
 
   activePaths.forEach((path) => {
-    const arc = arcsContribution[index];
-    let text = '';
+    const pathKey = path.join('->');
+    if (seenPaths.has(pathKey)) {
+      return;
+    }
+    seenPaths.add(pathKey);
 
     if (path.length === 2) {
-      text = `● By direct connection, it ${colorToVerbal(arc.color)} the probability of ${path[1]}.`;
+      const [nodeA, nodeB] = path;
+      const arc = arcsContribution.find(
+        (a) =>
+          (a.from === nodeA && a.to === nodeB) ||
+          (a.from === nodeB && a.to === nodeA)
+      );
+      if (arc) {
+        const sentence = `● By direct connection, it ${colorToVerbal(arc.color)} the probability of ${nodeB}.`;
+        allSentences.push(sentence);
+      } else {
+        const sentence = `● By direct connection, it doesn't change the probability of ${nodeB}.`;
+        allSentences.push(sentence);
+      }
+
     } else {
-      text = '● It ';
-      for (let i = 0; i < path.length; i++) {
-        if (i < path.length - 1) {
-          if (i === 0) {
-            const toState = (path[index + 1] === arc.to) ? arc.toState : arc.fromState;
-            text += `${colorToVerbalShorten(arc.color)} the probability that ${path[index + 1]} was ${toState},`;
-          }
+
+      const chainEffects = [];
+      for (let i = 0; i < path.length - 1; i++) {
+        const fromNode = path[i];
+        const toNode = path[i + 1];
+        const arc = arcsContribution.find(
+          (a) =>
+            (a.from === fromNode && a.to === toNode) ||
+            (a.from === toNode && a.to === fromNode)
+        );
+        if (arc) {
+          chainEffects.push(`it ${colorToVerbal(arc.color)} the probability of ${toNode}`);
         } else {
-          text += ` which in turn ${colorToVerbal(arc.color)} the probability of ${path[i]}.`;
+          chainEffects.push(`it doesn't change the probability of ${toNode}`);
         }
       }
+      const chainSentence = chainEffects.join(', which in turn ');
+      const sentence = `● ${chainSentence}.`;
+      allSentences.push(sentence);
     }
+  });
 
-    if (!seen.has(text)) {
-      seen.add(text);
-      const sentenceEl = n('p', text);
-      verbalListDisplay.appendChild(sentenceEl);
-    }
-
-    if (path.length > 2) {
-      index++;
+  const usedTexts = new Set();
+  allSentences.forEach((sentence) => {
+    if (!usedTexts.has(sentence)) {
+      usedTexts.add(sentence);
+      verbalListDisplay.appendChild(n('p', sentence));
     }
   });
 }
-
-// function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay) {
-//   verbalListDisplay.innerHTML = '';
-
-//   if (!arcsContribution || arcsContribution.length === 0) {
-//     // If no arcs, just exit or show something minimal
-//     const p = n('p', '(No arcs to explain.)');
-//     verbalListDisplay.appendChild(p);
-//     return;
-//   }
-
-//   const introSpans = [];
-//   arcsContribution.forEach((arc, i) => {
-//     // For each arc: “the presence of Dermascare”, or “inheriting the Mutation”
-//     const chunk = n('span', 
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.from, { class: 'verbalTextBold' })
-//     );
-//     introSpans.push(chunk);
-//     // if not the last item, insert “ or ”
-//     if (i < arcsContribution.length - 1) {
-//       introSpans.push(' or ');
-//     }
-//   });
-
-//   // Combine them into one sentence
-//   const firstParagraph = n('p',
-//     'Either ',
-//     ...introSpans,
-//     ' can directly cause ',
-//     n('span', arcsContribution[0].toState, { class: 'verbalTextItalic' }), ' ',
-//     n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
-//     '.'
-//   );
-
-//   verbalListDisplay.appendChild(firstParagraph);
-
-
-//   arcsContribution.forEach((arc, index) => {
-//     // We'll create a bullet like “1.”, “2.”, etc. 
-
-//     const bulletNumber = (index + 1) + '.';
- 
-//     const colorPhrase = colorToVerbal(arc.color);
-
-//     // Construct the paragraph
-//     const bulletParagraph = n('p',
-//       n('span', bulletNumber, { style: 'font-weight:bold' }), ' ',
-//       `If we didn't know about `,
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       `, finding out the `,
-//       n('span', arc.fromState, { class: 'verbalTextItalic' }),
-//       ' of ',
-//       n('span', arc.from, { class: 'verbalTextBold' }),
-//       ' would ',
-//       n('span', colorPhrase, { class: 'verbalTextUnderline' }),
-//       ' the probability of ',
-//       n('span', arc.toState, { class: 'verbalTextItalic' }), ' ',
-//       n('span', arc.to, { class: 'verbalTextBold' }),
-//       '.'
-//     );
-
-//     verbalListDisplay.appendChild(bulletParagraph);
-//   });
-
-// }
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
 // "explaining away" and "empowering way".
