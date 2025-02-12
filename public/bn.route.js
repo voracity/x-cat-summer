@@ -1254,20 +1254,16 @@ module.exports = {
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
-							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
-							console.log('allPaths:', allPaths)					
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);					
 						
 							// filterActivePaths
-							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
-											
-							// activePaths = filterShortestPaths(ActivePaths);							
+							let activePaths = filterActivePaths(allPaths,relationships,evidence);							
 						
-							// const nonActiveNodes = Object.keys(evidence);
-							// console.log("activePaths: ", activePaths);
+							// console.log("activePaths :", activePaths);
 
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
-							for (const path of allPaths) {
+							for (const path of activePaths) {
 								bn.activePaths.push(path)				
 								// console.log('bn.activePaths:', bn.activePaths)					
 							}
