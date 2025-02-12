@@ -131,16 +131,14 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
 
   // Intro
   const introParagraph = n('p',
-    'Either ',
-    n('span', arc0.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.from, {class:'verbalTextBold'}),
+    n('span', arc0.toState, {class:'verbalTextItalic'}), "       ",
+    n('span', arc0.to, {class:'verbalTextBold'}), '  ',
+    'can directly cause by the', '  ',
+    n('span', arc0.from, {class:'verbalTextBold'}),' being ',
+    n('span', arc0.fromState, {class:'verbalTextItalic'}), 
     ' or the ',
-    n('span', arc1.fromState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc1.from, {class:'verbalTextBold'}),
-    ' can directly cause ',
-    n('span', arc0.toState, {class:'verbalTextItalic'}), ' ',
-    n('span', arc0.to, {class:'verbalTextBold'}),
-    '.'
+    n('span', arc1.from, {class:'verbalTextBold'}),' being ',
+    n('span', arc1.fromState, {class:'verbalTextItalic'}), '.'
   );
   verbalListDisplay.appendChild(introParagraph);
 
@@ -150,15 +148,10 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
     `If we didn’t know about `,
     n('span', arc0.to,{class:'verbalTextBold'}),
     `, finding out the `,
-    n('span', arc0.fromState,{class:'verbalTextItalic'}),
-    ' of ',
     n('span', arc0.from,{class:'verbalTextBold'}),
-    ' would be enough to increase the probability of ',
-    n('span', arc0.toState,{class:'verbalTextItalic'}),' ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ', even without ',
-    n('span', arc1.from,{class:'verbalTextBold'}),
-    '. This alone wouldn’t change the probability of ',
+    ' was ',
+    n('span', arc0.fromState,{class:'verbalTextItalic'}),'    ',
+    `wouldn't change the probability of  ` ,
     n('span', arc1.from,{class:'verbalTextBold'}),
     '.'
   );
@@ -166,12 +159,12 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
 
   // Step 2a
   const step2a = n('p',
-    n('span','2a.',{style:'fontWeight:bold'}),' ',
-    'But first knowing ',
+    n('span','2a. ',{style:'fontWeight:bold'}),' ',
+    `But we do already know `,
     n('span', arc0.to,{class:'verbalTextBold'}),
     ' is ',
     n('span', arc0.toState,{class:'verbalTextItalic'}),
-    ' greatly increases the probability of ',
+    ` which has ${colorToVerbal(arc1.color)} the probability of  `,
     n('span', arc1.from,{class:'verbalTextBold'}),
     '.'
   );
@@ -180,30 +173,64 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   // Step 2b 
   let step2bText = '';
   if (effectType === 'explaining away') {
-    step2bText = ` only slightly increases the probability of ${arc1.from}. By making ${arc0.to}'s contribution smaller, the ${arc0.from} finding moderately reduces the probability of ${arc1.from}. (baseDiff = ${baseDiff.toFixed(2)}) `;
+    step2bText = n(
+      'span',
+      `${colorToVerbalShorten(arc1.color)} the probability that `,
+      n('span', arc1.toState, { class: 'verbalTextItalic' }),
+      ' ',
+      n('span', arc1.to, { class: 'verbalTextBold' }),
+      ' occurred without ',
+      n('span', arc1.from, { class: 'verbalTextBold' }),
+      ' -- so knowing ',
+      n('span', arc0.to, { class: 'verbalTextBold' }),
+      ' is ',
+      n('span', arc0.toState, { class: 'verbalTextBold' }),
+      ` now only ${colorToVerbal(arc0.color)} the probability of `,
+      n('span', arc1.from, { class: 'verbalTextBold' }),
+      '.'
+    );
   } else {
-    step2bText = ` significantly increases the probability of ${arc1.from}. By making ${arc0.to}'s contribution bigger, the ${arc0.from} finding slightly increases the probability of ${arc1.from}. (powerDiff = ${powerDiff.toFixed(2)}) `;
+    step2bText = n(
+      'span',
+      `${colorToVerbalShorten(arc1.color)} the probability that `,
+      n('span', arc1.toState, { class: 'verbalTextItalic' }),
+      ' ',
+      n('span', arc1.to, { class: 'verbalTextBold' }),
+      ' occurred without ',
+      n('span', arc1.from, { class: 'verbalTextBold' }),
+      ' -- so knowing ',
+      n('span', arc0.to, { class: 'verbalTextBold' }),
+      ' is ',
+      n('span', arc0.toState, { class: 'verbalTextItalic' }),
+      ` now only ${colorToVerbal(arc1.color)} the probability of `,
+      n('span', arc1.from, { class: 'verbalTextBold' }),
+      '.'
+    );
   }
-
-  const step2b = n('p',
-    n('span','2b.',{style:'fontWeight:bold'}),' ',
-    'Now finding out the ',
-    n('span', arc0.fromState,{class:'verbalTextItalic'}),' of ',
-    n('span', arc0.from,{class:'verbalTextBold'}),
+  
+  // Now, step2b is a single paragraph <p> containing an inline <span>
+  const step2b = n(
+    'p',
+    n('span', '2b.', { style: 'fontWeight:bold' }),
+    ' Now finding out the ',
+    n('span', arc0.from, { class: 'verbalTextBold' }),
+    ' was ',
+    n('span', arc0.fromState, { class: 'verbalTextItalic' }),
+    ' ',
     step2bText
   );
+  
   verbalListDisplay.appendChild(step2b);
-
-  // Pattern paragraph
-  const patternParagraph = n('p',
-    'Because we see an ',
-    n('span', effectType,{class:'verbalTextBold'}),
-    ' pattern, the net effect on ',
-    n('span', arc0.to,{class:'verbalTextBold'}),
-    ' is that the probability is ',
-    (effectType === 'explaining away' ? 'reduced overall.' : 'increased overall.')
-  );
-  verbalListDisplay.appendChild(patternParagraph);
+  // // Pattern paragraph
+  // const patternParagraph = n('p',
+  //   'Because we see an ',
+  //   n('span', effectType,{class:'verbalTextBold'}),
+  //   ' pattern, the net effect on ',
+  //   n('span', arc0.to,{class:'verbalTextBold'}),
+  //   ' is that the probability is ',
+  //   (effectType === 'explaining away' ? 'reduced overall.' : 'increased overall.')
+  // );
+  // verbalListDisplay.appendChild(patternParagraph);
 
   // // Final line
   // const finalOverall = n('p',
