@@ -1232,13 +1232,9 @@ module.exports = {
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of allPaths) {
 								bn.activePaths.push(path)				
-								// console.log('bn.activePaths:', bn.activePaths)					
-							}
-							
-
-							let pathRel = activePathWithRelationships(allPaths[0], relationships)
-							// console.log('pathRel:', pathRel)
-							pathWithRelationship.push(pathRel)														
+								let pathRel = activePathWithRelationships(path, relationships)							
+								pathWithRelationship.push(pathRel)																					
+							}							
 
 							if (focusEvidence !== 'null'){
 								// console.log('pathWithRelationship:', pathWithRelationship)	
