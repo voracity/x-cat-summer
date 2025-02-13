@@ -411,6 +411,7 @@ class Node {
 	}
 
 	static setFocusEvidence(nodeElement, bn) {
+		if (isFrozen) return 
 		nodeElement.classList.add("focusEvidence");		
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
@@ -545,6 +546,8 @@ class Node {
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
+				if (isFrozen) return ;
+
 				console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
@@ -685,6 +688,8 @@ document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
 	let verbal = false;
 	let animation = false;
+	this.isFrozen = false;
+
 
 	const siteLinksDiv = document.querySelector('.siteLinks');
 
@@ -701,6 +706,8 @@ document.addEventListener('DOMContentLoaded', event => {
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
+		if (this.isFrozen) return;
+		
 		let target = event.target.closest('.target');
 		if (target) {
 			// target.classList.toggle('selected');
@@ -717,6 +724,7 @@ document.addEventListener('DOMContentLoaded', event => {
 			// Add event listener to checkboxes
 			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
 				checkbox.addEventListener('change', function () {
+					if (this.isFrozen) return;
 						if (this.checked) {
 		
 								// Add 'not-checked' class to other checkboxes
@@ -836,6 +844,7 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	q(dlg).querySelector('[name=bnName]').select().focus();
 	// });
 	q('button.publish').addEventListener('click', event => {
+		if (this.isFrozen) return;
 		let doPublish = async _=> {
 			let qs = new URLSearchParams(location.search);
 			let res = await fetch('/bn?requestType=data&updateBn=1', {method:'POST',
@@ -874,6 +883,13 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.onlyTargetNode = event.target.checked
 		bnDetail.$handleUpdate({updateShowBarChange:""});
 	})
+
+	q('button.frozen-mode').addEventListener('click',() => {
+		
+		this.isFrozen = !this.isFrozen; 
+		console.log('Frozen Mode:', this.isFrozen);
+	})
+
 });
 
 

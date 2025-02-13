@@ -291,6 +291,7 @@ class BnDetail {
 					'Only Show Target Node',
 					n('input.influence-target-node', {type:"checkbox"})
 				),
+				n('button.frozen-mode', 'Frozen Mode'),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),
 				n('span.scenarioControls',
