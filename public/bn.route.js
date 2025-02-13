@@ -633,14 +633,14 @@ class BnDetail {
 						}												
 
 						// Overall Detail Sentence
-						if (displayDetail && m.activePaths.length >= 2) {
-							verbalOverallSentence.innerHTML = '';
-							verbalOverallSentence.appendChild(
-								n('p', `Overall, the findings `, 
-								n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
-								n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
-							));
-						}
+						// if (displayDetail && m.activePaths.length >= 2) {
+						// 	verbalOverallSentence.innerHTML = '';
+						// 	verbalOverallSentence.appendChild(
+						// 		n('p', `Overall, the findings `, 
+						// 		n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
+						// 		n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
+						// 	));
+						// }
 
 						// set colour and width of the barchange element
 						if (this.drawOptions.drawChangeBar) {
@@ -722,18 +722,18 @@ class BnDetail {
 						// console.log("importantMiddleNodes", importantMiddleNodes);
 						// console.log("evidenceNodeLabels", evidenceNodeLabels);
 						// console.log("targetNodeLabel", targetNodeLabel);
-						if (m.activePaths.length >= 2 && displayDetail) {
-							verbalIntroSentence.innerHTML = '';
-							verbalIntroSentence.appendChild(
-								n('p', 'Finding out ', 
-								n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-								' was ',
-								n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-								' contributes due to ',
-								numberToWord(m.activePaths.length),
-								' connections:'
-								))
-						}
+						// if (m.activePaths.length >= 2 && displayDetail) {
+						// 	verbalIntroSentence.innerHTML = '';
+						// 	verbalIntroSentence.appendChild(
+						// 		n('p', 'Finding out ', 
+						// 		n('span', focusEvidenceName, {class: 'verbalTextBold'}),
+						// 		' was ',
+						// 		n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
+						// 		' contributes due to ',
+						// 		numberToWord(m.activePaths.length),
+						// 		' connections:'
+						// 		))
+						// }
 					
 						// console.log("sortedArcInfluence:", sortedArcInfluence);		
 						// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, this.bnView);			

@@ -43,17 +43,40 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
 
 // Generates 2 dot points explanations of how active paths and arcs contribute to the target node's belief.
 function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
-  const describedDirectConnections = new Set();
+  verbalListDisplay.innerHTML = '';
+
+  if (!activePaths || activePaths.length === 0) {
+    verbalListDisplay.appendChild(n('p','(No paths)'));
+    return;
+  }
+
+  if (!arcsContribution || arcsContribution.length === 0) {
+    verbalListDisplay.appendChild(n('p','(No arcs)'));
+    return;
+  }
+
+  const primaryArc = arcsContribution[0]; 
+  const subjectName = primaryArc.from || 'UnknownSubject';      
+  const subjectState = primaryArc.fromState || 'someState';    
+  const targetName = primaryArc.to || 'UnknownTarget';         
+
+  const connectionsCount = activePaths.length;
+  const introPara = n(
+    'p',
+    `Finding out ${subjectName} was ${subjectState} contributes due to `,
+    n('span', numberToWord(connectionsCount), { class: 'verbalTextBold' }),
+    ' connection',
+    (connectionsCount > 1 ? 's' : ''), // 复数
+    ':'
+  );
+  verbalListDisplay.appendChild(introPara);
+
   const seenPaths = new Set();
-
-  const allSentences = [];
-
   activePaths.forEach((path) => {
     const pathKey = path.join('->');
-    if (seenPaths.has(pathKey)) {
-      return;
-    }
+    if (seenPaths.has(pathKey)) return;
     seenPaths.add(pathKey);
+
 
     if (path.length === 2) {
       const [nodeA, nodeB] = path;
@@ -63,15 +86,17 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
           (a.from === nodeB && a.to === nodeA)
       );
       if (arc) {
-        const sentence = `● By direct connection, it ${colorToVerbal(arc.color)} the probability of ${nodeB}.`;
-        allSentences.push(sentence);
+        const bulletText = `By direct connection, it ${colorToVerbal(arc.color)} the probability of ${nodeB}.`;
+        verbalListDisplay.appendChild(n('p', '• ' + bulletText));
       } else {
-        const sentence = `● By direct connection, it doesn't change the probability of ${nodeB}.`;
-        allSentences.push(sentence);
+git
+        verbalListDisplay.appendChild(
+          n('p', `• By direct connection, it doesn't change the probability of ${nodeB}.`)
+        );
       }
+    } 
 
-    } else {
-
+    else {
       const chainEffects = [];
       for (let i = 0; i < path.length - 1; i++) {
         const fromNode = path[i];
@@ -88,18 +113,20 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
         }
       }
       const chainSentence = chainEffects.join(', which in turn ');
-      const sentence = `● ${chainSentence}.`;
-      allSentences.push(sentence);
+      verbalListDisplay.appendChild(n('p', `• ${chainSentence}.`));
     }
   });
 
-  const usedTexts = new Set();
-  allSentences.forEach((sentence) => {
-    if (!usedTexts.has(sentence)) {
-      usedTexts.add(sentence);
-      verbalListDisplay.appendChild(n('p', sentence));
-    }
-  });
+  const overallColor = primaryArc.color || 'does not change';
+  const overallPara = n(
+    'p',
+    'Overall, the finding ',
+    n('span', colorToVerbal(overallColor), { class: 'verbalTextUnderline' }),
+    ' the probability of ',
+    n('span', targetName, { class: 'verbalTextBold' }),
+    '.'
+  );
+  verbalListDisplay.appendChild(overallPara);
 }
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
@@ -221,29 +248,20 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   );
   
   verbalListDisplay.appendChild(step2b);
-  // // Pattern paragraph
-  // const patternParagraph = n('p',
-  //   'Because we see an ',
-  //   n('span', effectType,{class:'verbalTextBold'}),
-  //   ' pattern, the net effect on ',
-  //   n('span', arc0.to,{class:'verbalTextBold'}),
-  //   ' is that the probability is ',
-  //   (effectType === 'explaining away' ? 'reduced overall.' : 'increased overall.')
-  // );
-  // verbalListDisplay.appendChild(patternParagraph);
 
-  // // Final line
-  // const finalOverall = n('p',
-  //   'Overall, the findings ',
-  //   (effectType === 'explaining away'
-  //     ? n('span','moderately reduces',{class:'verbalTextUnderline'})
-  //     : n('span','slightly increases',{class:'verbalTextUnderline'})
-  //   ),
-  //   ' the probability of ',
-  //   n('span', arc1.from,{class:'verbalTextBold'}),
-  //   '.'
-  // );
-  // verbalListDisplay.appendChild(finalOverall);
+  // Final line
+  const finalOverall = n('p',
+    'Overall, finding out the ',
+    n('span', arc0.from, { class: 'verbalTextBold' }),' was ',
+    n('span', arc0.fromState, { class: 'verbalTextItalic' }),'  ',
+    `${colorToVerbal(arc0.color)} the probability of `,
+    n('span', arc1.from, { class: 'verbalTextBold' }),' , ',
+    `by making the ${colorToVerbalShorten(arc1.color)} from `,
+    n('span', arc0.toState, { class: 'verbalTextItalic' }),'  ',
+    n('span', arc0.to, { class: 'verbalTextBold' }),
+    '.'
+  );
+  verbalListDisplay.appendChild(finalOverall);
 }
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
