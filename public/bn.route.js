@@ -545,7 +545,7 @@ class BnDetail {
 					// console.log('evidenceNodeName:', evidenceNodeName)			
 					console.log('this.bnView:', this.bnView)		
 
-					// Activate Evidence - Flash Node - Shining Node
+					// Activate Evidence - Flash Node - Shining Node - Focus Node
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
@@ -632,32 +632,30 @@ class BnDetail {
 							));
 						}
 
-						// console.log('colorClass:', colorClass)
-						console.log('-------------------------------------')
-						// set colour and width of the barchange element
+						// console.log('colorClass:', colorClass)						
+						// set colour and width of the barchange element of finding
 
-						if (this.drawOptions.drawChangeBar) {
-							barchangeElem.style.width = absChange+"%";
-							barchangeElem.style.marginLeft = "-"+absChange+"%";
-							// barchangeElem.style.left = `${100 - absChange}%`;
+						// if (this.drawOptions.drawChangeBar) {
+						// 	barchangeElem.style.width = absChange+"%";
+						// 	barchangeElem.style.marginLeft = "-"+absChange+"%";
+						// 	// barchangeElem.style.left = `${100 - absChange}%`;
 	
+						// 	Array.from(barchangeElem.classList).forEach(classname => {
+						// 		if (classname.indexOf("influence-idx") == 0) {
+						// 			cellProbabilityElem.classList.remove(classname);
 	
-							Array.from(barchangeElem.classList).forEach(classname => {
-								if (classname.indexOf("influence-idx") == 0) {
-									cellProbabilityElem.classList.remove(classname);
+						// 			barchangeElem.classList.remove(classname);
+						// 			barchangeElem.classList.remove(colorClass+"-box");
+						// 			barchangeElem.classList.remove("frame");
+						// 		}
+						// 	})
 	
-									barchangeElem.classList.remove(classname);
-									barchangeElem.classList.remove(colorClass+"-box");
-									barchangeElem.classList.remove("frame");
-								}
-							})
-	
-							barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
+						// 	barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
 							
-							barchangeElem.classList.add(colorClass);
-						}
+						// 	barchangeElem.classList.add(colorClass);
+						// }
 						
-						cellProbabilityElem.classList.add(colorClass);
+						// cellProbabilityElem.classList.add(colorClass);
 
 						// for all elements not being part of the bar set backgroundcolor
 						Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
@@ -672,7 +670,7 @@ class BnDetail {
 				
 					// ARCS && Fade Nodes && Arrow Animation
 					// console.log('---------------------------------------AAAAAArcInfluence')
-					if (m.arcInfluence && m.activePaths) {
+					if (m.arcInfluence && m.activePaths && focusEvidence) {
 						let delay = 0;
 						// console.log("arcInfluence:", m.arcInfluence);			
 					
@@ -854,6 +852,7 @@ class BnDetail {
 
 				}
 				// shadow-boxes with width 0 still show their glow
+				// target bar color
 				if (Math.abs(diff)>0)
 					barchangeElem.classList.add(targetColorClass+"-box");
 
@@ -868,6 +867,7 @@ class BnDetail {
 					let currentBelief = m.nodeBeliefs[nodelabel];
 					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
 
+					// color non fiding node
 					currentBelief.forEach((curBelief, idx) => {
 						let diff = curBelief - origBeliefs[idx]
 						let absDiff = diff * 100;
@@ -888,16 +888,16 @@ class BnDetail {
 						}
 					})
 				})
+		} 
+		// else {
 
-		} else {
 
+		// 	Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
+		// 		let barchange = targetNode.querySelector(".barchange");
+		// 		barchange.style.width = ""
+		// 	})
 
-			// Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
-			// 	let barchange = targetNode.querySelector(".barchange");
-			// 	barchange.style.width = ""
-			// })
-
-		}
+		// }
 	}
 
 	saveSnapshot() {
