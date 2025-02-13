@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders, inferTenseFromArcInfluence } = require("./_/js/verbals")
 
 // This object encapsulates multiple calculation methods for assessing relationships within Bayesian Networks. 
 // Each plugin, such as do, ci, mi, cheng, and far, performs specific types of computations.
@@ -584,8 +584,7 @@ class BnDetail {
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
 					console.log('evidenceNode:', evidenceNode)
-					
-									
+							
 					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
@@ -619,8 +618,7 @@ class BnDetail {
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
-												
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName, displayDetail);
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
@@ -628,7 +626,7 @@ class BnDetail {
 							verbalListDisplay.appendChild(findingOutSentence)
 							
 							if (numsEntries >= 2) {
-								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
 							}
 						}												
 
@@ -831,7 +829,7 @@ class BnDetail {
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
 							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider);
+							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence);
 						}
 					}
 				})

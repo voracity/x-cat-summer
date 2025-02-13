@@ -29,20 +29,36 @@ function colorToVerbalShorten(color) {
     return "increases";
 }
 
+// Determines the direction of arrows between evidence and target
+function inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeName) {
+  let isParent = arcInfluence.some(arc => arc.parent === evidenceNodeName && arc.child === targetNodeName);
+
+  if (isParent) {
+      return { evidenceTense: "was", targetTense: "is" }; // Evidence influences target
+  } else {
+      return { evidenceTense: "is", targetTense: "was" }; // Target influences evidence
+  }
+}
+
+
+
 // Constructs a detailed sentence explaining the influence of evidence on a target node.
-function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState, detail=false) {    
+function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState, detail = false, arcInfluence) {
+  let { evidenceTense, targetTense } = inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeName);
+
   let findingSentence = n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
-    n('span', evidenceNodeName, {class: 'verbalTextBold'}), ' was ', 
-    n('span', evidenceState, {class: 'verbalTextItalic'}),' ', 
-    n('span', colorToVerbal(colorContribute), {class: 'verbalTextUnderline'}), ' the probability of ', 
-    n('span', targetNodeName, {class: 'verbalTextBold'}), ' is ', 
-    n('span', targetState, {class: 'verbalTextItalic'}), detail ? ', by direct connection.' : ' .'); 
-    
+      n('span', evidenceNodeName, {class: 'verbalTextBold'}), ` ${evidenceTense} `, 
+      n('span', evidenceState, {class: 'verbalTextItalic'}), ' ', 
+      n('span', colorToVerbal(colorContribute), {class: 'verbalTextUnderline'}), ' the probability of ', 
+      n('span', targetNodeName, {class: 'verbalTextBold'}), ` ${targetTense} `, 
+      n('span', targetState, {class: 'verbalTextItalic'}), detail ? ', by direct connection.' : ' .'
+  ); 
+  
   return findingSentence;
 }
 
 // Generates 2 dot points explanations of how active paths and arcs contribute to the target node's belief.
-function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay) {
+function buildDetailSentenceList(activePaths, arcsContribution, verbalListDisplay, arcInfluence) {
   verbalListDisplay.innerHTML = '';
 
   if (!activePaths || activePaths.length === 0) {
@@ -59,11 +75,13 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   const subjectName = primaryArc.from || 'UnknownSubject';      
   const subjectState = primaryArc.fromState || 'someState';    
   const targetName = primaryArc.to || 'UnknownTarget';         
+  
+  let { evidenceTense, targetTense } = inferTenseFromArcInfluence(arcInfluence, subjectName, targetName);
 
   const connectionsCount = activePaths.length;
   const introPara = n(
     'p',
-    `Finding out ${subjectName} was ${subjectState} contributes due to `,
+    `Finding out ${subjectName} ${evidenceTense} ${subjectState} contributes due to `,
     n('span', numberToWord(connectionsCount), { class: 'verbalTextBold' }),
     ' connection',
     (connectionsCount > 1 ? 's' : ''), // 复数
@@ -101,13 +119,16 @@ git
       for (let i = 0; i < path.length - 1; i++) {
         const fromNode = path[i];
         const toNode = path[i + 1];
+        
         const arc = arcsContribution.find(
           (a) =>
             (a.from === fromNode && a.to === toNode) ||
-            (a.from === toNode && a.to === fromNode)
+            (a.from === toNode && a.to === fromNode) 
         );
+
         if (arc) {
-          chainEffects.push(`it ${colorToVerbal(arc.color)} the probability of ${toNode}`);
+          const fromState = arc.fromState; // Extract toState from the arc
+          chainEffects.push(`It ${colorToVerbalShorten(arc.color)} the probability that ${toNode} ${evidenceTense} ${fromState}`);
         } else {
           chainEffects.push(`it doesn't change the probability of ${toNode}`);
         }
@@ -265,7 +286,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
 }
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
-function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay,colliderDiffs) {
+function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes,verbalListDisplay,colliderDiffs, arcInfluence) {
 
   // We'll sort them into two categories: colliderPaths and normalPaths
   const colliderPaths = [];
@@ -283,12 +304,12 @@ function generateDetailedExplanations(activePaths,arcsContribution,colliderNodes
   // Now call the detail function for normal vs. collider paths
   if (normalPaths.length > 0) {
     console.log("normalPaths: ", normalPaths)
-    buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay);
+    buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay, arcInfluence);
   }
 
   if (colliderPaths.length > 0) {
     console.log("colliderPaths: ", colliderPaths)
-    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs);
+    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs, arcInfluence);
   }
 }
 
@@ -335,7 +356,8 @@ function findAllColliders(relationships) {
 }
  
 // Builds a summary sentence for the combined effect of multiple findings on a target node.
-function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targetState) {
+function buildSummarySentence(numsFinding, evidenceNodeName, colorContribute, targetNodeName, targetState, arcInfluence) {
+  let { targetTense } = inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeName);
   let findings = numsFinding == 2 ? 'Both' : 'All';
   return n('p', 
     n('span', `${findings} findings`, {class: 'verbalTextBold'}),
@@ -343,7 +365,7 @@ function buildSummarySentence(numsFinding, colorContribute, targetNodeName, targ
     n('span', colorToVerbal(colorContribute), {class: 'verbalTextUnderline'}),
     ' the probability that ',
     n('span', targetNodeName, {class: 'verbalTextBold'}),
-    ' is ',
+    ` ${targetTense} `,
     n('span', targetState, {class: 'verbalTextItalic'}),
     '.',
     n('br'),
@@ -566,5 +588,6 @@ function analyzeColliders(net, relationships, evidence, targetNode, targetStateI
 
 module.exports = {
   findAllColliders,
-  analyzeColliders
+  analyzeColliders,
+  inferTenseFromArcInfluence
 }
