@@ -567,7 +567,7 @@ class BnDetail {
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
+						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} was `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
 					}
