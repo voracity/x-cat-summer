@@ -98,7 +98,7 @@ var g = new Proxy({}, {
 		'RemoveArc': ['void', [voidPtr, 'int', 'int']],
 		'WriteToFile': ['void', [voidPtr, 'string']],
 	},
-	g: _g = (_=>{ffi.Library('bismile64', Object.assign({},_definitions))
+	g: _g = (_=>{
 		try {
 			return ffi.Library('bismile64', Object.assign({},_definitions));
 		}
