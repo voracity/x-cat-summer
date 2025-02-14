@@ -1,5 +1,12 @@
 var refs = {};
 
+// Implements a Bayesian Network (`bn`) object for managing nodes, evidence, and causal relationships.
+// 1. Network Initialization: Handles limited mode and drag functionality through `initialize()`, `enableLimitedMode()`, and `disableLimitedMode()`.
+// 2. Rendering: Draws arcs between nodes (`drawArcs`) and dynamically updates GUI elements like information windows and CI Table (`showCiTable`, `hideCiTable`).
+// 3. Evidence Updates: Updates network beliefs and causal influences using server-provided data (`update`).
+// 4. Causal Analysis: Visualizes causal strength and relationships, including colliders and active paths.
+// 5. Interactive GUI: Updates node styles and displays causal metrics dynamically.
+
 var bn = {
 	guiEnabled: true,
 	nodes: {},
@@ -15,6 +22,9 @@ var bn = {
 	focusEvidence: null,
 	dragFunc:true,
 	showMenu:null,
+	verbal:null,
+	detail:false,
+
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -43,14 +53,16 @@ var bn = {
         const urlParams = new URLSearchParams(window.location.search);
         this.limitedMode = urlParams.get('limitedmode') === 'true';
 		this.MenuDisplay = urlParams.get('showmenu') === 'false';
-
+		this.verbalMode = urlParams.get('verbal') === 'false';
+		this.animationMode = urlParams.get('animation') === 'false';
+		// limited mode
         if (this.limitedMode) {
             this.enableLimitedMode(); 
         }
 		else{
             this.disableLimitedMode(); 
 		}
-
+		// menu Dispaly
 		if (this.MenuDisplay) {
 			ShowMenu = false
             console.log("Menu disbaled");
@@ -60,6 +72,29 @@ var bn = {
             console.log("Menu abled");
 			ShowMenu = true
 		}
+	
+		// verbal mode
+		if (this.verbalMode) {
+			verbal = false
+            console.log("Verbal mode disabled");
+
+        }
+		else{
+            console.log("Verbal mode enabled");
+			verbal = true
+		}
+
+		// animaton mode
+		if (this.animationMode) {
+			window.animation = false
+            console.log("Animation mode disbaled");
+
+        }
+		else{
+            console.log("Animation mode enabaled");
+			window.animation = true
+		}
+
     },
 
     enableLimitedMode() {
@@ -229,6 +264,19 @@ refs.Node = function(el) {
 	return bn.getNode(nodeName);
 }
 
+// Node Class for Bayesian Network manages individual nodes within a Bayesian Network, 
+// linking them to their models and the broader network.
+
+// 1. Constructor: Initializes nodes with references to the Bayesian Network and their model data.
+// 2. Role Management: Allows nodes to be assigned roles (e.g., cause or effect).
+// Dynamically updates roles and related states/arcs (`setRole`, `guiSetRole`).
+// 3. Evidence Handling: Adds, removes, or clears evidence for nodes, and updates the network state accordingly (`setEvidence`, `clearEvidence`).
+// 4. Interactive Context Menu: Provides a menu for setting or clearing roles interactively (`guiPopupMenu`).
+// 5. Focus and Flash Effects: Highlights nodes with visual effects when selected (`flashNode`, `setFocusEvidence`).
+// 6. GUI Events: Handles click and drag events for interactive node manipulation.
+// Updates node positions and redraws arrows in real-time (`guiSetupEvents`).
+// 7. Drag Functionality: Enables nodes to be moved interactively within the GUI while maintaining visual consistency of arrows.
+
 class Node {
 	constructor(bn, nodeName) {
 		this.bn = bn;
@@ -281,7 +329,8 @@ class Node {
 		}
 		/// Update selected states
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
-		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));
+		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
+	
 		//this.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
@@ -385,7 +434,12 @@ class Node {
 
 	static setFocusEvidence(nodeElement, bn) {
 		nodeElement.classList.add("focusEvidence");		
-		bn.focusEvidence = nodeElement.dataset.name;			
+		bn.focusEvidence = nodeElement.dataset.name;
+	}
+
+	static moveFocusEvidence(nodeElement,bn){
+		nodeElement.classList.remove("focusEvidence");		
+		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
 
@@ -395,6 +449,8 @@ class Node {
 
 		const controlsDiv = document.querySelector('.controls');
 		const headerDiv = document.querySelector('.header')
+		const verbalPart = document.querySelector('#verbalBox')
+
 
 		if (!ShowMenu) {
 			controlsDiv.style.display = 'none';
@@ -402,6 +458,14 @@ class Node {
 		} else {
 			controlsDiv.style.display = 'block'; 
 			headerDiv.style.removeProperty('display')
+		}
+
+		if (!verbal) {
+
+			verbalPart.style.display = 'none';
+
+		} else {
+			verbalPart.style.display = 'block'; 
 		}
 
 		q(".bnView").addEventListener("click", (event) => {
@@ -443,15 +507,21 @@ class Node {
 				playButton.style.transform = "translateY(-50%)";
 				evidenceNodeTitle.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
-				Node.setFocusEvidence(focusEvidenceNode, bn);
-				// focusEvidenceNode.classList.add("focusEvidence");		
-				console.log('--------------asdfasdf------------focusEvidenceNode:', this.focusEvidence);
+
+				console.log('-----DEtail:---',bn.detail)
+
+				if (bn.detail === false){
+					console.log('CHANGING--------')
+					Node.setFocusEvidence(focusEvidenceNode, bn);
+					bn.detail = true
+				}
+				else{
+					Node.moveFocusEvidence(focusEvidenceNode, bn);
+					bn.detail = false
+				}
 				
 				const node = refs.Node(focusEvidenceNode)
-				node.bn.update();
-				
-					// console.log("focusEvidenceNode:", focusEvidenceNode);
-								
+				node.bn.update();																	
 			}
 				
 			
@@ -475,8 +545,8 @@ class Node {
 					node.bn.update();
 				}
 
-				/// Arrows need updating, and since there's an animation,
-				/// least visually ugly thing to do is sync it with the animation
+				// Arrows need updating, and since there's an animation,
+				// least visually ugly thing to do is sync it with the animation
 				let arrowDraw;
 				node.el().addEventListener(
 					"transitionend",
@@ -492,8 +562,6 @@ class Node {
 				nextFrame();
 			}
 		});
-
-	
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
@@ -558,20 +626,21 @@ function setupScenarioEvents() {
 	let removeScenario = q('.removeScenario');
 	let renameScenario = q('.renameScenario');
 	
+	// Handles changes in the scenario selection dropdown
 	scenarioBox.addEventListener('input', async event => {
 		let opt = scenarioBox.options[scenarioBox.selectedIndex];
 		if (opt.matches('.none')) {
-			/// Clear scenario (evidence only? or roles as well?)
+            // Clear scenario: Removes all evidence and roles from the Bayesian Network
 			//bn.update({});
 			for (let node of bn.model) {
 				let n = bn.getNode(node.name);
 				n.clearEvidence();
-				n.setRole(null);
+				n.setRole(null); // Reset roles for all nodes
 			}
 			bn.update(bn.evidence);
 		}
 		else {
-			/// Load scenario
+            // Load selected scenario: Applies evidence and roles from the chosen scenario
 			let scenario = JSON.parse(opt.dataset.scenario);
 			console.log(scenario);
 			for (let node of bn.model) {
@@ -579,7 +648,7 @@ function setupScenarioEvents() {
 				n.clearEvidence();
 				n.setRole(null);
 				if (scenario.evidence[node.name]) {
-					bn.getNode(node.name).setEvidence(scenario.evidence[node.name]);
+					bn.getNode(node.name).setEvidence(scenario.evidence[node.name]); // Apply evidence
 				}
 			}
 			if (scenario.selectedStates) {
@@ -587,17 +656,19 @@ function setupScenarioEvents() {
 			}
 			if (scenario.roles)  for (let [role,nodeNames] of Object.entries(scenario.roles)) {
 				for (let nodeName of nodeNames) {
-					bn.getNode(nodeName).setRole(role);
+					bn.getNode(nodeName).setRole(role); // Assign roles
 				}
 			}
-			bn.update(scenario.evidence);
+			bn.update(scenario.evidence);  // Update the network with the scenario's evidence
 		}
 	});
+
+	// Save the current state as a scenario
 	saveScenario.addEventListener('click', async event => {
 		let name = '';
 		let sep = '';
 		for (let [k,v] of Object.entries(bn.evidence)) {
-			name += sep + `${k}=${v}`;
+			name += sep + `${k}=${v}`; // Create a name based on current evidence
 			sep = ', ';
 		}
 		if (!name) { name = '(No evidence)'; }
@@ -607,9 +678,12 @@ function setupScenarioEvents() {
 			'Accept': 'application/json',
 			'Content-Type': 'application/json',
 		}}).then(r => r.json());
+        // Append the new scenario to the dropdown		
 		scenarioBox.append(n('option', upd.name, {value: res.scenarioId, dataScenario: JSON.stringify(upd)}));
 		scenarioBox.value = res.scenarioId;
 	});
+
+    // Remove the selected scenario from the dropdown	
 	removeScenario.addEventListener('click', event => {
 		let scenarioId = event.target.closest('.controls').querySelector('.scenario').value;
 		let qs = getQs();
@@ -619,45 +693,53 @@ function setupScenarioEvents() {
 		}});
 		scenarioBox.querySelector(`[value="${scenarioId}"]`).remove();
 	});
+
+	// Rename the selected scenario
 	renameScenario.addEventListener('click', event => {
 		let scenarioId = event.target.closest('.controls').querySelector('.scenario').value;
 		let qs = getQs();
 		let opt = scenarioBox.querySelector(`[value="${scenarioId}"]`);
-		let newName = prompt('New scenario name:', opt.text);
+		let newName = prompt('New scenario name:', opt.text); // Prompt for a new name
 		let upd = {name: newName};
 		fetch('/bn?renameScenario=1&requestType=data&id='+qs.id+'&scenarioId='+scenarioId, {method:'POST', body: JSON.stringify(upd), headers: {
 			'Accept': 'application/json',
 			'Content-Type': 'application/json',
 		}});
-		opt.text = newName;
+		opt.text = newName;  // Update the scenario name in the dropdown
 	});
 }
 
 document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
+	let verbal = false;
+	let animation = false;
 
 	const siteLinksDiv = document.querySelector('.siteLinks');
-
+    
+	// Handle visibility of the site links menu
 	if (!showMenu) {
-		siteLinksDiv.remove(); // 从 DOM 中移除
+		siteLinksDiv.remove(); // Remove the menu from the DOM if not displayed
 	} else {
 		const header = document.querySelector('.header');
 		const newDiv = document.createElement('div');
 		newDiv.className = 'siteLinks';
-		header.appendChild(newDiv); // 重新插入
+		header.appendChild(newDiv); // Re-add the menu to the header
 	}
+
+	// Initialize the Bayesian Network detail view
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
 		let target = event.target.closest('.target');
 		if (target) {
+			// Handle target selection and prevent interaction with evidence nodes
 			// target.classList.toggle('selected');
 			let possibleEvidenceNode = target.closest('.node.hasEvidence');
 			
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
 				return;
-
+			// Clear existing target nodes and states
 			document.querySelectorAll('.node.istargetnode').forEach(node => {
 				node.classList.remove('istargetnode');
 				node.querySelectorAll('.state.istarget').forEach(state => {
@@ -665,8 +747,30 @@ document.addEventListener('DOMContentLoaded', event => {
 				})
 			})
 
+			// Toggle the selected state and node as targets
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
+
+			// Add event listener to checkboxes
+			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
+				checkbox.addEventListener('change', function () {
+						if (this.checked) {
+		
+								// Add 'not-checked' class to other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										if (cb !== this) {
+												cb.classList.add('not-checked');
+										}
+								});
+						} else {
+								// Remove 'not-checked' class from other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										cb.classList.remove('not-checked');
+								});
+						}
+				});
+			});
+
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
@@ -680,11 +784,11 @@ document.addEventListener('DOMContentLoaded', event => {
 			
 			let states = [...node.querySelectorAll('.state.istarget')].map(el => Number(el.closest('.state').dataset.index));
 			
-			// clean up if we have not target selected
+			// If no states are selected, clear targets and reset styles
 			if (!states.length) {
 				delete bn.selectedStates[nodeName];
 
-				// reset background colors for every evidence node 
+				// Reset all evidence node background colors and classes
 				Array.from(document.querySelectorAll("span.barchange")).forEach(elem=>{
 					elem.style.width = "";
 					Array.from(elem.classList).forEach(classname=> {
@@ -700,6 +804,7 @@ document.addEventListener('DOMContentLoaded', event => {
 				)
 			}
 			else {
+				// Update the selected states in the Bayesian Network
 				bn.selectedStates[nodeName] = states;
 			}
 			if (Object.keys(bn.selectedStates).length > 0)
@@ -708,12 +813,14 @@ document.addEventListener('DOMContentLoaded', event => {
 				bn.calculateTargetChange = false;
 				// bn.update(bn.evidence);
 			
+			// Trigger Bayesian Network update if there is evidence
 			if (Object.keys(bn.evidence).length > 0)
 				bn.update(bn.evidence);
 			return;
 		}
 		let state = event.target.closest('.state');
 		if (state) {
+			// Set evidence for the selected state and trigger updates
 			refs.Node(state).setEvidence(state.dataset.index, {update:true});
 			/*let nodeName = state.closest('.node').dataset.name;
 			let evidence = {};
@@ -768,15 +875,19 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	]});
 	// 	q(dlg).querySelector('[name=bnName]').select().focus();
 	// });
+
+	// Event listener for publishing the Bayesian Network
 	q('button.publish').addEventListener('click', event => {
 		let doPublish = async _=> {
 			let qs = new URLSearchParams(location.search);
 			let res = await fetch('/bn?requestType=data&updateBn=1', {method:'POST',
 				body: q(new FormData).append('updates', JSON.stringify({visibility:'public',id: qs.get('id')})).unchain()
 			});
-			bnDetail.$handleUpdate({visibility:'public'});
-			ui.dismissDialogs();
+			bnDetail.$handleUpdate({visibility:'public'}); // Update BN detail with public visibility
+			ui.dismissDialogs(); // Dismiss any open dialogs
 		};
+
+		// Show dialog for confirming the publish action
 		let dlg = ui.popupDialog([
 			n('h2', 'Publish BN'),
 		], {buttons: [
@@ -788,30 +899,36 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	let scaling = q('select.scaleimage').value
 	// 	render.Network(Number(scaling), "png");
 	// })
+
+	// Save snapshot of the current Bayesian Network state
 	q('button.savesnapshot').addEventListener('click', () => {
 		bnDetail.saveSnapshot()
 	})
+
+	// Download Bayesian Network as an SVG file
 	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");
 	})
+
+	// Download Bayesian Network as a Base64 encoded file
 	q('button.downloadbase64').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "base64");
 	})
+
+	// Toggle frame rendering for influences
 	q('input.influence-as-frame').addEventListener('click', (event) => {
-		bnDetail.drawFrame = event.target.checked
+		bnDetail.drawFrame = event.target.checked  // Enable/disable frame drawing
 		bnDetail.$handleUpdate({updateFrameMode:""});
 	})
+
+	// Toggle bar change display for the target node
 	q('input.influence-target-node').addEventListener('click', (event) => {
-		bnDetail.onlyTargetNode = event.target.checked
+		bnDetail.onlyTargetNode = event.target.checked // Enable/disable target node focus
 		bnDetail.$handleUpdate({updateShowBarChange:""});
 	})
 });
-
-
-
-
 
 function onMouseUp() {
   isDragging = false;
@@ -820,22 +937,23 @@ function onMouseUp() {
   document.removeEventListener('mouseup', onMouseUp);
 }
 
-// drag and drop
+// Drag-and-drop handling logic
 document.addEventListener('DOMContentLoaded', (event) => {
 
 	function handleDragEnter(e) {
-	  this.classList.add('over');
+	  this.classList.add('over');  // Highlight the dragged element
 
 	  this.currentZoom = Math.trunc((window.outerWidth-10)/window.innerWidth*100)/100
 	}
   
 	function handleDragLeave(e) {
-	  this.classList.remove('over');
+	  this.classList.remove('over');  // Remove highlight on drag leave
 	}
 
 
 	function handleDragMove(e) {
 		if (this.classList.contains('over')) {
+			// Adjust position using the current transformation matrix
 			// console.log(e.movementX, e.movementY, window.devicePixelRatio, e.movementX / window.devicePixelRatio)
 			let matrix = new WebKitCSSMatrix(window.getComputedStyle(this).getPropertyValue('transform'))
 			let moved = matrix.translate(e.movementX /  this.currentZoom, e.movementY /  this.currentZoom)
@@ -844,7 +962,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 		
 	}
 	
-  
+	// Apply drag-and-drop handlers to specific elements
 	let items = document.querySelector('.evidence-scale');
 	items.onmousedown = handleDragEnter
 	items.onmouseup = handleDragLeave
@@ -856,4 +974,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	verbalBox.onmouseup = handleDragLeave
 	verbalBox.onmouseleave = handleDragLeave
 	verbalBox.onmousemove = handleDragMove
-  });
+});
+
+
+

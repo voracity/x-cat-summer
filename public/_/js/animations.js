@@ -1,5 +1,7 @@
 var { getColor} = require('./utils.js');
 
+// Resets the influence visualization by removing existing arcs and restoring node opacity.
+// It then redraws the arcs based on the Bayesian network's current state.
 function reset(arcInfluence, bn, bnView) {
     if (arcInfluence) {
       arcInfluence.forEach((arcEntry) => {
@@ -7,16 +9,17 @@ function reset(arcInfluence, bn, bnView) {
           `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
         );
         if (arc) {
-          arc.remove();        
+          arc.remove();  // Remove existing arc element.
         }
       });
       bnView.querySelectorAll(`div.node`).forEach(node => {						
-        node.style.opacity = 1
+        node.style.opacity = 1  // Reset node opacity.
       });
-      bn.drawArcs();
+      bn.drawArcs();  // Redraw arcs.
     }
   }
   
+  // Sorts arc influences by their impact (max belief difference) and prioritizes arcs involving the evidence node.
   function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
     console.log('evidenceNodeName:', evidenceNodeName);
     return arcInfluence
@@ -54,6 +57,8 @@ function reset(arcInfluence, bn, bnView) {
       .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
   }
 
+
+// Animates and applies color to an element to visually represent influence.
 function colorElement(elem, paintColor, arcSize, direction = 'normal') {
     elem.style.stroke = paintColor;
     elem.style.strokeWidth = arcSize;

@@ -30,71 +30,6 @@ function pointerAsArray(ptr, type, size) {
 	return at;
 }
 
-/*var g = ffi.Library('bismile64', {
-	'new_network': [voidPtr, []],
-	'copy_network': [voidPtr, [voidPtr]],
-	'delete_network': [voidPtr, [voidPtr]],
-	'UpdateBeliefs': [ref.types.void, [voidPtr]],
-	'ReadFile': [ref.types.void, [voidPtr, 'string']],
-	'AddNode': ['int', [voidPtr, 'int', 'string']],
-	'DeleteNode': [ref.types.int, [voidPtr, 'int']],
-	'FindNode': ['int', [voidPtr, 'string']],
-	'GetNode': [voidPtr, [voidPtr, 'int']],
-	'node_Definition': [voidPtr, [voidPtr]],
-	'node_Value': [voidPtr, [voidPtr]],
-	'nodeValue_GetMatrix': [voidPtr, [voidPtr]],
-	'nodeDefinition_GetMatrix': [voidPtr, [voidPtr]],
-	'dMatrix_GetSize': ['int', [voidPtr]],
-	'dMatrix_GetItemsDouble': [ref.refType(ref.types.double), [voidPtr]],
-	'intArray_NumItems': ['int', [voidPtr]],
-	'intArray_Items': [ref.refType(ref.types.int), [voidPtr]],
-	'node_Info': [voidPtr, [voidPtr]],
-	'nodeInfo_Header': [voidPtr, [voidPtr]],
-	'nodeInfo_Screen': [voidPtr, [voidPtr]],
-	'screenInfo_position': [voidPtr, [voidPtr]],
-	'rectangle_center_X_set': ['void', [voidPtr, 'int']],
-	'rectangle_center_Y_set': ['void', [voidPtr, 'int']],
-	'rectangle_center_X': ['int', [voidPtr]],
-	'rectangle_center_Y': ['int', [voidPtr]],
-	'rectangle_width_set': ['void', [voidPtr, 'int']],
-	'rectangle_height_set': ['void', [voidPtr, 'int']],
-	'rectangle_width': ['int', [voidPtr]],
-	'rectangle_height': ['int', [voidPtr]],
-	'header_GetId': ['string', [voidPtr]],
-	'header_GetName': ['string', [voidPtr]],
-	'net_Header': [voidPtr, [voidPtr]],
-	'header_GetId': ['string', [voidPtr]],
-	'header_SetId': [voidPtr, [voidPtr, 'string']],
-	'header_GetName': ['string', [voidPtr]],
-	'header_SetName': [voidPtr, [voidPtr, 'string']],
-	'header_GetComment': ['string', [voidPtr]],
-	'header_SetComment': [voidPtr, [voidPtr, 'string']],
-	'nodeDefinition_GetNumberOfOutcomes': ['int', [voidPtr]],
-	'CalcProbEvidence': ['double', [voidPtr]],
-	'nodeValue_IsRealEvidence': ['int', [voidPtr]],
-	'nodeValue_GetEvidence': ['int', [voidPtr]],
-	'nodeValue_SetEvidence': ['void', [voidPtr, 'int']],
-	'nodeDefinition_GetOutcomesNames': [voidPtr, [voidPtr]],
-	'nodeDefinition_SetDoubleDefinition': ['void', [voidPtr, 'int', voidPtr]],
-	'stringArray_Items': [ref.refType(ref.types.CString), [voidPtr]],
-	'GetDefaultBNAlgorithm': ['int', [voidPtr]],
-	'SetDefaultBNAlgorithm': ['void', [voidPtr, 'int']],
-	'ClearAllEvidence': ['void', [voidPtr]],
-	'nodeValue_ClearEvidence': ['void', [voidPtr]],
-	'nodeValue_GetVirtualEvidence': [ref.refType(ref.types.double), [voidPtr]],
-	'nodeValue_SetVirtualEvidence': ['void', [voidPtr, 'int', voidPtr]],
-	'nodeDefinition_AddOutcome': ['void', [voidPtr, 'string']],
-	'nodeDefinition_SetNumberOfOutcomes': ['int', [voidPtr, 'int']],
-	'nodeDefinition_SetNumberOfOutcomesStr': ['int', [voidPtr, 'int', voidPtr]],
-	'nodeDefinition_RenameOutcomes': ['void', [voidPtr, 'int', voidPtr]],
-	'GetParents': [voidPtr, [voidPtr, 'int']],
-	'new_intArray': [voidPtr, []],
-	'GetAllNodes': ['void', [voidPtr, voidPtr]],
-	'AddArc': ['int', [voidPtr, 'int', 'int']],
-	'RemoveArc': ['void', [voidPtr, 'int', 'int']],
-	'WriteFile': ['void', [voidPtr, 'string']],
-});*/
-
 var _definitions;
 var _g;
 var g = new Proxy({}, {
@@ -103,7 +38,7 @@ var g = new Proxy({}, {
 		'copy_network': [voidPtr, [voidPtr]],
 		'delete_network': [voidPtr, [voidPtr]],
 		'UpdateBeliefs': [ref.types.void, [voidPtr]],
-		'ReadFile': [ref.types.void, [voidPtr, 'string']],
+		'ReadFromFile': [ref.types.void, [voidPtr, 'string']],
 		'AddNode': ['int', [voidPtr, 'int', 'string']],
 		'DeleteNode': [ref.types.int, [voidPtr, 'int']],
 		'FindNode': ['int', [voidPtr, 'string']],
@@ -152,6 +87,7 @@ var g = new Proxy({}, {
 		'nodeValue_GetVirtualEvidence': [ref.refType(ref.types.double), [voidPtr]],
 		'nodeValue_SetVirtualEvidence': ['void', [voidPtr, 'int', voidPtr]],
 		'nodeDefinition_AddOutcome': ['void', [voidPtr, 'string']],
+		'nodeDefinition_RemoveOutcome': ['int', [voidPtr, 'int']],
 		'nodeDefinition_SetNumberOfOutcomes': ['int', [voidPtr, 'int']],
 		'nodeDefinition_SetNumberOfOutcomesStr': ['int', [voidPtr, 'int', voidPtr]],
 		'nodeDefinition_RenameOutcomes': ['void', [voidPtr, 'int', voidPtr]],
@@ -160,7 +96,7 @@ var g = new Proxy({}, {
 		'GetAllNodes': ['void', [voidPtr, voidPtr]],
 		'AddArc': ['int', [voidPtr, 'int', 'int']],
 		'RemoveArc': ['void', [voidPtr, 'int', 'int']],
-		'WriteFile': ['void', [voidPtr, 'string']],
+		'WriteToFile': ['void', [voidPtr, 'string']],
 	},
 	g: _g = (_=>{
 		try {
@@ -209,7 +145,7 @@ class Net {
 	
 		if (fn) {
 			if (fs.existsSync(fn)) {
-				g.ReadFile(this.eNet, fn);
+				g.ReadFromFile(this.eNet, fn);
 				if (/\.dne$/.test(fn)) {
 					// Fix up probs that GeNIe has with reading new Netica (>= V4) files
 					let contents = fs.readFileSync(fn).toString();
@@ -296,7 +232,7 @@ class Net {
 	}
 
 	write(fn) {
-		g.WriteFile(this.eNet, fn);
+		g.WriteToFile(this.eNet, fn);
 	}
 	
 	/// Lots of limitations. Basic BNs only
@@ -415,7 +351,8 @@ class Net {
 		if (findings === null) {
 			findings = {}
 			for (let node of this.nodes()) {
-				findings[node.name()] = node.finding();
+				let f = node.finding();
+				if (f)  findings[node.name()] = f;
 			}
 			
 			return findings;
@@ -604,6 +541,172 @@ class Net {
 		
 		//return sorted(miTable, key = lambda x: x[1], reverse=True)
 		return miTable
+	}
+	
+	/**
+	Get all nodes or arcs (or arc traversals) on the d-connected paths from |sourceNode|
+	to |destNode|. (Note that arc traversals depend on direction, while arcs/nodes do not.)
+	
+	Options:
+		<none>: Get all nodes on d-connected paths between sourceNode & destNode.
+		arcs: Get all arcs on d-connected paths. These are returned as `${parentId}-${childId}`.
+		arcTraversal: Get arcs, and add traversal direction. Returned as `${parentId}-${childId}|${dir}`,
+		              where |dir| is either "down" (parent to child) or "up" (child to parent).
+		noSourceParents: Don't follow parents out of the sourceNode. Since only children are followed,
+		                 omits all backdoor paths.
+		noSourceChildren: Don't follow children out of the sourceNode. Since only parents are followed,
+		                  omits all selection bias and causal paths.
+	*/
+	findAllDConnectedNodes(sourceNode, destNode, o = {}) {
+		o.arcTraversal ??= false;
+		o.arcs = o.arcTraversal || (o.arcs ?? false);
+		o.noSourceParents ??= false;
+		o.noSourceChildren ??= false;
+		if (typeof(sourceNode)=="string")  sourceNode = this.node(sourceNode);
+		if (typeof(destNode)=="string")  destNode = this.node(destNode);
+		
+		let PARENTS = 0b01;
+		let CHILDREN = 0b10;
+		let PARENTSANDCHILDREN = 0b11;
+
+		/*
+		Alternative, not required:
+		function hasLoop(path, end) {
+			for (let i=path.length-1; i>=0; i--) {
+				if (end[0] == path[i][0] && (path[i][1]==PARENTSANDCHILDREN || end[1]==path[i][1])) {
+					return true;
+				}
+			}
+			return false;
+		}
+		*/
+		function hasLoop(path, end) {
+			for (let i=path.length-1; i>=0; i--) {
+				if (end[0] == path[i][0]) {
+					return true;
+				}
+			}
+			return false;
+		}
+		
+		/** Map GeNIe BN to MB BN **/
+		function makeDag(bn) {
+			let dag = {};
+			for (let node of bn.nodes()) {
+				dag[node.name()] = {
+					id: node.name(),
+					parents: node.parents(), children: node.children(),
+					intervene: false, /// Can change this if want to easily specify that arcs into the node have been cut
+					hasEvidence() {
+						return node.finding()!==null;
+					},
+					getDescendants() {
+						let descendants = new Set();
+						let toVisit = [this];
+						while (toVisit.length) {
+							let next = toVisit.shift();
+							next.children.forEach(c => descendants.add(c));
+							toVisit.push(...next.children);
+						}
+						return [...descendants];
+					},
+					isParent(toNode) {
+						return this.children.includes(toNode);
+					},
+				};
+			}
+			/// Replace par/child references to dag node refs
+			for (let [id,dagNode] of Object.entries(dag)) {
+				dagNode.parents = dagNode.parents.map(p => dag[p.name()]);
+				//console.log(dagNode.children);
+				dagNode.children = dagNode.children.map(c => dag[c.name()]);
+			}
+			
+			// let util = require('util');
+			// console.log(util.inspect(dag, {depth:3}));
+			
+			return dag;
+		}
+		
+		// console.log(sourceNode,destNode);
+		let dag = makeDag(this);
+		sourceNode = dag[sourceNode.name()];
+		destNode = dag[destNode.name()];
+		
+		let downstreamEv = Object.fromEntries(Object.values(dag).map(n => [n.id, n.getDescendants().map(n=>n.hasEvidence()).reduce((a,v)=>a+v,0)]));
+		// console.log(downstreamEv);
+
+		let pathsQueue = [[[sourceNode, PARENTSANDCHILDREN]]];
+		let foundPaths = [];
+		let resolved = {};
+		let arcs = new Set();
+		
+		let nodeDirKey = nodeDir => `${nodeDir[0].id}-${nodeDir[1]}`
+		function resolvePath(path, howResolved = true) {
+			// console.log(path);
+			let prevNodeDir = null;
+			for (let currentNodeDir of path) {
+				if (prevNodeDir) {
+					let par = prevNodeDir[0], child = currentNodeDir[0];
+					let swap = child.isParent(par);
+					if (swap)  [par,child] = [child,par];
+					if (o.arcTraversal) {
+						if (!swap)  arcs.add(`${par.id}-${child.id}|down`);
+						else        arcs.add(`${par.id}-${child.id}|up`);
+					}
+					else {
+						arcs.add(`${par.id}-${child.id}`);
+					}
+				}
+				resolved[nodeDirKey(currentNodeDir)] = howResolved ? currentNodeDir[0] : false;
+				prevNodeDir = currentNodeDir;
+			}
+		}
+		function nodeDirIsResolved(nodeDir) {
+			return Boolean(resolved[nodeDirKey(nodeDir)]);
+		}
+		let checkedBefore = 0;
+		let checkedAfter = 0;
+		while (pathsQueue.length) {
+			let currentPath = pathsQueue.shift();
+			
+			checkedBefore++;
+			if (nodeDirIsResolved(currentPath.at(-1))) {
+				resolvePath(currentPath);
+				continue;
+			}
+			checkedAfter++;
+			
+			let currentNode = currentPath.at(-1)[0];
+			if (currentNode == destNode) {
+				// foundPaths.push(currentPath.map(entry => entry[0].id).join(' - '));
+				// foundPaths.push(currentPath.map(entry => entry[0]));
+				resolvePath(currentPath);
+			}
+			else {
+				let checkParents = !currentNode.intervene && (!o.noSourceParents || currentNode != sourceNode);
+				let checkChildren = !o.noSourceChildren || currentNode != sourceNode;
+				if (checkParents && (currentPath.at(-1)[1]&PARENTS)==PARENTS) {
+					// console.log(currentNode);
+					let nextPaths = currentNode.parents
+						.filter(p => !p.hasEvidence() && !hasLoop(currentPath,[p,PARENTSANDCHILDREN]))
+						.map(p => currentPath.concat([[p,PARENTSANDCHILDREN]]));
+					pathsQueue.push(...nextPaths);
+				}
+				if (checkChildren && (currentPath.at(-1)[1]&CHILDREN)==CHILDREN) {
+					let nextPaths = currentNode.children
+						.filter(c => !hasLoop(currentPath,[c, c.hasEvidence()?PARENTS:(downstreamEv[c.id]?PARENTSANDCHILDREN:CHILDREN)]))
+						.map(c => currentPath.concat([[c, c.hasEvidence()?PARENTS:(downstreamEv[c.id]?PARENTSANDCHILDREN:CHILDREN)]]));
+					pathsQueue.push(...nextPaths);
+				}
+			}
+		}
+		// console.log(checkedBefore, '/', checkedAfter);
+		
+		if (o.arcs) {
+			return [...arcs];
+		}
+		return [...new Set(Object.values(resolved))].map(n => this.node(n.id)); // Convert back to GeNIe before going back
 	}
 }
 
@@ -811,6 +914,14 @@ class Node {
 		g.nodeDefinition_AddOutcome(nodeDef, name);
 
 		// Chain
+		this.net.needsUpdate = true;
+		return this;
+	}
+	
+	removeState(name) {
+		let state = this.state(name);
+		state.remove();
+		
 		this.net.needsUpdate = true;
 		return this;
 	}
@@ -1114,6 +1225,14 @@ class State {
 	constructor(node = null, stateNum = null) {
 		this.node = node;
 		this.stateNum = stateNum;
+	}
+	
+	remove() {
+		g.nodeDefinition_RemoveOutcome(this.node._gNodeDef(), this.stateNum);
+		
+		this.node._setupStates(true);
+		
+		return this;
 	}
 
 	name(_name = null) {
