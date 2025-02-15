@@ -618,7 +618,7 @@ class BnDetail {
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence);
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
