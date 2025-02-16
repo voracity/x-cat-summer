@@ -16,7 +16,7 @@ var bn = {
 	showMenu:null,
 	verbal:null,
 	detail:false,
-
+	classifiedPaths: null,
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -135,6 +135,8 @@ var bn = {
 					console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
 					this.activePaths = reqData.activePaths;
+					this.classifiedPaths = reqData.classifiedPaths;
+					console.log('reqData.classifiedPaths:', reqData.classifiedPaths);
 				} else {
 					this.influences = {};
 				}
@@ -145,7 +147,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths});
 	},
 
 	guiUpdateInfoWindows() {

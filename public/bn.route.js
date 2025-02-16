@@ -535,6 +535,9 @@ class BnDetail {
 				reset(m.arcInfluence, bn, this.bnView);				
 
 			} else {
+				if (m.classifiedPaths) {
+					console.log('m.classifiedPaths:', m.classifiedPaths)
+				}
 				console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
@@ -635,27 +638,28 @@ class BnDetail {
 						// console.log('colorClass:', colorClass)						
 						// set colour and width of the barchange element of finding
 
-						// if (this.drawOptions.drawChangeBar) {
-						// 	barchangeElem.style.width = absChange+"%";
-						// 	barchangeElem.style.marginLeft = "-"+absChange+"%";
-						// 	// barchangeElem.style.left = `${100 - absChange}%`;
+						if (this.drawOptions.drawChangeBar) {
+							barchangeElem.style.width = absChange+"%";
+							barchangeElem.style.marginLeft = "-"+absChange+"%";
+							// barchangeElem.style.left = `${100 - absChange}%`;
 	
-						// 	Array.from(barchangeElem.classList).forEach(classname => {
-						// 		if (classname.indexOf("influence-idx") == 0) {
-						// 			cellProbabilityElem.classList.remove(classname);
+							Array.from(barchangeElem.classList).forEach(classname => {
+								if (classname.indexOf("influence-idx") == 0) {
+									cellProbabilityElem.classList.remove(classname);
 	
-						// 			barchangeElem.classList.remove(classname);
-						// 			barchangeElem.classList.remove(colorClass+"-box");
-						// 			barchangeElem.classList.remove("frame");
-						// 		}
-						// 	})
+									barchangeElem.classList.remove(classname);
+									barchangeElem.classList.remove(colorClass+"-box");
+									barchangeElem.classList.remove("frame");
+								}
+							})
 	
-						// 	barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
+							// barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
 							
-						// 	barchangeElem.classList.add(colorClass);
-						// }
+							// color of next to state black bar
+							// barchangeElem.classList.add(colorClass);
+						}
 						
-						// cellProbabilityElem.classList.add(colorClass);
+						cellProbabilityElem.classList.add(colorClass);
 
 						// for all elements not being part of the bar set backgroundcolor
 						Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
@@ -1241,8 +1245,9 @@ module.exports = {
 								// console.log('bn.activePaths:', bn.activePaths)
 								// console.log('focusEvidence:', focusEvidence)
 								// console.log('targetNodeName:', targetNodeName)								
-								let pathClassified = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
-								const {firstOrderPaths, secondOrderPaths} = pathClassified
+								let classifiedPaths = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
+								bn.classifiedPaths = classifiedPaths
+								const {firstOrderPaths, secondOrderPaths} = classifiedPaths
 								console.log('firstOrderPaths:', firstOrderPaths)
 								console.log('secondOrderPaths:', secondOrderPaths)
 							}							
