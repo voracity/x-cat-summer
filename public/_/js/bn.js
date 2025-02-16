@@ -147,7 +147,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence});
 	},
 
 	guiUpdateInfoWindows() {

@@ -1,5 +1,18 @@
 var { getColor} = require('./utils.js');
 
+function fadeNodes(classifiedPaths, bnView) {						
+  let activeNodes = new Set([
+    ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
+    ...classifiedPaths.secondOrderPaths.flat()
+  ]);						
+  bnView.querySelectorAll('div.node').forEach(node => {
+    let nodeName = node.getAttribute('data-name');
+    if (!activeNodes.has(nodeName)) {
+      node.style.opacity = 0.3;
+    }
+  });
+}
+
 function reset(arcInfluence, bn, bnView) {
     if (arcInfluence) {
       arcInfluence.forEach((arcEntry) => {

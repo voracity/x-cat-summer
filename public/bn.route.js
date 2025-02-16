@@ -538,6 +538,9 @@ class BnDetail {
 				if (m.classifiedPaths) {
 					console.log('m.classifiedPaths:', m.classifiedPaths)
 				}
+				if (m.focusEvidence) {
+					console.log('m.focusEvidence:', m.focusEvidence)
+				}
 				console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
@@ -674,195 +677,210 @@ class BnDetail {
 				
 					// ARCS && Fade Nodes && Arrow Animation
 					// console.log('---------------------------------------AAAAAArcInfluence')
-					if (m.arcInfluence && m.activePaths && focusEvidence) {
-						let delay = 0;
-						// console.log("arcInfluence:", m.arcInfluence);			
-					
-						reset(m.arcInfluence, bn, this.bnView);
 
-						// console.log('---------------------------------------AAAAAAactivePaths')
-						// Fade Nodes										
-						// console.log('m.activePaths is activated: ', m.activePaths)
-						let activeNodes = new Set(m.activePaths.flat())
-						// console.log('activeNodes:', activeNodes)
-						console.log('m.activePaths:', m.activePaths)
-						console.log('m.activePaths length:', m.activePaths.length)
+					async function animateBN(m, bn, bnView, focusEvidence, listTargetNodes) {						
+						await animateNodes(m, bn, bnView, focusEvidence);
+						await colorTargetBar(listTargetNodes);
+					}
+					animateBN(m, bn, this.bnView, focusEvidence, listTargetNodes);
+					fadeNodes(m.classifiedPaths, this.bnView);
 
-						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
-
-						// console.log('evidenceNodeName:', evidenceNodeName)
-						console.log('activeNodes: ', activeNodes)
+					async function animateNodes(m, bn, bnView) {
+						if (m.arcInfluence && m.activePaths && m.focusEvidence) {
+							let delay = 0;
+							// console.log("arcInfluence:", m.arcInfluence);			
 						
-						// Node Fading
-						this.bnView.querySelectorAll('div.node').forEach(node => {
-							let nodeName = node.getAttribute('data-name');
-							if (!activeNodes.has(nodeName) && verbal) {
-								node.style.opacity = 0.3
+							reset(m.arcInfluence, bn, bnView);
+
+							// console.log('---------------------------------------AAAAAAactivePaths')
+							// Fade Nodes										
+							// console.log('m.activePaths is activated: ', m.activePaths)
+							let activeNodes = new Set(m.activePaths.flat())
+							// console.log('activeNodes:', activeNodes)
+							console.log('m.activePaths:', m.activePaths)
+							console.log('m.activePaths length:', m.activePaths.length)
+
+							// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
+
+							// console.log('evidenceNodeName:', evidenceNodeName)
+							console.log('activeNodes: ', activeNodes)
+							
+							// Node Fading
+							// bnView.querySelectorAll('div.node').forEach(node => {
+							// 	let nodeName = node.getAttribute('data-name');
+							// 	if (!activeNodes.has(nodeName) && verbal) {
+							// 		node.style.opacity = 0.3
+							// 	}
+							// 	// console.log('node:', node)	
+							// 	// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
+							// 	// 	node.style.opacity = 0.3
+							// 	// }
+							// })						
+							// console.log('AAAAAAA---------------------------------------')
+						
+							// console.log("evidenceNodeName:", evidenceNodeName);
+							const sortedArcInfluence = sortArcInfluenceByDiff(
+								m.arcInfluence,
+								m.nodeBeliefs,													
+								evidenceNodeName
+							);						
+						
+							// console.log("importantMiddleNodes", importantMiddleNodes);
+							// console.log("evidenceNodeLabels", evidenceNodeLabels);
+							// console.log("targetNodeLabel", targetNodeLabel);
+							if (m.activePaths.length >= 2 && displayDetail) {
+								verbalIntroSentence.innerHTML = '';
+								verbalIntroSentence.appendChild(
+									n('p', 'Finding out ', 
+									n('span', focusEvidenceName, {class: 'verbalTextBold'}),
+									' was ',
+									n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
+									' contributes due to ',
+									numberToWord(m.activePaths.length),
+									' connections:'
+									))
 							}
-							// console.log('node:', node)	
-							// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
-							// 	node.style.opacity = 0.3
-							// }
-						})						
-						// console.log('AAAAAAA---------------------------------------')
-					
-						// console.log("evidenceNodeName:", evidenceNodeName);
-						const sortedArcInfluence = sortArcInfluenceByDiff(
-							m.arcInfluence,
-							m.nodeBeliefs,													
-							evidenceNodeName
-						);						
-					
-						// console.log("importantMiddleNodes", importantMiddleNodes);
-						// console.log("evidenceNodeLabels", evidenceNodeLabels);
-						// console.log("targetNodeLabel", targetNodeLabel);
-						if (m.activePaths.length >= 2 && displayDetail) {
-							verbalIntroSentence.innerHTML = '';
-							verbalIntroSentence.appendChild(
-								n('p', 'Finding out ', 
-								n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-								' was ',
-								n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-								' contributes due to ',
-								numberToWord(m.activePaths.length),
-								' connections:'
-								))
-						}
-					
-						// console.log("sortedArcInfluence:", sortedArcInfluence);		
-						// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, this.bnView);			
-					
-						let arcsContribution = [];
+						
+							// console.log("sortedArcInfluence:", sortedArcInfluence);		
+							// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, bnView);			
+						
+							let arcsContribution = [];
 
-						sortedArcInfluence.forEach((arcEntry, index) => {						
-							let arc = document.querySelector(
-								`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-							);
-							// console.log("index:", index);
-							// console.log("arcEntry:", arcEntry);							
-							// console.log("activeNodes:",activeNodes);
-							// console.log("arcEntry.color:", arcEntry.color);
-							// console.log('arcEntry[child]', arcEntry.child)
-							// console.log('arcEntry[parent]', arcEntry.parent)
-							// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-
-							// we know the first child is the colour arc
-							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
-							let parentNodeState = parentNode.querySelector('.label').textContent;
-							
-							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-							let childNodeState = childNode.querySelector('.label').textContent;
-
-							
-							// coloring order of arrows
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
-								arcsContribution.push({
-									from: arcEntry.parent,
-									fromState: parentNodeState,
-									to: arcEntry.child,
-									toState: childNodeState,
-									color: arcEntry.color,
-									// targetNodeName: targetNodeName,
-									// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
-								})
-
-								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
-								let animationOrder = 'normal';
-								if (index == 0 && arcEntry.child == evidenceNodeName) {
-									animationOrder = 'reverse';
-								}											
-
-								let combinedElems = Array.from(influeceArcBodyElems).map(
-									(bodyElem, index) => {
-										return {
-											body: bodyElem,
-											head: influeceArcHeadElems[index],
-										};
-									},
+							sortedArcInfluence.forEach((arcEntry, index) => {						
+								let arc = document.querySelector(
+									`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 								);
-								let paintColor = getComputedStyle(
-									document.documentElement,
-									).getPropertyValue(`--${arcEntry.color}`);
+								// console.log("index:", index);
+								// console.log("arcEntry:", arcEntry);							
+								// console.log("activeNodes:",activeNodes);
+								// console.log("arcEntry.color:", arcEntry.color);
+								// console.log('arcEntry[child]', arcEntry.child)
+								// console.log('arcEntry[parent]', arcEntry.parent)
+								// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 
-								setTimeout(() => {														
-									combinedElems.forEach((pair) => {
-										let bodyElem = pair.body;
-										let headElem = pair.head;																						
-										
-										if (animationOrder == 'normal') {
-											// coloring arrow from bottom to top
-											colorElement(bodyElem, paintColor, arcSize, animationOrder);							
-											setTimeout(() => {											
-												colorElement(headElem, paintColor, arcSize, animationOrder);												
-											}, 1000);
-										
-										} else {
-											// coloring arrow from top to bottom														
-											colorElement(bodyElem, paintColor, arcSize, animationOrder);											
-											// don't have to wait to color the head		
-											setTimeout(() => {											
-												colorElement(headElem, paintColor, arcSize, animationOrder);												
-											}, 0);													
-										}										
-									});
-								}, delay);					
-								delay += 500;
-							} else {	
-								// Fade arrows						
-								// console.log("arc:", arc);
-								let arcBodys = arc.querySelectorAll('path.line')							
-								arcBodys[1].setAttribute('stroke', '#ffffff')
-								// console.log("arcBodys[1]:", arcBodys[1]);
+								// we know the first child is the colour arc
+								let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
+								let parentNodeState = parentNode.querySelector('.label').textContent;
+								
+								let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
+								let childNodeState = childNode.querySelector('.label').textContent;
 
-								let arcHeads = arc.querySelectorAll('g.head')							
-								arcHeads[1].setAttribute('fill', '#fafafa')																
-								arcHeads[1].setAttribute('stroke', '#fafafa')	
-								// console.log("arcHeads[1]:", arcHeads[1]);	
-								// arcBodys[1].style.opacity = 0.1
-								// console.log("arcBodys after changing color:", arcBodys[1]);
+								
+								// coloring order of arrows       
+								if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
+									arcsContribution.push({
+										from: arcEntry.parent,
+										fromState: parentNodeState,
+										to: arcEntry.child,
+										toState: childNodeState,
+										color: arcEntry.color,
+										// targetNodeName: targetNodeName,
+										// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
+									})
+
+									let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+									let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
+									let animationOrder = 'normal';
+									if (index == 0 && arcEntry.child == evidenceNodeName) {
+										animationOrder = 'reverse';
+									}											
+
+									let combinedElems = Array.from(influeceArcBodyElems).map(
+										(bodyElem, index) => {
+											return {
+												body: bodyElem,
+												head: influeceArcHeadElems[index],
+											};
+										},
+									);
+									let paintColor = getComputedStyle(
+										document.documentElement,
+										).getPropertyValue(`--${arcEntry.color}`);
+
+									setTimeout(() => {														
+										combinedElems.forEach((pair) => {
+											let bodyElem = pair.body;
+											let headElem = pair.head;																						
+											
+											if (animationOrder == 'normal') {
+												// coloring arrow from bottom to top
+												colorElement(bodyElem, paintColor, arcSize, animationOrder);							
+												setTimeout(() => {											
+													colorElement(headElem, paintColor, arcSize, animationOrder);												
+												}, 1000);
+											
+											} else {
+												// coloring arrow from top to bottom														
+												colorElement(bodyElem, paintColor, arcSize, animationOrder);											
+												// don't have to wait to color the head		
+												setTimeout(() => {											
+													colorElement(headElem, paintColor, arcSize, animationOrder);												
+												}, 0);													
+											}										
+										});
+									}, delay);					
+									delay += 500;
+								} else {	
+									// Fade arrows						
+									// console.log("arc:", arc);
+									let arcBodys = arc.querySelectorAll('path.line')							
+									arcBodys[1].setAttribute('stroke', '#ffffff')
+									// console.log("arcBodys[1]:", arcBodys[1]);
+
+									let arcHeads = arc.querySelectorAll('g.head')							
+									arcHeads[1].setAttribute('fill', '#fafafa')																
+									arcHeads[1].setAttribute('stroke', '#fafafa')	
+									// console.log("arcHeads[1]:", arcHeads[1]);	
+									// arcBodys[1].style.opacity = 0.1
+									// console.log("arcBodys after changing color:", arcBodys[1]);
+								}
+							});
+							console.log('arcsContribution:', arcsContribution)
+							if (displayDetail) {
+								// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+								generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
 							}
-						});
-						console.log('arcsContribution:', arcsContribution)
-						if (displayDetail) {
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
 						}
 					}
 				})
 			}
-			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-				let baseBelief = data.model.beliefs[data.index];
-				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
-				let diff = currentBelief - baseBelief
-				let absDiff = 100*Math.abs(diff)
-				let targetColorClass = getColor(diff)				
-				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
-
-				Array.from(barchangeElem.classList).forEach(classname=> {
-					if (classname.indexOf("influence-idx") == 0) {
-						barchangeElem.classList.remove(classname);
-						barchangeElem.classList.remove(`${targetColorClass}-box`);
-						barchangeElem.classList.remove(`influence-box`);
-					}
-				})
-
-				if (diff > 0) {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
-				} else {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
-
-				}
-				// shadow-boxes with width 0 still show their glow
-				// target bar color
-				if (Math.abs(diff)>0)
-					barchangeElem.classList.add(targetColorClass+"-box");
-
-			})
 			
-			if (this.drawOptions.drawChangeBar)
+			async function colorTargetBar(listTargetNodes) {
+				Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+					let baseBelief = data.model.beliefs[data.index];
+					let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
+					let diff = currentBelief - baseBelief
+					let absDiff = 100*Math.abs(diff)
+					let targetColorClass = getColor(diff)				
+					let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+					Array.from(barchangeElem.classList).forEach(classname=> {
+						if (classname.indexOf("influence-idx") == 0) {
+							barchangeElem.classList.remove(classname);
+							barchangeElem.classList.remove(`${targetColorClass}-box`);
+							barchangeElem.classList.remove(`influence-box`);
+						}
+					})
+
+					if (diff > 0) {
+						barchangeElem.style.marginLeft = `-${absDiff}%`;
+						barchangeElem.style.width = `${absDiff}%`;
+					} else {
+						barchangeElem.style.marginLeft = `-${absDiff}%`;
+						barchangeElem.style.width = `${absDiff}%`;
+
+					}
+					// shadow-boxes with width 0 still show their glow
+
+					// target bar color
+					if (Math.abs(diff)>0)
+						barchangeElem.classList.add(targetColorClass+"-box");
+
+				})
+			}
+
+			// color non finding node
+			if (this.drawOptions.drawChangeBar) {
 				// Now set the change of belief for all remaining nodes, so show how their states
 				// changed given all evidence VS no evidence
 				Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
@@ -871,7 +889,7 @@ class BnDetail {
 					let currentBelief = m.nodeBeliefs[nodelabel];
 					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
 
-					// color non fiding node
+					
 					currentBelief.forEach((curBelief, idx) => {
 						let diff = curBelief - origBeliefs[idx]
 						let absDiff = diff * 100;
@@ -892,6 +910,8 @@ class BnDetail {
 						}
 					})
 				})
+			}
+
 		} 
 		// else {
 
