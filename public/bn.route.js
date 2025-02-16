@@ -567,7 +567,8 @@ class BnDetail {
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} was `, 
+						let { evidenceTense } = inferTenseFromArcInfluence(m.arcInfluence, focusEvidenceName, "Dermascare");
+						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} ${evidenceTense} `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
 					}
@@ -829,7 +830,7 @@ class BnDetail {
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
 							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence);
+							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
 						}
 					}
 				})
