@@ -249,14 +249,14 @@ function fadeArrows(arcParent, arcChildren) {
   let arcHeads = arc.querySelectorAll('g.head');
 
   if (arcBodys.length > 1) {
-      arcBodys[1].setAttribute('stroke', '#ffffff');
+      arcBodys[1].setAttribute('stroke', '#fafafa');
   }
   if (arcHeads.length > 1) {
       arcHeads[1].setAttribute('fill', '#fafafa');
       arcHeads[1].setAttribute('stroke', '#fafafa');
   }
 
-  console.log(`Fading arc: ${arcParent} → ${arcChildren}`);
+  // console.log(`Fading arc: ${arcParent} → ${arcChildren}`);
 }
 
 function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
