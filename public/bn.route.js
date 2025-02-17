@@ -721,7 +721,6 @@ class BnDetail {
 								let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
 								let childNodeState = childNode.querySelector('.label').textContent;
 
-								
 								// coloring order of arrows       
 								if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
 									arcsContribution.push({
@@ -731,15 +730,7 @@ class BnDetail {
 										toState: childNodeState,
 										color: arcEntry.color,										
 									})
-								} else {	
-									// Fade arrows															
-									let arcBodys = arc.querySelectorAll('path.line')							
-									arcBodys[1].setAttribute('stroke', '#ffffff')									
-
-									let arcHeads = arc.querySelectorAll('g.head')							
-									arcHeads[1].setAttribute('fill', '#fafafa')																
-									arcHeads[1].setAttribute('stroke', '#fafafa')	
-								}
+								} 
 							});
 							console.log('arcsContribution:', arcsContribution)
 							if (displayDetail) {								
@@ -774,7 +765,7 @@ class BnDetail {
 							else if (path.type == 'target'){
 								colorTargetBar(listTargetNodes, m)
 							}
-						}, (index + 1) * 850)				
+						}, (index + 1) * 850) // start index at 1 so the flashing go first
 					})												
 				} 				
 			}			
