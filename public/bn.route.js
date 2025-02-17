@@ -679,15 +679,7 @@ class BnDetail {
 				
 					// ARCS && Fade Nodes && Arrow Animation
 					// console.log('---------------------------------------AAAAAArcInfluence')
-
-					async function animateBN(m, bn, bnView, focusEvidence, listTargetNodes) {						
-						await animateNodes(m, bn, bnView, focusEvidence);
-						// await colorTargetBar(listTargetNodes);
-					}
-					// animateBN(m, bn, this.bnView, focusEvidence, listTargetNodes);
-
-					
-
+					// unused function
 					async function animateNodes(m, bn, bnView) {
 						if (m.arcInfluence && m.activePaths && m.focusEvidence) {
 							let delay = 0;
@@ -702,10 +694,6 @@ class BnDetail {
 								m.nodeBeliefs,													
 								evidenceNodeName
 							);						
-						
-							// console.log("importantMiddleNodes", importantMiddleNodes);
-							// console.log("evidenceNodeLabels", evidenceNodeLabels);
-							// console.log("targetNodeLabel", targetNodeLabel);
 							if (m.activePaths.length >= 2 && displayDetail) {
 								verbalIntroSentence.innerHTML = '';
 								verbalIntroSentence.appendChild(
@@ -719,38 +707,16 @@ class BnDetail {
 									))
 							}
 						
-							// console.log("sortedArcInfluence:", sortedArcInfluence);		
-							// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, bnView);			
-						
 							let arcsContribution = [];
 
 							sortedArcInfluence.forEach((arcEntry, index) => {						
 								let arc = document.querySelector(
 									`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 								);
-								// console.log("arc INSIDEEE:", arc);
-								// console.log("index:", index);
-								// console.log("arcEntry:", arcEntry);							
-								// console.log("activeNodes:",activeNodes);
-								// console.log("arcEntry.color:", arcEntry.color);
-								// console.log('arcEntry[child]', arcEntry.child)
-								// console.log('arcEntry[parent]', arcEntry.parent)
-								// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
 
 								// we know the first child is the colour arc
-								let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
-								// let influencedState = parentNode.querySelector(".state .cellProbability[class*='influence']");
-								// if (influencedState) {
-								// 	let stateLabel = influencedState.querySelector('.label').textContent;
-								// 	console.log("stateLabel:", stateLabel);
-								// }
-								// let parentNodeStateIdx = m.nodeBeliefs[parentNodeName];
-								// let parentNodeState = parentNode.querySelector('.states')
-								// console.log('parentNodeStateIdx:', parentNodeStateIdx);
-
-								// console.log('parentNode:', parentNode)
-								let parentNodeState = parentNode.querySelector('.label').textContent;
-								// console.log('parentNodeState:', parentNodeState)
+								let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);								
+								let parentNodeState = parentNode.querySelector('.label').textContent;								
 								
 								let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
 								let childNodeState = childNode.querySelector('.label').textContent;
@@ -763,28 +729,20 @@ class BnDetail {
 										fromState: parentNodeState,
 										to: arcEntry.child,
 										toState: childNodeState,
-										color: arcEntry.color,
-										// targetNodeName: targetNodeName,
-										// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
+										color: arcEntry.color,										
 									})
 								} else {	
-									// Fade arrows						
-									// console.log("arc:", arc);
+									// Fade arrows															
 									let arcBodys = arc.querySelectorAll('path.line')							
-									arcBodys[1].setAttribute('stroke', '#ffffff')
-									// console.log("arcBodys[1]:", arcBodys[1]);
+									arcBodys[1].setAttribute('stroke', '#ffffff')									
 
 									let arcHeads = arc.querySelectorAll('g.head')							
 									arcHeads[1].setAttribute('fill', '#fafafa')																
 									arcHeads[1].setAttribute('stroke', '#fafafa')	
-									// console.log("arcHeads[1]:", arcHeads[1]);	
-									// arcBodys[1].style.opacity = 0.1
-									// console.log("arcBodys after changing color:", arcBodys[1]);
 								}
 							});
 							console.log('arcsContribution:', arcsContribution)
-							if (displayDetail) {
-								// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+							if (displayDetail) {								
 								generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
 							}
 						}
@@ -795,11 +753,10 @@ class BnDetail {
 				if (m.classifiedPaths) {					
 					reset(m.arcInfluence, bn, this.bnView);				
 					fadeNodes(m.classifiedPaths, this.bnView);	
-					
-					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);				
-					
-
+										
+					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
 					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
+					fadeAllArrows(m, animationOrderBN, arcColorDict)
 					
 					console.log('animationOrderBN:', animationOrderBN)
 					console.log('arcColorDict:', arcColorDict)
@@ -818,20 +775,7 @@ class BnDetail {
 								colorTargetBar(listTargetNodes, m)
 							}
 						}, (index + 1) * 850)				
-					})		
-
-					fadeAllArrows(m, animationOrderBN, arcColorDict)
-
-					async function fadeAllArrows (m, animationOrderBN, arcColorDict) {
-						const coloredArcs = await extractColoredArrows(m.arcInfluence, animationOrderBN);
-						Object.keys(arcColorDict).forEach((arcKey) => {
-							if (!coloredArcs.has(arcKey)) {
-									const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child
-									fadeArrows(arcParent, arcChildren);
-							}
-						});
-					}
-					
+					})												
 				} 				
 			}			
 		} 

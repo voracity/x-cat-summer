@@ -255,8 +255,16 @@ function fadeArrows(arcParent, arcChildren) {
       arcHeads[1].setAttribute('fill', '#fafafa');
       arcHeads[1].setAttribute('stroke', '#fafafa');
   }
+}
 
-  // console.log(`Fading arc: ${arcParent} → ${arcChildren}`);
+async function fadeAllArrows (m, animationOrderBN, arcColorDict) {
+  const coloredArcs = await extractColoredArrows(m.arcInfluence, animationOrderBN);
+  Object.keys(arcColorDict).forEach((arcKey) => {
+    if (!coloredArcs.has(arcKey)) {
+        const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child
+        fadeArrows(arcParent, arcChildren);
+    }
+  });
 }
 
 function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
