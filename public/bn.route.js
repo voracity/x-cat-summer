@@ -686,9 +686,7 @@ class BnDetail {
 					}
 					// animateBN(m, bn, this.bnView, focusEvidence, listTargetNodes);
 
-					if (m.classifiedPaths) {
-						fadeNodes(m.classifiedPaths, this.bnView);
-					}
+					
 
 					async function animateNodes(m, bn, bnView) {
 						if (m.arcInfluence && m.activePaths && m.focusEvidence) {
@@ -696,34 +694,8 @@ class BnDetail {
 							// console.log("arcInfluence:", m.arcInfluence);			
 						
 							reset(m.arcInfluence, bn, bnView);
-
-							// console.log('---------------------------------------AAAAAAactivePaths')
-							// Fade Nodes										
-							// console.log('m.activePaths is activated: ', m.activePaths)
-							let activeNodes = new Set(m.activePaths.flat())
-							// console.log('activeNodes:', activeNodes)
-							// console.log('m.activePaths:', m.activePaths)
-							// console.log('m.activePaths length:', m.activePaths.length)
-
-							// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
-
-							// console.log('evidenceNodeName:', evidenceNodeName)
-							// console.log('activeNodes: ', activeNodes)
 							
-							// Node Fading
-							// bnView.querySelectorAll('div.node').forEach(node => {
-							// 	let nodeName = node.getAttribute('data-name');
-							// 	if (!activeNodes.has(nodeName) && verbal) {
-							// 		node.style.opacity = 0.3
-							// 	}
-							// 	// console.log('node:', node)	
-							// 	// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
-							// 	// 	node.style.opacity = 0.3
-							// 	// }
-							// })						
-							// console.log('AAAAAAA---------------------------------------')
-						
-							// console.log("evidenceNodeName:", evidenceNodeName);
+							let activeNodes = new Set(m.activePaths.flat())
 							
 							const sortedArcInfluence = sortArcInfluenceByDiff(
 								m.arcInfluence,
@@ -795,49 +767,6 @@ class BnDetail {
 										// targetNodeName: targetNodeName,
 										// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
 									})
-
-									let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-									let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
-									let animationOrder = 'normal';
-									if (index == 0 && arcEntry.child == evidenceNodeName) {
-										animationOrder = 'reverse';
-									}											
-
-									let combinedElems = Array.from(influeceArcBodyElems).map(
-										(bodyElem, index) => {
-											return {
-												body: bodyElem,
-												head: influeceArcHeadElems[index],
-											};
-										},
-									);
-									let paintColor = getComputedStyle(
-										document.documentElement,
-										).getPropertyValue(`--${arcEntry.color}`);
-
-									// setTimeout(() => {														
-									// 	combinedElems.forEach((pair) => {
-									// 		let bodyElem = pair.body;
-									// 		let headElem = pair.head;																						
-											
-									// 		if (animationOrder == 'normal') {
-									// 			// coloring arrow from bottom to top
-									// 			colorElement(bodyElem, paintColor, arcSize, animationOrder);							
-									// 			setTimeout(() => {											
-									// 				colorElement(headElem, paintColor, arcSize, animationOrder);												
-									// 			}, 1000);
-											
-									// 		} else {
-									// 			// coloring arrow from top to bottom														
-									// 			colorElement(bodyElem, paintColor, arcSize, animationOrder);											
-									// 			// don't have to wait to color the head		
-									// 			setTimeout(() => {											
-									// 				colorElement(headElem, paintColor, arcSize, animationOrder);												
-									// 			}, 0);													
-									// 		}										
-									// 	});
-									// }, delay);					
-									// delay += 500;
 								} else {	
 									// Fade arrows						
 									// console.log("arc:", arc);
@@ -863,7 +792,9 @@ class BnDetail {
 				})
 			}
 			// Animation		
-			if (m.classifiedPaths) {										
+			if (m.classifiedPaths) {					
+				reset(m.arcInfluence, bn, this.bnView, listTargetNodes);				
+				fadeNodes(m.classifiedPaths, this.bnView);	
 				let animationOrderBN = generateAnimationOrder(m.classifiedPaths);
 				console.log('animationOrderBN:', animationOrderBN)
 				const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
@@ -897,54 +828,7 @@ class BnDetail {
 					}, index * 750)				
 				})								
 			}
-
-
-			// colorNode('Podunk_Beach', m)
-
-			// color non finding node || color nodes
-			// if (this.drawOptions.drawChangeBar) {
-			// 	// Now set the change of belief for all remaining nodes, so show how their states
-			// 	// changed given all evidence VS no evidence
-			// 	Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
-			// 		let nodelabel = node.getAttribute("data-name");
-			// 		console.log('nodelabel:', nodelabel)
-					
-			// 		let currentBelief = m.nodeBeliefs[nodelabel];
-			// 		let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
-
-					
-			// 		currentBelief.forEach((curBelief, idx) => {
-			// 			let diff = curBelief - origBeliefs[idx]
-			// 			let absDiff = diff * 100;
-						
-			// 			// let colorClass = getColor(/curBelief/origBeliefs[idx])
-			// 			let colorClass = getColor(diff)
-
-			// 			let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-			// 			barchangeElem.classList.add(colorClass)						
-
-			// 			if (absDiff > 0) {
-			// 				// overlay change over the current belief bar
-			// 				barchangeElem.style.marginLeft = `-${absDiff}%`;
-			// 				barchangeElem.style.width = `${absDiff}%`;
-			// 			} else {
-			// 				// the change will be placed right next to the original belief bar
-			// 				barchangeElem.style.width = `${absDiff}%`;
-			// 			}
-			// 		})
-			// 	})
-			// }
-
 		} 
-		// else {
-
-
-		// 	Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
-		// 		let barchange = targetNode.querySelector(".barchange");
-		// 		barchange.style.width = ""
-		// 	})
-
-		// }
 	}
 
 	saveSnapshot() {
