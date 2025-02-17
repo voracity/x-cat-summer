@@ -871,31 +871,31 @@ class BnDetail {
 
 				console.log("m.arcInfluence:", m.arcInfluence);
 				
-				animationOrderBN.forEach((path) => {
-					if (path.type == 'arrow') {
-						
-						let arcParent = null
-						let arcChildren = null
-						if (path.direction == 'normal') {
-							arcParent = path.from
-							arcChildren = path.to
-						} else {
-							arcParent = path.to
-							arcChildren = path.from
+				animationOrderBN.forEach((path, index) => {
+					setTimeout(() => {
+						if (path.type == 'arrow') {
+							
+							let arcParent = null
+							let arcChildren = null
+							if (path.direction == 'normal') {
+								arcParent = path.from
+								arcChildren = path.to
+							} else {
+								arcParent = path.to
+								arcChildren = path.from
+							}
+							const color = arcColorDict[`${arcParent}, ${arcChildren}`]
+							// console.log('color:', color)
+							colorArrows(arcParent, arcChildren, path.direction, color)
 						}
-						const color = arcColorDict[`${arcParent}, ${arcChildren}`]
-						// console.log('color:', color)
-						colorArrows(arcParent, arcChildren, path.direction, color)
-					}
-					// else if (path.type == 'node') {
-					// 	colorNode(path.name, m)
-					// }
-					// else if (path.type == 'target'){
-					// 	colorTargetBar(listTargetNodes)
-					// }
-				})
-				// colorTargetBar(listTargetNodes, m)
-				console.log('-------------End Animation--------------')
+						else if (path.type == 'node') {
+							colorNode(path.name, m)
+						}
+						else if (path.type == 'target'){
+							colorTargetBar(listTargetNodes, m)
+						}
+					}, index * 750)				
+				})								
 			}
 
 
