@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders, analyzeColliders, inferTenseFromArcInfluence } = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
 
 // This object encapsulates multiple calculation methods for assessing relationships within Bayesian Networks. 
 // Each plugin, such as do, ci, mi, cheng, and far, performs specific types of computations.
@@ -567,8 +567,7 @@ class BnDetail {
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						let { evidenceTense } = inferTenseFromArcInfluence(m.arcInfluence, focusEvidenceName, "Dermascare");
-						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} ${evidenceTense} `, 
+						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
 					}
@@ -585,7 +584,8 @@ class BnDetail {
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
 					console.log('evidenceNode:', evidenceNode)
-							
+					
+									
 					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
@@ -619,7 +619,8 @@ class BnDetail {
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
+												
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName, displayDetail);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
@@ -627,19 +628,19 @@ class BnDetail {
 							verbalListDisplay.appendChild(findingOutSentence)
 							
 							if (numsEntries >= 2) {
-								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
 							}
 						}												
 
 						// Overall Detail Sentence
-						// if (displayDetail && m.activePaths.length >= 2) {
-						// 	verbalOverallSentence.innerHTML = '';
-						// 	verbalOverallSentence.appendChild(
-						// 		n('p', `Overall, the findings `, 
-						// 		n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
-						// 		n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
-						// 	));
-						// }
+						if (displayDetail && m.activePaths.length >= 2) {
+							verbalOverallSentence.innerHTML = '';
+							verbalOverallSentence.appendChild(
+								n('p', `Overall, the findings `, 
+								n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
+								n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
+							));
+						}
 
 						// set colour and width of the barchange element
 						if (this.drawOptions.drawChangeBar) {
@@ -721,18 +722,18 @@ class BnDetail {
 						// console.log("importantMiddleNodes", importantMiddleNodes);
 						// console.log("evidenceNodeLabels", evidenceNodeLabels);
 						// console.log("targetNodeLabel", targetNodeLabel);
-						// if (m.activePaths.length >= 2 && displayDetail) {
-						// 	verbalIntroSentence.innerHTML = '';
-						// 	verbalIntroSentence.appendChild(
-						// 		n('p', 'Finding out ', 
-						// 		n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-						// 		' was ',
-						// 		n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-						// 		' contributes due to ',
-						// 		numberToWord(m.activePaths.length),
-						// 		' connections:'
-						// 		))
-						// }
+						if (m.activePaths.length >= 2 && displayDetail) {
+							verbalIntroSentence.innerHTML = '';
+							verbalIntroSentence.appendChild(
+								n('p', 'Finding out ', 
+								n('span', focusEvidenceName, {class: 'verbalTextBold'}),
+								' was ',
+								n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
+								' contributes due to ',
+								numberToWord(m.activePaths.length),
+								' connections:'
+								))
+						}
 					
 						// console.log("sortedArcInfluence:", sortedArcInfluence);		
 						// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, this.bnView);			
@@ -830,7 +831,7 @@ class BnDetail {
 						console.log('arcsContribution:', arcsContribution)
 						if (displayDetail) {
 							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
+							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider);
 						}
 					}
 				})

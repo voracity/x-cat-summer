@@ -1,4 +1,7 @@
 var {Net} = require('../../../bni_smile');
+
+// Event Listener for Navigation:
+// Listens for clicks on buttons with `href` attributes and navigates to the specified URL.
 document.addEventListener('DOMContentLoaded', event => {
 	document.addEventListener('click', event => {
 		if (event.target.matches('button[href]')) {
@@ -8,6 +11,7 @@ document.addEventListener('DOMContentLoaded', event => {
 	});
 });
 
+// Adds a synthetic node to a Bayesian Network that combines multiple parent nodes, creating an identity matrix for its CPT.
 function addJointChild(net, parentNames, tempNodeName = null) {
 	let stateList = [];
 	let stateIndexes = parentNames.map(_=>0);
@@ -25,7 +29,7 @@ function addJointChild(net, parentNames, tempNodeName = null) {
 	return tempNodeName;
 }
 
-
+// Removes a parent's influence on a child node in the Bayesian Network by marginalizing its CPT; optionally reduces the CPT size.
 function marginalizeParentArc(child, parentToRemove, reduce = false) {
 	function getRowIndex(parIndexes) {
 		let rowIndex = 0;
@@ -87,6 +91,7 @@ function marginalizeParentArc(child, parentToRemove, reduce = false) {
 	}
 }
 
+// Extracts specified keys from an object and returns a new object containing only those key-value pairs.
 function pick(obj, keys) {
 	let newObj = {};
 	for (let key of keys) {
@@ -97,6 +102,7 @@ function pick(obj, keys) {
 	return newObj;
 }
 
+// Parses query parameters from a URL and returns them as a key-value object.
 function getQs(searchStr) {
 	searchStr = searchStr || window.location.search;
 	var params = {};
@@ -112,6 +118,7 @@ function getQs(searchStr) {
 	return params;
 }
 
+// Maps a change rate to a predefined color code based on its magnitude and direction.
 function getColor(changerate) {
   if (changerate <= -0.3) 
     return "influence-idx6";
@@ -129,6 +136,7 @@ function getColor(changerate) {
     return "influence-idx0";
 }
 
+// Calculates the color code for a target node state based on the difference between its baseline and current beliefs.
 function getTargetStateColor(baseBelief, currentBelief) {
   let diff = currentBelief - baseBelief;
   let color = getColor(diff);

@@ -1,4 +1,10 @@
+/**
+ * This file provides a utility for dynamically drawing SVG arrows between elements or coordinates.
+ * It includes functions to calculate geometry, handle transforms, and create connections with styling and interactivity.
+ */
+
 var draw = {
+	// Creates an SVG element with specified attributes and optional child elements.
 	makeSvg: function(tag, attrs, content) {
 		var el= document.createElementNS('http://www.w3.org/2000/svg', tag);
 		for (var k in attrs) {
@@ -9,6 +15,7 @@ var draw = {
 		}
 		return el;
 	},
+	// Draws an arrow between two points using SVG, optionally within an existing or standalone SVG.
 	drawArrow: function(outputEl, from, to, opts = {}) {
 		var sx = sy = 40; //startX, startY (padding for the svg)
 		var width = Math.abs(from.x - to.x);
@@ -22,10 +29,11 @@ var draw = {
 			$svg = $(outputEl);
 		}
 		else if (isPath) {
-			/// Retrieve saved opts
+			// If a path is passed, retrieve and reuse its options.
 			opts = $(outputEl).data('opts');
 		}
 		else {
+			// Creates a standalone SVG with arrowhead markers and styles.
 			$svg = $("<svg width="+(width+sx*2)+" height="+(height+sy*2)+" data-standalone='true'><style>\
 				.arc { stroke: black; stroke-width: 1; }\
 				.arc .bar { opacity: 0; }\
@@ -66,6 +74,7 @@ var draw = {
 			gap = arrowheadLength + 20;
 		}
 		let ratio = height/width; /// Infinity's already handled nicely!
+		// Adjusts arrow start and end points to include margins for blocked paths.
 		let gapWidth = Math.sign(to.x - from.x) * Math.sqrt(gap**2/(ratio**2+1));
 		let gapHeight = Math.sign(to.y - from.y) * Math.sqrt(gap**2 - gapWidth**2);
 		marginEndX = gapWidth; marginEndY = gapHeight;
@@ -84,6 +93,7 @@ var draw = {
 		function doDraw() {
 			
 		}
+		// If drawing inside an existing SVG, append the path directly.
 		if (insideSvg) {
 			$svg.append(path = this.makeSvg("path", {
 				d: "M "+(startX)+" "+(startY)+" L "+(endX)+" "+(endY),
@@ -136,6 +146,7 @@ var draw = {
 				}
 			}
 			else {
+				// Handles standalone SVG creation or updates for blocked paths and arrowhead transformations.
 				let block = this.makeSvg('path', {d:`M${endX+arrowheadLength},${endY} v-8 v16`, 'stroke-width': '2', class: 'bar'});
 				let endpoints = {};
 				if (opts.parent)  endpoints['data-parent'] = opts.parent;
@@ -183,6 +194,8 @@ var draw = {
 		$(path).data('opts', opts);
 		return path;
 	},
+
+	// Draws an arrow between bounding boxes of two elements, adjusting for edges.
 	drawArrowBetweenBoxes: function(outputEl, from, to, opts = {}) {
 		this.addCenter(from);
 		this.addCenter(to);
@@ -194,7 +207,7 @@ var draw = {
 			c = to.cy - m*to.cx;
 		}
 		else {
-			c = to.cx;
+			c = to.cx;  // Handles vertical lines where slope is undefined.
 		}
 		
 		/// Test each edge of from
@@ -213,6 +226,7 @@ var draw = {
 		
 		return this.drawArrow(outputEl, {x:fromInt[0],y:fromInt[1]}, {x:toInt[0],y:toInt[1]}, opts);
 	},
+	// Calculates the distance between two points.
 	dist: function(p1, p2) {
 		return Math.sqrt(Math.pow(p1[0]-p2[0],2) + Math.pow(p1[1]-p2[1],2));
 	},
@@ -241,12 +255,15 @@ var draw = {
 				intersects.push([x,y]);
 			}
 		}
+		// Handles intersection with box edges.
 		return intersects;
 	},
+	// Adds center coordinates to a box object for easier calculations.
 	addCenter: function(box) {
 		box.cx = box.left + box.width/2;
 		box.cy = box.top + box.height/2;
 	},
+	// Retrieves the bounding box of an element, accounting for transformations and scrolls.
 	getBox: function(el) {
 		/*var box = {width: $(el).outerWidth(), height: $(el).outerHeight(),
 			left: $(el)[0].offsetLeft, top: $(el)[0].offsetTop};*/
@@ -263,7 +280,7 @@ var draw = {
 		$(path).attr('data-can-redraw', true).data('redraw', {outputEl, fromEl, toEl});
 		return path;
 	},
-	/// Arcs track which from/to elements they belong to
+    // Updates arrows based on visibility and position changes of elements.
 	updateArrows: function(outputEl) {
 		$(outputEl).find('path[data-can-redraw]').each(function() {
 			let opts = $(this).data('opts');
