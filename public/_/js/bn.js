@@ -489,7 +489,7 @@ class Node {
 				evidenceNodeTitle.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
 
-				console.log('-----DEtail:---',bn.detail)
+				console.log('-----DETAIL:---',bn.detail)
 
 				if (bn.detail === false){
 					console.log('CHANGING--------')

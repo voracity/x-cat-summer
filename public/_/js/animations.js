@@ -15,10 +15,10 @@ function fadeNodes(classifiedPaths, bnView) {
 
 function colorNode(nodeName, m) {
   // Find the node with the given data-name
-  let node = document.querySelector(`.node[data-name="${nodeName}"]`);
+  let node = document.querySelector(`.node[data-name="${nodeName}"]:not(.focusEvidence)`);
 
   if (!node) {
-      console.warn(`Node with name "${nodeName}" not found.`);
+      // console.warn(`Node with name "${nodeName}" not found.`);
       return;
   }
 
@@ -55,30 +55,32 @@ function generateAnimationOrder(classifiedPaths) {
   let targetNode = null; // Store target node to ensure it's added at the end
 
   function processPath(path) {
-      for (let i = 0; i < path.length - 1; i++) {
-          let [currentNode, relation] = path[i];
-          let [nextNode, nextRelation] = path[i + 1];
+    for (let i = 0; i < path.length - 1; i++) {
+      let [currentNode, relation] = path[i];
+      let [nextNode, nextRelation] = path[i + 1];
 
-          let arrowDirection = relation === "parent" ? "normal" : "reverse";
-          let arrowKey = `${currentNode}->${nextNode}`;
+      let arrowDirection = relation === "parent" ? "normal" : "reverse";
+      let arrowKey = `${currentNode}->${nextNode}`;
+      let arrowKeyReverse = `${nextNode}->${currentNode}`;
 
-          // Capture target node
-          if (nextRelation === "target") {
-              targetNode = nextNode;
-          }
-
-          // Add arrow if not visited
-          if (!visitedArrows.has(arrowKey)) {
-              animationOrder.push({ type: "arrow", from: currentNode, to: nextNode, direction: arrowDirection });
-              visitedArrows.add(arrowKey);
-          }
-
-          // Add node if not visited and it's not the target yet
-          if (!visitedNodes.has(nextNode) && nextRelation !== "target") {
-              animationOrder.push({ type: "node", name: nextNode });
-              visitedNodes.add(nextNode);
-          }
+      // Capture target node
+      if (nextRelation === "target") {
+          targetNode = nextNode;
       }
+
+      // Add arrow if not visited
+      if (!visitedArrows.has(arrowKey)) {
+          animationOrder.push({ type: "arrow", from: currentNode, to: nextNode, direction: arrowDirection });
+          visitedArrows.add(arrowKey);
+          visitedArrows.add(arrowKeyReverse);
+      }
+
+      // Add node if not visited and it's not the target yet
+      if (!visitedNodes.has(nextNode) && nextRelation !== "target") {
+          animationOrder.push({ type: "node", name: nextNode });
+          visitedNodes.add(nextNode);
+      }
+    }
   }
 
   // Process first-order paths
@@ -109,6 +111,7 @@ function reset(arcInfluence, bn, bnView) {
     }
     bnView.querySelectorAll('div.node').forEach(node => {						
       node.style.opacity = 1
+      node.style.boxShadow = ""
     });
     bn.drawArcs();
   }

@@ -815,7 +815,7 @@ class BnDetail {
 							else if (path.type == 'target'){
 								colorTargetBar(listTargetNodes, m)
 							}
-						}, index * 750)				
+						}, (index + 1) * 850)				
 					})					
 					
 					Object.keys(arcColorDict).forEach((arcKey) => {
