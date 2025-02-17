@@ -96,7 +96,7 @@ function generateAnimationOrder(classifiedPaths) {
   return animationOrder;
 }
 
-function reset(arcInfluence, bn, bnView, listTargetNodes) {
+function reset(arcInfluence, bn, bnView) {
     if (arcInfluence) {
       arcInfluence.forEach((arcEntry) => {
         let arc = document.querySelector(
@@ -105,13 +105,12 @@ function reset(arcInfluence, bn, bnView, listTargetNodes) {
         if (arc) {
           arc.remove();        
         }
-      });
-      bnView.querySelectorAll(`div.node`).forEach(node => {						
-        node.style.opacity = 1
-      });
-      bn.drawArcs();
-      resetTargetBar(listTargetNodes)
+      });      
     }
+    bnView.querySelectorAll('div.node').forEach(node => {						
+      node.style.opacity = 1
+    });
+    bn.drawArcs();
   }
   
 function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
@@ -342,32 +341,6 @@ function colorTargetBar(listTargetNodes, m) {
       barchangeElem.classList.add(targetColorClass+"-box");
 
   })
-}
-
-function resetTargetBar(listTargetNodes) {
-  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-      let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
-
-      if (!barchangeElem) {
-          console.warn(`resetTargetBar: No barchange element found for target node: ${targetNodeName}`);
-          return;
-      }
-
-      // Remove any previously applied classes
-      Array.from(barchangeElem.classList).forEach(classname => {
-          if (classname.includes("influence-idx") || classname.includes("-box")) {
-              barchangeElem.classList.remove(classname);
-          }
-      });
-
-      // Reset styles
-      barchangeElem.style.marginLeft = "";
-      barchangeElem.style.width = "";
-      barchangeElem.style.backgroundColor = "";
-      barchangeElem.style.opacity = "";
-  });
-
-  // console.log("resetTargetBar: All target bars have been reset.");
 }
 
 // class AnimationStep {
