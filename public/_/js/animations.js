@@ -3,7 +3,7 @@ var { getColor} = require('./utils.js');
 function fadeNodes(classifiedPaths, bnView) {						
   let activeNodes = new Set([
     ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
-    ...classifiedPaths.secondOrderPaths.flat()
+    ...classifiedPaths.secondOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
   ]);						
   bnView.querySelectorAll('div.node').forEach(node => {
     let nodeName = node.getAttribute('data-name');
@@ -11,6 +11,55 @@ function fadeNodes(classifiedPaths, bnView) {
       node.style.opacity = 0.3;
     }
   });
+}
+
+function generateAnimationOrder(classifiedPaths) {
+  let {firstOrderPaths, secondOrderPaths} = classifiedPaths;
+  let animationOrder = [];
+  let visitedArrows = new Set();
+  let visitedNodes = new Set();
+  let targetNode = null; // Store target node to ensure it's added at the end
+
+  function processPath(path) {
+      for (let i = 0; i < path.length - 1; i++) {
+          let [currentNode, relation] = path[i];
+          let [nextNode, nextRelation] = path[i + 1];
+
+          let arrowDirection = relation === "parent" ? "normal" : "reverse";
+          let arrowKey = `${currentNode}->${nextNode}`;
+
+          // Capture target node
+          if (nextRelation === "target") {
+              targetNode = nextNode;
+          }
+
+          // Add arrow if not visited
+          if (!visitedArrows.has(arrowKey)) {
+              animationOrder.push({ type: "arrow", from: currentNode, to: nextNode, direction: arrowDirection });
+              visitedArrows.add(arrowKey);
+          }
+
+          // Add node if not visited and it's not the target yet
+          if (!visitedNodes.has(nextNode) && nextRelation !== "target") {
+              animationOrder.push({ type: "node", name: nextNode });
+              visitedNodes.add(nextNode);
+          }
+      }
+  }
+
+  // Process first-order paths
+  firstOrderPaths.forEach(processPath);
+
+  // Process second-order paths, ensuring no duplicates
+  secondOrderPaths.forEach(processPath);
+
+  // Ensure the target node is added at the end
+  if (targetNode && !visitedNodes.has(targetNode)) {
+      animationOrder.push({ type: "target", name: targetNode });
+      visitedNodes.add(targetNode);
+  }
+
+  return animationOrder;
 }
 
 function reset(arcInfluence, bn, bnView) {

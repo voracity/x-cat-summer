@@ -535,11 +535,17 @@ class BnDetail {
 				reset(m.arcInfluence, bn, this.bnView);				
 
 			} else {
+				animationOrder = null;
 				if (m.classifiedPaths) {
-					console.log('m.classifiedPaths:', m.classifiedPaths)
+					console.log('m.classifiedPaths:', m.classifiedPaths)					
+					console.log('generateAnimationOrder(m.classifiedPaths):', generateAnimationOrder(m.classifiedPaths))
+					animationOrder = generateAnimationOrder(m.classifiedPaths);
 				}
 				if (m.focusEvidence) {
 					console.log('m.focusEvidence:', m.focusEvidence)
+				}
+				if (m.selectedStates) {
+					console.log('m.selectedStates:', m.selectedStates)
 				}
 				console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
@@ -611,7 +617,7 @@ class BnDetail {
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
-						let targetStateName = targetStateElem.querySelector('.label').textContent;						
+						let targetStateName = targetStateElem.querySelector('.label').textContent;		
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
@@ -697,13 +703,13 @@ class BnDetail {
 							// console.log('m.activePaths is activated: ', m.activePaths)
 							let activeNodes = new Set(m.activePaths.flat())
 							// console.log('activeNodes:', activeNodes)
-							console.log('m.activePaths:', m.activePaths)
-							console.log('m.activePaths length:', m.activePaths.length)
+							// console.log('m.activePaths:', m.activePaths)
+							// console.log('m.activePaths length:', m.activePaths.length)
 
 							// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
 							// console.log('evidenceNodeName:', evidenceNodeName)
-							console.log('activeNodes: ', activeNodes)
+							// console.log('activeNodes: ', activeNodes)
 							
 							// Node Fading
 							// bnView.querySelectorAll('div.node').forEach(node => {
@@ -719,6 +725,7 @@ class BnDetail {
 							// console.log('AAAAAAA---------------------------------------')
 						
 							// console.log("evidenceNodeName:", evidenceNodeName);
+							console.log("m.arcInfluence:", m.arcInfluence);
 							const sortedArcInfluence = sortArcInfluenceByDiff(
 								m.arcInfluence,
 								m.nodeBeliefs,													
@@ -760,7 +767,18 @@ class BnDetail {
 
 								// we know the first child is the colour arc
 								let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
+								// let influencedState = parentNode.querySelector(".state .cellProbability[class*='influence']");
+								// if (influencedState) {
+								// 	let stateLabel = influencedState.querySelector('.label').textContent;
+								// 	console.log("stateLabel:", stateLabel);
+								// }
+								// let parentNodeStateIdx = m.nodeBeliefs[parentNodeName];
+								// let parentNodeState = parentNode.querySelector('.states')
+								// console.log('parentNodeStateIdx:', parentNodeStateIdx);
+
+								console.log('parentNode:', parentNode)
 								let parentNodeState = parentNode.querySelector('.label').textContent;
+								// console.log('parentNodeState:', parentNodeState)
 								
 								let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
 								let childNodeState = childNode.querySelector('.label').textContent;
@@ -1149,11 +1167,13 @@ module.exports = {
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
+						console.log('evidence:', evidence)
 
 						let focusEvidence = null
 
 						if (req.query.focusEvidence) {
-							focusEvidence = req.query.focusEvidence;							
+							focusEvidence = req.query.focusEvidence;		
+							console.log('focusEvidence:', focusEvidence)					
 						}
 
 						// the selected state is our Target
@@ -1265,7 +1285,7 @@ module.exports = {
 								// console.log('bn.activePaths:', bn.activePaths)
 								// console.log('focusEvidence:', focusEvidence)
 								// console.log('targetNodeName:', targetNodeName)								
-								let classifiedPaths = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
+								let classifiedPaths = classifyPaths(pathWithRelationship, focusEvidence, targetNodeName)
 								bn.classifiedPaths = classifiedPaths
 								const {firstOrderPaths, secondOrderPaths} = classifiedPaths
 								console.log('firstOrderPaths:', firstOrderPaths)
@@ -1288,11 +1308,15 @@ module.exports = {
 						// calculate arc importances
 						let arcs = []
 						// reset network
-						net = new Net(bnKey);
+						net = new Net(bnKey);						
+						
 						net.nodes().forEach(child => {
-							let childname = child.name();
+							let childname = child.name();			
+										
+
 							child.parents().forEach(parent => {
-								let parentname = parent.name();
+								
+								let parentname = parent.name();							
 								
 								let netWithnewCPT = new Net(bnKey);
 								let newcpt = marginalizeParentArc(child, parent, true);
@@ -1303,7 +1327,7 @@ module.exports = {
 								newchild.cpt(newcpt);
 								
 								for (let [nodeName,stateI] of Object.entries(evidence)) {
-									netWithnewCPT.node(nodeName).finding(Number(stateI));
+									netWithnewCPT.node(nodeName).finding(Number(stateI));									
 								}
 
 								netWithnewCPT.update();
@@ -1340,8 +1364,7 @@ module.exports = {
 					let selectedStates = null;
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-					}
-					console.log({selectedStates});
+					}					
 					
 					/// Update selected states if there are joint causes
 					console.log({roles});
