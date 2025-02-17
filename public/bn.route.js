@@ -795,29 +795,19 @@ class BnDetail {
 			if (m.classifiedPaths) {					
 				reset(m.arcInfluence, bn, this.bnView, listTargetNodes);				
 				fadeNodes(m.classifiedPaths, this.bnView);	
-				let animationOrderBN = generateAnimationOrder(m.classifiedPaths);
-				console.log('animationOrderBN:', animationOrderBN)
+				
+				let animationOrderBN = generateAnimationOrder(m.classifiedPaths);				
+				const coloredArcs = extractColoredArrows(m.arcInfluence, animationOrderBN);
+
 				const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
 				console.log('arcColorDict:', arcColorDict)
-
-				console.log("m.arcInfluence:", m.arcInfluence);
 				
 				animationOrderBN.forEach((path, index) => {
 					setTimeout(() => {
 						if (path.type == 'arrow') {
-							
-							let arcParent = null
-							let arcChildren = null
-							if (path.direction == 'normal') {
-								arcParent = path.from
-								arcChildren = path.to
-							} else {
-								arcParent = path.to
-								arcChildren = path.from
-							}
-							const color = arcColorDict[`${arcParent}, ${arcChildren}`]
-							// console.log('color:', color)
-							colorArrows(arcParent, arcChildren, path.direction, color)
+							const { arcParent, arcChildren } = getArcEndpoints(path);							
+							const color = arcColorDict[`${arcParent}, ${arcChildren}`]							
+							colorArrows(arcParent, arcChildren, path.direction, color)							
 						}
 						else if (path.type == 'node') {
 							colorNode(path.name, m)
@@ -826,7 +816,17 @@ class BnDetail {
 							colorTargetBar(listTargetNodes, m)
 						}
 					}, index * 750)				
-				})								
+				})					
+				
+				Object.keys(arcColorDict).forEach((arcKey) => {
+					if (!coloredArcs.has(arcKey)) {
+							const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child
+							fadeArrows(arcParent, arcChildren);
+					}
+				});
+
+			} else {
+				reset(m.arcInfluence, bn, this.bnView, listTargetNodes);
 			}
 		} 
 	}

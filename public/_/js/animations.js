@@ -114,70 +114,70 @@ function reset(arcInfluence, bn, bnView, listTargetNodes) {
     }
   }
   
-  function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
-    console.log('arcInfluence:', arcInfluence);
-    console.log('evidenceNodeName:', evidenceNodeName);
-    return arcInfluence
-      .map((arcEntry) => {
-        // Calculate max diff for this arcEntry       
-        const diffs = Object.entries(arcEntry.targetBelief).map(
-          ([targetNodeName, arcBeliefs]) => {
-            const targetNode = document.querySelector(
-              `div.node[data-name=${targetNodeName}]`
-            );
-            const targetStateElem = targetNode.querySelector(".state.istarget");
-            const targetStateIdx = targetStateElem.dataset.index;
-  
-            // Calculate diff for this target
-            return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
-          }
-        );
-  
-        // max to ensures the arc represents its strongest influence across all targets.
-        const maxDiff = Math.max(...diffs);
-        const color = getColor(maxDiff);
-  
-        // Add a priority flag: 1 if evidenceNodeName is part of the arc, 0 otherwise
-        const isPriority = (arcEntry.child === evidenceNodeName || arcEntry.parent === evidenceNodeName) ? 1 : 0;
-  
-        
-        return { ...arcEntry, maxDiff, color, isPriority };      
-      })
-      .sort((a, b) => {
-        if (b.isPriority !== a.isPriority) {
-          return b.isPriority - a.isPriority;
+function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
+  console.log('arcInfluence:', arcInfluence);
+  console.log('evidenceNodeName:', evidenceNodeName);
+  return arcInfluence
+    .map((arcEntry) => {
+      // Calculate max diff for this arcEntry       
+      const diffs = Object.entries(arcEntry.targetBelief).map(
+        ([targetNodeName, arcBeliefs]) => {
+          const targetNode = document.querySelector(
+            `div.node[data-name=${targetNodeName}]`
+          );
+          const targetStateElem = targetNode.querySelector(".state.istarget");
+          const targetStateIdx = targetStateElem.dataset.index;
+
+          // Calculate diff for this target
+          return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
         }
-        return b.maxDiff - a.maxDiff;
-      }) // Sort by maxDiff in descending order
-      .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
-  }
+      );
 
-  function getArcColors(arcInfluence, nodeBeliefs) {
-    const arcColors = {};
+      // max to ensures the arc represents its strongest influence across all targets.
+      const maxDiff = Math.max(...diffs);
+      const color = getColor(maxDiff);
 
-    arcInfluence.forEach((arcEntry) => {
-        // Calculate max diff for this arcEntry       
-        const diffs = Object.entries(arcEntry.targetBelief).map(([targetNodeName, arcBeliefs]) => {
-            const targetNode = document.querySelector(`div.node[data-name=${targetNodeName}]`);
-            const targetStateElem = targetNode.querySelector(".state.istarget");
-            const targetStateIdx = targetStateElem.dataset.index;
+      // Add a priority flag: 1 if evidenceNodeName is part of the arc, 0 otherwise
+      const isPriority = (arcEntry.child === evidenceNodeName || arcEntry.parent === evidenceNodeName) ? 1 : 0;
 
-            // Calculate diff for this target
-            return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
-        });
+      
+      return { ...arcEntry, maxDiff, color, isPriority };      
+    })
+    .sort((a, b) => {
+      if (b.isPriority !== a.isPriority) {
+        return b.isPriority - a.isPriority;
+      }
+      return b.maxDiff - a.maxDiff;
+    }) // Sort by maxDiff in descending order
+    .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
+}
 
-        // Calculate the maximum difference to represent the arc's strongest influence
-        const maxDiff = Math.max(...diffs);
-        const color = getColor(maxDiff);
+function getArcColors(arcInfluence, nodeBeliefs) {
+  const arcColors = {};
 
-        // Create the key using child and parent names
-        const key = `${arcEntry.parent}, ${arcEntry.child}`;
+  arcInfluence.forEach((arcEntry) => {
+      // Calculate max diff for this arcEntry       
+      const diffs = Object.entries(arcEntry.targetBelief).map(([targetNodeName, arcBeliefs]) => {
+          const targetNode = document.querySelector(`div.node[data-name=${targetNodeName}]`);
+          const targetStateElem = targetNode.querySelector(".state.istarget");
+          const targetStateIdx = targetStateElem.dataset.index;
 
-        // Add the key-value pair to the dictionary
-        arcColors[key] = color;
-    });
+          // Calculate diff for this target
+          return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
+      });
 
-    return arcColors;
+      // Calculate the maximum difference to represent the arc's strongest influence
+      const maxDiff = Math.max(...diffs);
+      const color = getColor(maxDiff);
+
+      // Create the key using child and parent names
+      const key = `${arcEntry.parent}, ${arcEntry.child}`;
+
+      // Add the key-value pair to the dictionary
+      arcColors[key] = color;
+  });
+
+  return arcColors;
 }
 
 function colorArrows(arcParent, arcChildren, colorOrder, color) {
@@ -199,26 +199,62 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
     },
   );
   												
-    combinedElems.forEach((pair) => {
-      let bodyElem = pair.body;
-      let headElem = pair.head;	      																			
-      
-      if (colorOrder == 'normal') {
-        // coloring arrow from bottom to top
-        colorElement(bodyElem, paintColor, arcSize, colorOrder);	
-        // console.log('bodyElem working:');						
-        setTimeout(() => {											
-          // console.log("headElem:", headElem, "Tag:", headElem?.tagName);
-          colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);												
-          
-        }, 800);
-      
-      } else {
-        // coloring arrow from top to bottom														
-        colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);											  
-        colorElement(bodyElem, paintColor, arcSize, colorOrder);												        
-      }										
-    });
+  combinedElems.forEach((pair) => {
+    let bodyElem = pair.body;
+    let headElem = pair.head;	      																			
+    
+    if (colorOrder == 'normal') {
+      // coloring arrow from bottom to top
+      colorElement(bodyElem, paintColor, arcSize, colorOrder);	
+      // console.log('bodyElem working:');						
+      setTimeout(() => {											
+        // console.log("headElem:", headElem, "Tag:", headElem?.tagName);
+        colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);												
+        
+      }, 800);
+    
+    } else {
+      // coloring arrow from top to bottom														
+      colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);											  
+      colorElement(bodyElem, paintColor, arcSize, colorOrder);												        
+    }										
+  });
+}
+
+function extractColoredArrows(arcInfluence, animationOrderBN) {
+  const coloredArcs = new Set();
+  animationOrderBN.forEach((path) => {
+    if (path.type === "arrow") {
+      let { arcParent, arcChildren } = getArcEndpoints(path);
+      let key = `${arcParent}, ${arcChildren}`;
+      coloredArcs.add(key);
+    }
+  });
+  return coloredArcs;
+}
+
+function fadeArrows(arcParent, arcChildren) {
+  let arc = document.querySelector(
+      `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
+  );
+
+  if (!arc) {
+      console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);
+      return;
+  }
+
+  let arcBodys = arc.querySelectorAll('path.line');
+  let arcHeads = arc.querySelectorAll('g.head');
+
+  if (arcBodys.length > 1) {
+      arcBodys[1].setAttribute('stroke', '#ffffff');
+  }
+  if (arcHeads.length > 1) {
+      arcHeads[1].setAttribute('fill', '#fafafa');
+      arcHeads[1].setAttribute('stroke', '#fafafa');
+  }
+
+  console.log(`Fading arc: ${arcParent} → ${arcChildren}`);
 }
 
 function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
@@ -266,6 +302,12 @@ function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = 
   
   // Animate stroke from hidden to full visibility
   elem.style.strokeDashoffset = 0;
+}
+
+function getArcEndpoints(path) {
+  return path.direction === "normal"
+      ? { arcParent: path.from, arcChildren: path.to }
+      : { arcParent: path.to, arcChildren: path.from };
 }
 
 function colorTargetBar(listTargetNodes, m) {
