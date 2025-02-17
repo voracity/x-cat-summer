@@ -756,10 +756,10 @@ class BnDetail {
 										
 					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
 					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
-					fadeAllArrows(m, animationOrderBN, arcColorDict)
+					fadeAllArrows(animationOrderBN, arcColorDict)
 					
-					console.log('animationOrderBN:', animationOrderBN)
-					console.log('arcColorDict:', arcColorDict)
+					// console.log('animationOrderBN:', animationOrderBN)
+					// console.log('arcColorDict:', arcColorDict)
 					
 					animationOrderBN.forEach((path, index) => {
 						setTimeout(() => {

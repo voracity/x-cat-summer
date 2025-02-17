@@ -223,7 +223,7 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
   });
 }
 
-function extractColoredArrows(arcInfluence, animationOrderBN) {
+async function extractColoredArrows(animationOrderBN) {
   const coloredArcs = new Set();
   animationOrderBN.forEach((path) => {
     if (path.type === "arrow") {
@@ -257,8 +257,8 @@ function fadeArrows(arcParent, arcChildren) {
   }
 }
 
-async function fadeAllArrows (m, animationOrderBN, arcColorDict) {
-  const coloredArcs = await extractColoredArrows(m.arcInfluence, animationOrderBN);
+async function fadeAllArrows(animationOrderBN, arcColorDict) {
+  const coloredArcs = await extractColoredArrows(animationOrderBN);
   Object.keys(arcColorDict).forEach((arcKey) => {
     if (!coloredArcs.has(arcKey)) {
         const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child
