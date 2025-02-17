@@ -13,6 +13,40 @@ function fadeNodes(classifiedPaths, bnView) {
   });
 }
 
+function colorNode(nodeName, m) {
+  // Find the node with the given data-name
+  let node = document.querySelector(`.node[data-name="${nodeName}"]`);
+
+  if (!node) {
+      console.warn(`Node with name "${nodeName}" not found.`);
+      return;
+  }
+
+  let currentBelief = m.nodeBeliefs[nodeName];
+  let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
+
+  
+  currentBelief.forEach((curBelief, idx) => {
+    let diff = curBelief - origBeliefs[idx]
+    let absDiff = diff * 100;
+    
+    // let colorClass = getColor(/curBelief/origBeliefs[idx])
+    let colorClass = getColor(diff)
+
+    let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
+    barchangeElem.classList.add(colorClass)						
+
+    if (absDiff > 0) {
+      // overlay change over the current belief bar
+      barchangeElem.style.marginLeft = `-${absDiff}%`;
+      barchangeElem.style.width = `${absDiff}%`;
+    } else {
+      // the change will be placed right next to the original belief bar
+      barchangeElem.style.width = `${absDiff}%`;
+    }
+  });
+}
+
 function generateAnimationOrder(classifiedPaths) {
   let {firstOrderPaths, secondOrderPaths} = classifiedPaths;
   let animationOrder = [];
@@ -80,6 +114,7 @@ function reset(arcInfluence, bn, bnView) {
   }
   
   function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
+    console.log('arcInfluence:', arcInfluence);
     console.log('evidenceNodeName:', evidenceNodeName);
     return arcInfluence
       .map((arcEntry) => {
@@ -116,27 +151,154 @@ function reset(arcInfluence, bn, bnView) {
       .map(({ maxDiff, color, ...arcEntry }) => ({...arcEntry, color})); // Remove the maxDiff property
   }
 
-function colorElement(elem, paintColor, arcSize, direction = 'normal') {
-    elem.style.stroke = paintColor;
-    elem.style.strokeWidth = arcSize;
+  function getArcColors(arcInfluence, nodeBeliefs) {
+    const arcColors = {};
 
-    let elemLength = elem.getTotalLength();
-    elem.style.strokeDasharray = elemLength;
+    arcInfluence.forEach((arcEntry) => {
+        // Calculate max diff for this arcEntry       
+        const diffs = Object.entries(arcEntry.targetBelief).map(([targetNodeName, arcBeliefs]) => {
+            const targetNode = document.querySelector(`div.node[data-name=${targetNodeName}]`);
+            const targetStateElem = targetNode.querySelector(".state.istarget");
+            const targetStateIdx = targetStateElem.dataset.index;
 
-    if (direction === 'normal') {
-        elem.style.strokeDashoffset = elemLength; // Normal start (hidden)
-    } else {
-        elem.style.strokeDashoffset = -elemLength; // Reverse the animation
-    } 
+            // Calculate diff for this target
+            return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
+        });
 
-    elem.style.transition = "none"; // Remove any previous transitions
-    elem.getBoundingClientRect(); // Trigger the flow, without this it just appears not flowing from the start to finish
-    
+        // Calculate the maximum difference to represent the arc's strongest influence
+        const maxDiff = Math.max(...diffs);
+        const color = getColor(maxDiff);
+
+        // Create the key using child and parent names
+        const key = `${arcEntry.parent}, ${arcEntry.child}`;
+
+        // Add the key-value pair to the dictionary
+        arcColors[key] = color;
+    });
+
+    return arcColors;
+}
+
+function colorArrows(arcParent, arcChildren, colorOrder, color) {
+  let arc = document.querySelector(
+    `[data-child=${arcChildren}][data-parent=${arcParent}]`,
+  );
+
+  let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+  let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
+  let paintColor = getComputedStyle(document.documentElement).getPropertyValue(`--${color}`);
+  let arcSize = 8;
+
+  let combinedElems = Array.from(influeceArcBodyElems).map(
+    (bodyElem, index) => {
+      return {
+        body: bodyElem,
+        head: influeceArcHeadElems[index],
+      };
+    },
+  );
+  												
+    combinedElems.forEach((pair) => {
+      let bodyElem = pair.body;
+      let headElem = pair.head;	      																			
+      
+      if (colorOrder == 'normal') {
+        // coloring arrow from bottom to top
+        colorElement(bodyElem, paintColor, arcSize, colorOrder);	
+        // console.log('bodyElem working:');						
+        setTimeout(() => {											
+          // console.log("headElem:", headElem, "Tag:", headElem?.tagName);
+          colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);												
+          
+        }, 800);
+      
+      } else {
+        // coloring arrow from top to bottom														
+        colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);											  
+        colorElement(bodyElem, paintColor, arcSize, colorOrder);												        
+      }										
+    });
+}
+
+function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
+  if (!elem) {
+      console.warn("colorElement: Element is null or undefined");
+      return;
+  }
+
+  elem.style.stroke = paintColor;
+  elem.style.strokeWidth = arcSize;
+
+  let elemLength = 100; 
+
+  if (elem.tagName.toLowerCase() === "path") {
+      elemLength = elem.getTotalLength();
+
+  } else if (elem.tagName.toLowerCase() === "g") {      
+      let pathElem = elem.querySelector("path");
+      
+      if (pathElem && typeof pathElem.getTotalLength === "function") {
+          elemLength = pathElem.getTotalLength();
+          elem = pathElem; 
+      } else {
+          console.warn("colorElement: No valid path inside <g> or getTotalLength() not supported.");
+      }
+      
+  } else {
+      console.warn("colorElement: getTotalLength() not supported for", elem);
+  }
+
+  elem.style.strokeDasharray = elemLength;
+
+  if (direction === 'normal') {
+      elem.style.strokeDashoffset = elemLength; // Normal start (hidden)
+  } else {
+      elem.style.strokeDashoffset = -elemLength; // Reverse the animation
+  } 
+
+  elem.style.transition = "none"; 
+  elem.getBoundingClientRect(); // Trigger reflow to apply changes
+  
+  if (isBody) {
     elem.style.transition = "stroke-dashoffset 1s ease-in-out";
-    
-    // Normal direction: animate from no stroke to full stroke 
-    elem.style.strokeDashoffset = 0;
+  }
+  
+  // Animate stroke from hidden to full visibility
+  elem.style.strokeDashoffset = 0;
+}
 
+function colorTargetBar(listTargetNodes, m) {
+  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+    let baseBelief = data.model.beliefs[data.index];
+    let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
+    let diff = currentBelief - baseBelief
+    let absDiff = 100*Math.abs(diff)
+    let targetColorClass = getColor(diff)				
+    let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+    Array.from(barchangeElem.classList).forEach(classname=> {
+      if (classname.indexOf("influence-idx") == 0) {
+        barchangeElem.classList.remove(classname);
+        barchangeElem.classList.remove(`${targetColorClass}-box`);
+        barchangeElem.classList.remove(`influence-box`);
+      }
+    })
+
+    if (diff > 0) {
+      barchangeElem.style.marginLeft = `-${absDiff}%`;
+      barchangeElem.style.width = `${absDiff}%`;
+    } else {
+      barchangeElem.style.marginLeft = `-${absDiff}%`;
+      barchangeElem.style.width = `${absDiff}%`;
+
+    }
+    // shadow-boxes with width 0 still show their glow
+
+    // target bar color
+    if (Math.abs(diff)>0)
+      barchangeElem.classList.add(targetColorClass+"-box");
+
+  })
 }
 
 // class AnimationStep {

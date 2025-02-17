@@ -534,13 +534,7 @@ class BnDetail {
 
 				reset(m.arcInfluence, bn, this.bnView);				
 
-			} else {
-				animationOrder = null;
-				if (m.classifiedPaths) {
-					console.log('m.classifiedPaths:', m.classifiedPaths)					
-					console.log('generateAnimationOrder(m.classifiedPaths):', generateAnimationOrder(m.classifiedPaths))
-					animationOrder = generateAnimationOrder(m.classifiedPaths);
-				}
+			} else {		
 				if (m.focusEvidence) {
 					console.log('m.focusEvidence:', m.focusEvidence)
 				}
@@ -618,6 +612,8 @@ class BnDetail {
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
 						let targetStateName = targetStateElem.querySelector('.label').textContent;		
+						console.log('0101010------ targetStateName:', targetStateName)
+
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
@@ -686,10 +682,13 @@ class BnDetail {
 
 					async function animateBN(m, bn, bnView, focusEvidence, listTargetNodes) {						
 						await animateNodes(m, bn, bnView, focusEvidence);
-						await colorTargetBar(listTargetNodes);
+						// await colorTargetBar(listTargetNodes);
 					}
-					animateBN(m, bn, this.bnView, focusEvidence, listTargetNodes);
-					fadeNodes(m.classifiedPaths, this.bnView);
+					// animateBN(m, bn, this.bnView, focusEvidence, listTargetNodes);
+
+					if (m.classifiedPaths) {
+						fadeNodes(m.classifiedPaths, this.bnView);
+					}
 
 					async function animateNodes(m, bn, bnView) {
 						if (m.arcInfluence && m.activePaths && m.focusEvidence) {
@@ -725,7 +724,7 @@ class BnDetail {
 							// console.log('AAAAAAA---------------------------------------')
 						
 							// console.log("evidenceNodeName:", evidenceNodeName);
-							console.log("m.arcInfluence:", m.arcInfluence);
+							
 							const sortedArcInfluence = sortArcInfluenceByDiff(
 								m.arcInfluence,
 								m.nodeBeliefs,													
@@ -757,6 +756,7 @@ class BnDetail {
 								let arc = document.querySelector(
 									`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
 								);
+								// console.log("arc INSIDEEE:", arc);
 								// console.log("index:", index);
 								// console.log("arcEntry:", arcEntry);							
 								// console.log("activeNodes:",activeNodes);
@@ -776,7 +776,7 @@ class BnDetail {
 								// let parentNodeState = parentNode.querySelector('.states')
 								// console.log('parentNodeStateIdx:', parentNodeStateIdx);
 
-								console.log('parentNode:', parentNode)
+								// console.log('parentNode:', parentNode)
 								let parentNodeState = parentNode.querySelector('.label').textContent;
 								// console.log('parentNodeState:', parentNodeState)
 								
@@ -815,29 +815,29 @@ class BnDetail {
 										document.documentElement,
 										).getPropertyValue(`--${arcEntry.color}`);
 
-									setTimeout(() => {														
-										combinedElems.forEach((pair) => {
-											let bodyElem = pair.body;
-											let headElem = pair.head;																						
+									// setTimeout(() => {														
+									// 	combinedElems.forEach((pair) => {
+									// 		let bodyElem = pair.body;
+									// 		let headElem = pair.head;																						
 											
-											if (animationOrder == 'normal') {
-												// coloring arrow from bottom to top
-												colorElement(bodyElem, paintColor, arcSize, animationOrder);							
-												setTimeout(() => {											
-													colorElement(headElem, paintColor, arcSize, animationOrder);												
-												}, 1000);
+									// 		if (animationOrder == 'normal') {
+									// 			// coloring arrow from bottom to top
+									// 			colorElement(bodyElem, paintColor, arcSize, animationOrder);							
+									// 			setTimeout(() => {											
+									// 				colorElement(headElem, paintColor, arcSize, animationOrder);												
+									// 			}, 1000);
 											
-											} else {
-												// coloring arrow from top to bottom														
-												colorElement(bodyElem, paintColor, arcSize, animationOrder);											
-												// don't have to wait to color the head		
-												setTimeout(() => {											
-													colorElement(headElem, paintColor, arcSize, animationOrder);												
-												}, 0);													
-											}										
-										});
-									}, delay);					
-									delay += 500;
+									// 		} else {
+									// 			// coloring arrow from top to bottom														
+									// 			colorElement(bodyElem, paintColor, arcSize, animationOrder);											
+									// 			// don't have to wait to color the head		
+									// 			setTimeout(() => {											
+									// 				colorElement(headElem, paintColor, arcSize, animationOrder);												
+									// 			}, 0);													
+									// 		}										
+									// 	});
+									// }, delay);					
+									// delay += 500;
 								} else {	
 									// Fade arrows						
 									// console.log("arc:", arc);
@@ -862,73 +862,78 @@ class BnDetail {
 					}
 				})
 			}
-			
-			async function colorTargetBar(listTargetNodes) {
-				Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-					let baseBelief = data.model.beliefs[data.index];
-					let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
-					let diff = currentBelief - baseBelief
-					let absDiff = 100*Math.abs(diff)
-					let targetColorClass = getColor(diff)				
-					let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+			// Animation		
+			if (m.classifiedPaths) {										
+				let animationOrderBN = generateAnimationOrder(m.classifiedPaths);
+				console.log('animationOrderBN:', animationOrderBN)
+				const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
+				console.log('arcColorDict:', arcColorDict)
 
-					Array.from(barchangeElem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0) {
-							barchangeElem.classList.remove(classname);
-							barchangeElem.classList.remove(`${targetColorClass}-box`);
-							barchangeElem.classList.remove(`influence-box`);
-						}
-					})
-
-					if (diff > 0) {
-						barchangeElem.style.marginLeft = `-${absDiff}%`;
-						barchangeElem.style.width = `${absDiff}%`;
-					} else {
-						barchangeElem.style.marginLeft = `-${absDiff}%`;
-						barchangeElem.style.width = `${absDiff}%`;
-
-					}
-					// shadow-boxes with width 0 still show their glow
-
-					// target bar color
-					if (Math.abs(diff)>0)
-						barchangeElem.classList.add(targetColorClass+"-box");
-
-				})
-			}
-
-			// color non finding node
-			if (this.drawOptions.drawChangeBar) {
-				// Now set the change of belief for all remaining nodes, so show how their states
-				// changed given all evidence VS no evidence
-				Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
-					let nodelabel = node.getAttribute("data-name");
-					
-					let currentBelief = m.nodeBeliefs[nodelabel];
-					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
-
-					
-					currentBelief.forEach((curBelief, idx) => {
-						let diff = curBelief - origBeliefs[idx]
-						let absDiff = diff * 100;
+				console.log("m.arcInfluence:", m.arcInfluence);
+				
+				animationOrderBN.forEach((path) => {
+					if (path.type == 'arrow') {
 						
-						// let colorClass = getColor(/curBelief/origBeliefs[idx])
-						let colorClass = getColor(diff)
-
-						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-						barchangeElem.classList.add(colorClass)						
-
-						if (absDiff > 0) {
-							// overlay change over the current belief bar
-							barchangeElem.style.marginLeft = `-${absDiff}%`;
-							barchangeElem.style.width = `${absDiff}%`;
+						let arcParent = null
+						let arcChildren = null
+						if (path.direction == 'normal') {
+							arcParent = path.from
+							arcChildren = path.to
 						} else {
-							// the change will be placed right next to the original belief bar
-							barchangeElem.style.width = `${absDiff}%`;
+							arcParent = path.to
+							arcChildren = path.from
 						}
-					})
+						const color = arcColorDict[`${arcParent}, ${arcChildren}`]
+						// console.log('color:', color)
+						colorArrows(arcParent, arcChildren, path.direction, color)
+					}
+					// else if (path.type == 'node') {
+					// 	colorNode(path.name, m)
+					// }
+					// else if (path.type == 'target'){
+					// 	colorTargetBar(listTargetNodes)
+					// }
 				})
+				// colorTargetBar(listTargetNodes, m)
+				console.log('-------------End Animation--------------')
 			}
+
+
+			// colorNode('Podunk_Beach', m)
+
+			// color non finding node || color nodes
+			// if (this.drawOptions.drawChangeBar) {
+			// 	// Now set the change of belief for all remaining nodes, so show how their states
+			// 	// changed given all evidence VS no evidence
+			// 	Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
+			// 		let nodelabel = node.getAttribute("data-name");
+			// 		console.log('nodelabel:', nodelabel)
+					
+			// 		let currentBelief = m.nodeBeliefs[nodelabel];
+			// 		let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
+
+					
+			// 		currentBelief.forEach((curBelief, idx) => {
+			// 			let diff = curBelief - origBeliefs[idx]
+			// 			let absDiff = diff * 100;
+						
+			// 			// let colorClass = getColor(/curBelief/origBeliefs[idx])
+			// 			let colorClass = getColor(diff)
+
+			// 			let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
+			// 			barchangeElem.classList.add(colorClass)						
+
+			// 			if (absDiff > 0) {
+			// 				// overlay change over the current belief bar
+			// 				barchangeElem.style.marginLeft = `-${absDiff}%`;
+			// 				barchangeElem.style.width = `${absDiff}%`;
+			// 			} else {
+			// 				// the change will be placed right next to the original belief bar
+			// 				barchangeElem.style.width = `${absDiff}%`;
+			// 			}
+			// 		})
+			// 	})
+			// }
 
 		} 
 		// else {
