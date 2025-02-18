@@ -113,6 +113,7 @@ function reset(arcInfluence, bn, bnView) {
       node.style.opacity = 1
       node.style.boxShadow = ""
     });
+    // document.querySelectorAll(".play-button").forEach(button => button.remove());
     bn.drawArcs();
   }
   
