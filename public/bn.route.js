@@ -740,7 +740,9 @@ class BnDetail {
 				})
 				
 				// Animation		
-				if (m.classifiedPaths) {										
+				if (m.classifiedPaths) {								
+					
+					reset(m.arcInfluence, bn, this.bnView);
 
 					const activeNodes = extractActiveNodes(m.classifiedPaths);	
 					fadeNodes(activeNodes, this.bnView);	
