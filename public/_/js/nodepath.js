@@ -178,28 +178,30 @@ function classifyPaths(pathWithRelationship, focusNode, targetNode) {
 
   for (let i = 0; i < pathWithRelationship.length; i++) {
       let lenPathRel = pathWithRelationship[i].length;
-      if (firstOrderPathsSet.has(pathWithRelationship[i])) {
+      let currPath = pathWithRelationship[i];
+      if (firstOrderPathsSet.has(currPath)) {
           continue;
       }
 
-      if (pathWithRelationship[i][lenPathRel - 2][0] == focusNode && pathWithRelationship[i][lenPathRel - 1][0] == targetNode) {
-        let pathStr = JSON.stringify(pathWithRelationship[i]);
+      // v-structure with focus node is the common cause
+      if (currPath[lenPathRel - 2][0] == focusNode && currPath[lenPathRel - 1][0] == targetNode && (currPath[lenPathRel - 2][1] === 'child')) {        
+        let pathStr = JSON.stringify(currPath);
         if (!secondOrderPathsSet.has(pathStr)) {
           secondOrderPathsSet.add(pathStr);
-          secondOrderPaths.push(pathWithRelationship[i]);          
-        }        
+          secondOrderPaths.push(currPath);                
+        }
       }      
 
       for (let j = 0; j < firstOrderPaths.length; j++) {
           let lenFirstOrd = firstOrderPaths[j].length;
           let focusNodePathType = firstOrderPaths[j][lenFirstOrd - 2][1];          
 
-          let relCurrPathWithFocusNodePath = classifyBNStructure(focusNodePathType, pathWithRelationship[i][lenPathRel - 2][1]);
+          let relCurrPathWithFocusNodePath = classifyBNStructure(focusNodePathType, currPath[lenPathRel - 2][1]);
           if (!isBlockedByBNStructure(relCurrPathWithFocusNodePath)) {
-              let pathString = JSON.stringify(pathWithRelationship[i]); 
+              let pathString = JSON.stringify(currPath); 
               if (!secondOrderPathsSet.has(pathString)) {
                   secondOrderPathsSet.add(pathString);
-                  secondOrderPaths.push(pathWithRelationship[i]);
+                  secondOrderPaths.push(currPath);
               }
           }
       }
