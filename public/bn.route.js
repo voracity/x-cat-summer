@@ -741,14 +741,15 @@ class BnDetail {
 				})
 				
 				// Animation		
-				if (m.classifiedPaths) {					
-					reset(m.arcInfluence, bn, this.bnView);				
-					fadeNodes(m.classifiedPaths, this.bnView);	
+				if (m.classifiedPaths) {										
+
+					const activeNodes = extractActiveNodes(m.classifiedPaths);	
+					fadeNodes(activeNodes, this.bnView);	
+					fadeAllArrows(activeNodes, m.arcInfluence)
 										
 					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
 					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
-					fadeAllArrows(animationOrderBN, arcColorDict)
-					
+													
 					console.log('animationOrderBN:', animationOrderBN)
 					console.log('arcColorDict:', arcColorDict)
 					
@@ -766,7 +767,7 @@ class BnDetail {
 								colorTargetBar(listTargetNodes, m)
 							}
 						}, (index + 1) * 850) // start index at 1 so the flashing go first
-					})												
+					})											
 				} 				
 			}			
 		} 

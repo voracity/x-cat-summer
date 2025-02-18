@@ -13,6 +13,30 @@ function fadeNodes(classifiedPaths, bnView) {
   });
 }
 
+function extractActiveNodes(classifiedPaths) {
+  return new Set([
+    ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
+    ...classifiedPaths.secondOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
+  ]);
+}
+
+function fadeNodes(activeNodes, bnView) {										
+  bnView.querySelectorAll('div.node').forEach(node => {
+    let nodeName = node.getAttribute('data-name');
+    if (!activeNodes.has(nodeName)) {
+      node.style.opacity = 0.3;
+    }
+  });
+}
+
+function fadeAllArrows(activeNodes, arcInfluence) {
+  arcInfluence.forEach((arcEntry) => {    
+    if (!activeNodes.has(arcEntry.child) || !activeNodes.has(arcEntry.parent)) {      
+      fadeArrow(arcEntry.parent, arcEntry.child);
+    }
+  });
+}
+
 function colorNode(nodeName, m) {
   // Find the node with the given data-name
   let node = document.querySelector(`.node[data-name="${nodeName}"]:not(.focusEvidence)`);
@@ -108,13 +132,12 @@ function reset(arcInfluence, bn, bnView) {
           arc.remove();        
         }
       });      
+      bn.drawArcs();
     }
     bnView.querySelectorAll('div.node').forEach(node => {						
       node.style.opacity = 1
       node.style.boxShadow = ""
-    });
-    // document.querySelectorAll(".play-button").forEach(button => button.remove());
-    bn.drawArcs();
+    });        
   }
   
 function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
@@ -235,35 +258,26 @@ async function extractColoredArrows(animationOrderBN) {
   return coloredArcs;
 }
 
-function fadeArrows(arcParent, arcChildren) {
+function fadeArrow(arcParent, arcChildren) {
   let arc = document.querySelector(
       `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
   );  
+
+  console.log('arc:', arc);
 
   if (!arc) {
       console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);
       return;
   }
 
-  let arcBodys = arc.querySelectorAll('path.line');
+  let arcBodys = arc.querySelectorAll('path.line'); 
   let arcHeads = arc.querySelectorAll('g.head');
   
   arcBodys[1].setAttribute('stroke', '#DBDBDB');
   arcHeads[1].setAttribute('fill', '#DBDBDB');
-  arcHeads[1].setAttribute('stroke', '#DBDBDB');
-  
+  arcHeads[1].setAttribute('stroke', '#DBDBDB');  
 }
 
-async function fadeAllArrows(animationOrderBN, arcColorDict) {
-  const coloredArcs = await extractColoredArrows(animationOrderBN);
-  
-  Object.keys(arcColorDict).forEach((arcKey) => {
-    if (!coloredArcs.has(arcKey)) {
-        const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child        
-        fadeArrows(arcParent, arcChildren);
-    }
-  });
-}
 
 function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
   if (!elem) {
