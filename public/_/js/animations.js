@@ -118,8 +118,7 @@ function reset(arcInfluence, bn, bnView) {
   }
   
 function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
-  console.log('arcInfluence:', arcInfluence);
-  console.log('evidenceNodeName:', evidenceNodeName);
+  
   return arcInfluence
     .map((arcEntry) => {
       // Calculate max diff for this arcEntry       
@@ -156,7 +155,7 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
 }
 
 function getArcColors(arcInfluence, nodeBeliefs) {
-  const arcColors = {};
+  const arcColors = {};  
 
   arcInfluence.forEach((arcEntry) => {
       // Calculate max diff for this arcEntry       
@@ -239,7 +238,7 @@ async function extractColoredArrows(animationOrderBN) {
 function fadeArrows(arcParent, arcChildren) {
   let arc = document.querySelector(
       `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
-  );
+  );  
 
   if (!arc) {
       console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);
@@ -248,21 +247,19 @@ function fadeArrows(arcParent, arcChildren) {
 
   let arcBodys = arc.querySelectorAll('path.line');
   let arcHeads = arc.querySelectorAll('g.head');
-
-  if (arcBodys.length > 1) {
-      arcBodys[1].setAttribute('stroke', '#fafafa');
-  }
-  if (arcHeads.length > 1) {
-      arcHeads[1].setAttribute('fill', '#fafafa');
-      arcHeads[1].setAttribute('stroke', '#fafafa');
-  }
+  
+  arcBodys[1].setAttribute('stroke', '#DBDBDB');
+  arcHeads[1].setAttribute('fill', '#DBDBDB');
+  arcHeads[1].setAttribute('stroke', '#DBDBDB');
+  
 }
 
 async function fadeAllArrows(animationOrderBN, arcColorDict) {
   const coloredArcs = await extractColoredArrows(animationOrderBN);
+  
   Object.keys(arcColorDict).forEach((arcKey) => {
     if (!coloredArcs.has(arcKey)) {
-        const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child
+        const [arcParent, arcChildren] = arcKey.split(", "); // Extract parent & child        
         fadeArrows(arcParent, arcChildren);
     }
   });

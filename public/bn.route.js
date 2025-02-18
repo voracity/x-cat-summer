@@ -749,8 +749,8 @@ class BnDetail {
 					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
 					fadeAllArrows(animationOrderBN, arcColorDict)
 					
-					// console.log('animationOrderBN:', animationOrderBN)
-					// console.log('arcColorDict:', arcColorDict)
+					console.log('animationOrderBN:', animationOrderBN)
+					console.log('arcColorDict:', arcColorDict)
 					
 					animationOrderBN.forEach((path, index) => {
 						setTimeout(() => {
