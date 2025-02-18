@@ -63,7 +63,7 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
       );
   }
 
-  // **Existing Functionality for Multiple Paths or Summary Mode**
+  // **Existing Functionality for Multiple Paths in Summary Mode**
   return n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
       n('span', evidenceNodeName, { class: 'verbalTextBold' }), ` ${evidenceTense} `, 
       n('span', evidenceState, { class: 'verbalTextItalic' }), ' ', 

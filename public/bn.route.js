@@ -563,7 +563,10 @@ class BnDetail {
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
 						focusEvidenceName = focusEvidence.getAttribute('data-name')
-						focusEvidenceState = focusEvidence.querySelector('.label').textContent
+						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
+						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
+						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+						let focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
@@ -756,7 +759,10 @@ class BnDetail {
 							let parentNodeState = parentNode.querySelector('.label').textContent;
 							
 							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-							let childNodeState = childNode.querySelector('.label').textContent;
+							let selectedStateIndex = m.nodeBeliefs[arcEntry.child]?.indexOf(1);
+
+							let selectedStateElem = childNode.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
+							let childNodeState = selectedStateElem ? selectedStateElem.textContent : "Unknown";
 
 							// coloring order of arrows
 							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
