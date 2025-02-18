@@ -261,9 +261,7 @@ async function extractColoredArrows(animationOrderBN) {
 function fadeArrow(arcParent, arcChildren) {
   let arc = document.querySelector(
       `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
-  );  
-
-  console.log('arc:', arc);
+  );    
 
   if (!arc) {
       console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);

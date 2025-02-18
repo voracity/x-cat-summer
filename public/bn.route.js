@@ -547,15 +547,15 @@ class BnDetail {
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;
-					console.log('-------------------------------------')
+					// console.log('-------------------------------------')
 					// console.log('evidenceNodeName:', evidenceNodeName)			
-					console.log('this.bnView:', this.bnView)		
+					// console.log('this.bnView:', this.bnView)		
 
 					// Activate Evidence - Flash Node - Shining Node - Focus Node
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
-					console.log('-----focuse Evidence----- :',focusEvidence)
+					// console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
@@ -580,7 +580,7 @@ class BnDetail {
 
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					console.log('evidenceNode:', evidenceNode)
+					// console.log('evidenceNode:', evidenceNode)
 					
 									
 					// console.log('evidenceNode:', evidenceNode)									
@@ -611,8 +611,7 @@ class BnDetail {
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
-						let targetStateName = targetStateElem.querySelector('.label').textContent;		
-						console.log('0101010------ targetStateName:', targetStateName)
+						let targetStateName = targetStateElem.querySelector('.label').textContent;								
 
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
@@ -750,8 +749,8 @@ class BnDetail {
 					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
 					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
 													
-					console.log('animationOrderBN:', animationOrderBN)
-					console.log('arcColorDict:', arcColorDict)
+					// console.log('animationOrderBN:', animationOrderBN)
+					// console.log('arcColorDict:', arcColorDict)
 					
 					animationOrderBN.forEach((path, index) => {
 						setTimeout(() => {
@@ -943,7 +942,7 @@ module.exports = {
 						evidence = JSON.parse(req.query.evidence);
 						
 					}
-					console.log('req.query:-----------------------', req.query)
+					console.log('req.query:--------', req.query)
 
 					// Initialize 'selectedStates' variable
 					let selectedStates = {};
@@ -1093,26 +1092,17 @@ module.exports = {
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
 							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
-							console.log('allPaths:', allPaths)					
-						
-							// filterActivePaths
-							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
-											
-							// activePaths = filterShortestPaths(ActivePaths);							
-						
-							// const nonActiveNodes = Object.keys(evidence);
-							// console.log("activePaths: ", activePaths);
-
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of allPaths) {
 								bn.activePaths.push(path)				
-								let pathRel = activePathWithRelationships(path, relationships)							
+								let pathRel = activePathWithRelationships(path, relationships)															
 								pathWithRelationship.push(pathRel)																					
 							}							
 
 							if (focusEvidence !== 'null'){
-								// console.log('pathWithRelationship:', pathWithRelationship)	
+								console.log('pathWithRelationship:', pathWithRelationship)	
+								// console.log('allPaths:', allPaths)	
 								// console.log('bn.activePaths:', bn.activePaths)
 								// console.log('focusEvidence:', focusEvidence)
 								// console.log('targetNodeName:', targetNodeName)								
