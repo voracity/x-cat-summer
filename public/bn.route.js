@@ -680,64 +680,64 @@ class BnDetail {
 					// ARCS && Fade Nodes && Arrow Animation
 					// console.log('---------------------------------------AAAAAArcInfluence')
 					// unused function
-					async function animateNodes(m, bn, bnView) {
-						if (m.arcInfluence && m.activePaths && m.focusEvidence) {
-							let delay = 0;
-							// console.log("arcInfluence:", m.arcInfluence);			
+					// async function animateNodes(m, bn, bnView) {
+					// 	if (m.arcInfluence && m.activePaths && m.focusEvidence) {
+					// 		let delay = 0;
+					// 		// console.log("arcInfluence:", m.arcInfluence);			
 						
-							reset(m.arcInfluence, bn, bnView);
+					// 		reset(m.arcInfluence, bn, bnView);
 							
-							let activeNodes = new Set(m.activePaths.flat())
+					// 		let activeNodes = new Set(m.activePaths.flat())
 							
-							const sortedArcInfluence = sortArcInfluenceByDiff(
-								m.arcInfluence,
-								m.nodeBeliefs,													
-								evidenceNodeName
-							);						
-							if (m.activePaths.length >= 2 && displayDetail) {
-								verbalIntroSentence.innerHTML = '';
-								verbalIntroSentence.appendChild(
-									n('p', 'Finding out ', 
-									n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-									' was ',
-									n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-									' contributes due to ',
-									numberToWord(m.activePaths.length),
-									' connections:'
-									))
-							}
+					// 		const sortedArcInfluence = sortArcInfluenceByDiff(
+					// 			m.arcInfluence,
+					// 			m.nodeBeliefs,													
+					// 			evidenceNodeName
+					// 		);						
+					// 		if (m.activePaths.length >= 2 && displayDetail) {
+					// 			verbalIntroSentence.innerHTML = '';
+					// 			verbalIntroSentence.appendChild(
+					// 				n('p', 'Finding out ', 
+					// 				n('span', focusEvidenceName, {class: 'verbalTextBold'}),
+					// 				' was ',
+					// 				n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
+					// 				' contributes due to ',
+					// 				numberToWord(m.activePaths.length),
+					// 				' connections:'
+					// 				))
+					// 		}
 						
-							let arcsContribution = [];
+					// 		let arcsContribution = [];
 
-							sortedArcInfluence.forEach((arcEntry, index) => {						
-								let arc = document.querySelector(
-									`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-								);
+					// 		sortedArcInfluence.forEach((arcEntry, index) => {						
+					// 			let arc = document.querySelector(
+					// 				`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
+					// 			);
 
-								// we know the first child is the colour arc
-								let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);								
-								let parentNodeState = parentNode.querySelector('.label').textContent;								
+					// 			// we know the first child is the colour arc
+					// 			let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);								
+					// 			let parentNodeState = parentNode.querySelector('.label').textContent;								
 								
-								let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-								let childNodeState = childNode.querySelector('.label').textContent;
+					// 			let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
+					// 			let childNodeState = childNode.querySelector('.label').textContent;
 
-								// coloring order of arrows       
-								if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
-									arcsContribution.push({
-										from: arcEntry.parent,
-										fromState: parentNodeState,
-										to: arcEntry.child,
-										toState: childNodeState,
-										color: arcEntry.color,										
-									})
-								} 
-							});
-							console.log('arcsContribution:', arcsContribution)
-							if (displayDetail) {								
-								generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
-							}
-						}
-					}
+					// 			// coloring order of arrows       
+					// 			if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
+					// 				arcsContribution.push({
+					// 					from: arcEntry.parent,
+					// 					fromState: parentNodeState,
+					// 					to: arcEntry.child,
+					// 					toState: childNodeState,
+					// 					color: arcEntry.color,										
+					// 				})
+					// 			} 
+					// 		});
+					// 		console.log('arcsContribution:', arcsContribution)
+					// 		if (displayDetail) {								
+					// 			generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
+					// 		}
+					// 	}
+					// }
 				})
 				
 				// Animation		
