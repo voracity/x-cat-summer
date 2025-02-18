@@ -63,7 +63,7 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
       );
   }
 
-  // **Existing Functionality for Multiple Paths in Summary Mode**
+  // **Existing Functionality for Multiple Paths or Summary Mode**
   return n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
       n('span', evidenceNodeName, { class: 'verbalTextBold' }), ` ${evidenceTense} `, 
       n('span', evidenceState, { class: 'verbalTextItalic' }), ' ', 
@@ -99,6 +99,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   let { evidenceTense, targetTense } = inferTenseFromArcInfluence(arcInfluence, subjectName, targetName);
 
   const connectionsCount = activePaths.length;
+  if (connectionsCount > 1){
   const introPara = n(
     'p',
     `Finding out ${targetName} ${evidenceTense} ${targetState} contributes due to `,
@@ -108,6 +109,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
     ':'
   );
   verbalListDisplay.appendChild(introPara);
+}
 
   const seenPaths = new Set();
   activePaths.forEach((path) => {
@@ -159,16 +161,18 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
     }
   });
 
-  const overallColor = primaryArc.color || 'does not change';
-  const overallPara = n(
-    'p',
-    'Overall, the finding ',
-    n('span', colorToVerbal(overallColor), { class: 'verbalTextUnderline' }),
-    ' the probability of ',
-    n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
-    '.'
-  );
-  verbalListDisplay.appendChild(overallPara);
+  if (connectionsCount > 1) {
+    const overallColor = primaryArc.color || 'does not change';
+    const overallPara = n(
+      'p',
+      'Overall, the finding ',
+      n('span', colorToVerbal(overallColor), { class: 'verbalTextUnderline' }),
+      ' the probability of ',
+      n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
+      '.'
+    );
+    verbalListDisplay.appendChild(overallPara);
+  }
 }
 
 
@@ -324,6 +328,105 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   }
 }
 
+function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidence) {
+  verbalListDisplay.innerHTML = '';
+
+  // Basic check
+  if (!arcsContribution || arcsContribution.length === 0) {
+    verbalListDisplay.appendChild(n('p', '(No arcs to explain.)'));
+    return;
+  }
+
+  const arc0 = arcsContribution[0];
+  const arc1 = arcsContribution[1];
+  const colliderNode = arc0.to;  // Node receiving two arrows (collider)
+  const parent1 = arc0.from;
+  const parent2 = arc1.from;
+
+  focusEvidenceName = focusEvidence.getAttribute('data-name')
+
+  // **Check if the clicked node is the collider or an evidence node**
+  if (focusEvidenceName === colliderNode) {
+
+    const step1 = n('p',
+      n('span', '1.', { style: 'fontWeight:bold' }), ' ',
+      `If we didn’t know about the`,
+      n('span', parent1, { class: 'verbalTextBold' }),
+      `, then finding out the`,
+      n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), ' ',
+      `would greatly increase the probability of `,
+      n('span', parent2, { class: 'verbalTextBold' }),
+      n('span', arc1.fromState, { class: 'verbalTextItalic' }),
+      `, by direct connection.`
+    );
+    verbalListDisplay.appendChild(step1);
+
+    const step2 = n('p',
+      n('span', '2a.', { style: 'fontWeight:bold' }), ' ',
+      `But knowing the `,
+      n('span', parent1, { class: 'verbalTextBold' }), ' was ',
+      n('span', arc0.fromState, { class: 'verbalTextItalic' }), ", ",
+      `which has ${colorToVerbal(arc1.color, true)} the probability that `,
+      n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
+      n('span', colliderNode, { class: 'verbalTextBold' }), ' will occur without ',
+      n('span', parent2, { class: 'verbalTextBold' }), '.'
+    );
+    verbalListDisplay.appendChild(step2);
+
+    const step3 = n('p',
+      n('span', '2b.', { style: 'fontWeight:bold' }), ' ',
+      `So, finding out `,
+      n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
+      `now only ${colorToVerbal(arc1.color)} the probability of `,
+      n('span', parent2, { class: 'verbalTextBold' }), '.'
+    );
+    verbalListDisplay.appendChild(step3);
+
+  } else {
+
+    const step1 = n('p',
+      n('span', '1.', { style: 'fontWeight:bold' }), ' ',
+      `If we didn’t know about `,
+      n('span', colliderNode, { class: 'verbalTextBold' }),
+      `, finding out the `,
+      n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' was ',
+      n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), ' ',
+      `wouldn't change the probability of `,
+      n('span', parent2, { class: 'verbalTextBold' }),
+      '.'
+    );
+    verbalListDisplay.appendChild(step1);
+
+    const step2 = n('p',
+      n('span', '2a.', { style: 'fontWeight:bold' }), ' ',
+      `But we do already know `,
+      n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), ", ",
+      `which has greatly increased the probability of `,
+      n('span', parent2, { class: 'verbalTextBold' }), '.'
+    );
+    verbalListDisplay.appendChild(step2);
+
+    const step3 = n('p',
+      n('span', '2b.', { style: 'fontWeight:bold' }), ' ',
+      `Now finding out `,
+      n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' was ',
+      n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), " ",
+      `increases the probability that `,
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
+      n('span', colliderNode, { class: 'verbalTextBold' }), " occurred without ",
+      n('span', parent2, { class: 'verbalTextBold' }), ` — so knowing `,
+      n('span', colliderNode, { class: 'verbalTextBold' }), " is ",
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
+      `now only ${colorToVerbal(arc1.color)} the probability of `,
+      n('span', parent2, { class: 'verbalTextBold' }), '.'
+    );
+    verbalListDisplay.appendChild(step3);
+  }
+}
+
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
 function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, colliderDiffs, arcInfluence, focusEvidence) {
@@ -331,17 +434,42 @@ function generateDetailedExplanations(activePaths, arcsContribution, colliderNod
   // **Sort Paths into Collider and Normal Paths**
   const colliderPaths = [];
   const normalPaths = [];
+  const specialPaths = [];
   activePaths.forEach((path) => {
-      if (pathHasCollider(path, colliderNodes)) {
-          colliderPaths.push(path);
-      } else {
-          normalPaths.push(path);
+    let foundSuperPath = false;
+
+    for (const other of activePaths) {
+      if (other !== path && other.length > path.length) {
+        if (isSubpath(path, other)) {
+          foundSuperPath = true;
+          break;
+        }
       }
+    }
+
+    if (foundSuperPath) {
+      console.log('Detected special subpaths:', specialPaths);
+      specialPaths.push(path);
+    } else if (pathHasCollider(path, colliderNodes)) {
+      console.log('Detected Collider paths:', colliderPaths);
+      colliderPaths.push(path);
+    } else {
+      console.log("Multiple Paths Detected - Using Standard Processing");
+      normalPaths.push(path);
+    }
   });
+
+  
+
   // **Check for Collider Paths First**
   if (colliderPaths.length > 0) {
-      buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs, arcInfluence, focusEvidence);
-      return; // **Exit after printing collider explanation**
+    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs, arcInfluence, focusEvidence);
+    return; // **Exit after printing collider explanation**
+  }
+
+  if (specialPaths.length > 0) {
+    buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidence)
+    return;
   }
 
   // **If No Collider Paths Exist, Proceed with Normal Processing**
@@ -382,10 +510,11 @@ function generateDetailedExplanations(activePaths, arcsContribution, colliderNod
       return;  // **Exit here to prevent further processing**
   }
 
+
+
   // **If Multiple Paths Exist, Use Default Processing**
   if (normalPaths.length > 0) {
-      console.log("Multiple Paths Detected - Using Standard Processing");
-      buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay, arcInfluence);
+    buildDetailSentenceList(normalPaths, arcsContribution, verbalListDisplay, arcInfluence);
   }
 }
 
@@ -395,6 +524,25 @@ function pathHasCollider(path, colliderObjs) {
   return middleNodes.some(node =>
     colliderObjs.some(colliderObj => colliderObj.node === node)
   );
+}
+
+function isSubpath(pathA, pathB) {
+  if (pathA.length > pathB.length) return false;
+
+  for (let start = 0; start <= pathB.length - pathA.length; start++) {
+    let match = true;
+    for (let i = 0; i < pathA.length; i++) {
+      if (pathB[start + i] !== pathA[i]) {
+        match = false;
+        break;
+      }
+    }
+    if (match) {
+      return true; 
+    }
+  }
+
+  return false;
 }
 
 // Identifies collider nodes in the network by analyzing relationships among parents.

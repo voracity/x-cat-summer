@@ -86,6 +86,20 @@ function isCollider(node, prevNode, nextNode, parentMap) {
   return parents.includes(prevNode) && parents.includes(nextNode);
 }
 
+function isSpecialCase(node, prevNode, nextNode, parentMap) {
+  if (!parentMap[node]) return false;
+  if (!parentMap[nextNode]) return false;
+
+  const nextparents = parentMap[nextNode];
+  const parents = parentMap[node];
+
+  if (nextparents.includes(node) && parents.includes(prevNode)) {
+   
+    return true;
+  }
+  return false;
+}
+
 // Retrieves all descendants of a node in the graph.
 function getDescendants(node, adjacencyMap) {
   const visited = new Set();
@@ -127,8 +141,14 @@ function isActivePath(path, relationships, evidence) {
   // Iterate over the "middle" nodes in the path
   for (let i = 1; i < path.length - 1; i++) {
     const node = path[i];
-    const prevNode = path[i - 1];
-    const nextNode = path[i + 1];
+    const nextNode = path[i - 1];
+    const prevNode = path[i + 1];
+
+    console.log('--------------nodepath.js',node, prevNode, nextNode, parentMap)
+
+    if (isSpecialCase(node, prevNode, nextNode, parentMap)) {
+      continue; 
+    }
 
     if (isCollider(node, prevNode, nextNode, parentMap)) {
       // A collider requires: node ∈ evidence OR at least one descendant in evidence
