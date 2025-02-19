@@ -504,10 +504,10 @@ class BnDetail {
 		// NODES
 		if (m.influences) {
 			let asFrame = true;
-			console.log("updating influences");
+			// console.log("updating influences");
 			let listTargetNodes = {}			
 			let entries = Object.entries(m.influences)
-			console.log('m.influences', m.influences)					
+			// console.log('m.influences', m.influences)					
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
 			if (verbal){
@@ -537,14 +537,8 @@ class BnDetail {
 
 				reset(m.arcInfluence, bn, this.bnView);
 
-			} else {		
-				if (m.focusEvidence) {
-					console.log('m.focusEvidence:', m.focusEvidence)
-				}
-				if (m.selectedStates) {
-					console.log('m.selectedStates:', m.selectedStates)
-				}
-				console.log('entries:', entries)
+			} else {						
+				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
@@ -556,7 +550,7 @@ class BnDetail {
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
-					console.log('-----focuse Evidence----- :',focusEvidence)
+					// console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
@@ -564,7 +558,7 @@ class BnDetail {
 						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
 						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
 						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
-						let focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
+						focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
@@ -585,7 +579,7 @@ class BnDetail {
 
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					console.log('evidenceNode:', evidenceNode)
+					// console.log('evidenceNode:', evidenceNode)
 							
 					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
@@ -1007,7 +1001,7 @@ module.exports = {
 
 						const colliders = findAllColliders(relationships);
 						bn.colliders = colliders;
-						console.log('Collider:', bn.colliders);
+						// console.log('Collider:', bn.colliders);
 
 
 						// Ensure only one selected target node

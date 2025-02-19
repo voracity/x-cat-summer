@@ -132,11 +132,11 @@ var bn = {
 					this.arcInfluence = reqData.arcInfluence;
 					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
 					// console.log('reqData.activePaths:', reqData.activePaths);
-					console.log('reqData.colliders:', reqData.colliders);
+					// console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
 					this.activePaths = reqData.activePaths;
 					this.classifiedPaths = reqData.classifiedPaths;
-					console.log('reqData.classifiedPaths:', reqData.classifiedPaths);
+					// console.log('reqData.classifiedPaths:', reqData.classifiedPaths);
 				} else {
 					this.influences = {};
 				}
@@ -154,7 +154,7 @@ var bn = {
 		q('div.infoWindow')?.remove();
 		this.ciTableEnabled = !!this.roles?.effect?.length;
 		if (!this.ciTableEnabled)  q('div.ciTableWindow')?.remove();
-		console.log(this.roles?.cause?.length, this.roles?.effect?.length);
+		// console.log(this.roles?.cause?.length, this.roles?.effect?.length);
 		if (this.roles?.cause?.length && this.roles?.effect?.length) {
 			let causes = this.roles.cause;
 			let causeStates = causes.map(cause => this.selectedStates[cause] && this.getNode(cause).model.states[this.selectedStates[cause]]);
@@ -451,7 +451,7 @@ class Node {
 		}
 
 		q(".bnView").addEventListener("click", (event) => {
-			console.log("move");
+			// console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
 			let focusEvidenceNode =  event.target.closest('.node');
@@ -475,7 +475,7 @@ class Node {
 
 	
 			if (evidenceNodeTitle && focusEvidenceNode.classList.contains("hasEvidence")) {  
-				console.log('evidenceNodeTitle', evidenceNodeTitle);
+				// console.log('evidenceNodeTitle', evidenceNodeTitle);
 
 
 				document.querySelectorAll(".play-button").forEach(button => button.remove());
@@ -486,7 +486,7 @@ class Node {
 				playButton.style.position = "absolute";
 		
 				playButton.addEventListener("click", () => {
-					console.log("Play Button Clicked!");
+					// console.log("Play Button Clicked!");
 					Node.flashNode(focusEvidenceNode);
 					bn.update();
 				});
@@ -499,9 +499,9 @@ class Node {
 				document.body.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
 		
-				console.log('bn.detail:', bn.detail);
+				// console.log('bn.detail:', bn.detail);
 				if (bn.detail === false) {
-					console.log('--------CHANGING--------');
+					// console.log('--------CHANGING--------');
 					Node.setFocusEvidence(focusEvidenceNode, bn);					
 					bn.detail = true;
 				} else {
@@ -566,23 +566,23 @@ class Node {
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
 
-				console.log('dragfunc:',dragFunc)
+				// console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
 					return
 				}
 
-				console.log("Mousedown triggered");
+				// console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
-				console.log('target:', target);
+				// console.log('target:', target);
 				
 
 				if (target) {
 					let targetNode = target.closest(".node");
 					event.stopPropagation();
 					event.preventDefault();
-					console.log("start dragging");
-					console.log('targetNode.classList:', targetNode.classList);
+					// console.log("start dragging");
+					// console.log('targetNode.classList:', targetNode.classList);
 
 					// define init pos
 					let origX = event.clientX,
