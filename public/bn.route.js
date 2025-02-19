@@ -314,7 +314,6 @@ class BnDetail {
 				),
 			),
 
-			
 
 			n('div.infoWindows',
 				/*	

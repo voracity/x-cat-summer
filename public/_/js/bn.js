@@ -311,7 +311,7 @@ class Node {
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
 		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
 	
-		//this.bn.gui('UpdateInfoWindows');
+		Node.reset();  // **调用 reset() 方法**his.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
 		if (this.role) {
@@ -345,6 +345,7 @@ class Node {
 		allStateElem.forEach((elem) => {
 			elem.style.backgroundColor = "";
 		});
+
 		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
@@ -412,19 +413,22 @@ class Node {
 		toggleFlash(); 		
 	}
 
+
+
 	static setFocusEvidence(nodeElement, bn) {
-		if (isFrozen) return 
-		nodeElement.classList.add("focusEvidence");		
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
 	static moveFocusEvidence(nodeElement,bn){
-		nodeElement.classList.remove("focusEvidence");		
+	
 		bn.focusEvidence = nodeElement.dataset.name;
+		document.querySelectorAll(".play-button").forEach(button => button.remove());
+
+
 	}
 
-
 	
+
 	static guiSetupEvents() {
 		bn.initialize();
 
@@ -464,47 +468,62 @@ class Node {
 					nodeHeader.style.cursor = "default"; 
 				});
 			});
-			if (evidenceNodeTitle) {				
-				
-				document.querySelectorAll(".play-button").forEach(button => button.remove());
-				const existingButton = evidenceNodeTitle.querySelector(".play-button");
-				if (existingButton) {
-					existingButton.remove();
+
+			if (!evidenceNodeTitle) { 
+				if (!bn.isFrozen) {  
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
 				}
-						
+				return;
+			}
+
+	
+			if (evidenceNodeTitle && focusEvidenceNode.classList.contains("hasEvidence")) {  
+				console.log('evidenceNodeTitle', evidenceNodeTitle);
+
+
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+		
 				const playButton = document.createElement("button");
 				playButton.textContent = "▶";
 				playButton.className = "play-button";
-
-				playButton.addEventListener("click", () => {
-					console.log('Button play');
-					//Hao add backend here
-				});
-
-				evidenceNodeTitle.style.position = "relative"; 
 				playButton.style.position = "absolute";
-				playButton.style.left = "-30px"; 
-				playButton.style.top = "55%"; 
+		
+				playButton.addEventListener("click", () => {
+					console.log("Play Button Clicked!");
+					Node.flashNode(focusEvidenceNode);
+					bn.update();
+				});
+		
+				let rect = evidenceNodeTitle.getBoundingClientRect();
+				playButton.style.left = `${window.scrollX + rect.left - 30}px`;
+				playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
 				playButton.style.transform = "translateY(-50%)";
-				evidenceNodeTitle.appendChild(playButton);
+				
+				document.body.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
-
-				console.log('-----DETAIL:---',bn.detail)
-
-				if (bn.detail === false){
-					console.log('CHANGING--------')
+		
+				if (bn.detail === false) {
+					console.log('--------CHANGING--------');
 					Node.setFocusEvidence(focusEvidenceNode, bn);
-					bn.detail = true
-				}
-				else{
+					bn.detail = true;
+				} else {
+					bn.detail = false;
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.moveFocusEvidence(focusEvidenceNode, bn);
-					bn.detail = false
+					bn.update();
 				}
-				
-				const node = refs.Node(focusEvidenceNode)
-				node.bn.update();																	
+				if (focusEvidenceNode.classList.contains("hasEvidence")) {
+					document.body.appendChild(playButton);
+				}
+		
+				const node = refs.Node(focusEvidenceNode);
+				node.bn.update();                                                                 
+			} else {
+				if (!bn.isFrozen) {  // **Frozen Mode 下不删除 PlayButton**
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+				}
 			}
-				
+					
 			
 			let menuButton = event.target.closest("a.menu");
 			if (menuButton) {
@@ -548,7 +567,6 @@ class Node {
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
-				if (isFrozen) return ;
 
 				console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
@@ -690,7 +708,6 @@ document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
 	let verbal = false;
 	let animation = false;
-	this.isFrozen = false;
 
 
 	const siteLinksDiv = document.querySelector('.siteLinks');
@@ -708,12 +725,16 @@ document.addEventListener('DOMContentLoaded', event => {
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
-		if (this.isFrozen) return;
 		
 		let target = event.target.closest('.target');
 		if (target) {
 			// target.classList.toggle('selected');
 			let possibleEvidenceNode = target.closest('.node.hasEvidence');
+
+			if (!possibleEvidenceNode) {
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+			}
+	
 			
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
@@ -726,7 +747,6 @@ document.addEventListener('DOMContentLoaded', event => {
 			// Add event listener to checkboxes
 			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
 				checkbox.addEventListener('change', function () {
-					if (this.isFrozen) return;
 						if (this.checked) {
 		
 								// Add 'not-checked' class to other checkboxes
@@ -846,7 +866,6 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	q(dlg).querySelector('[name=bnName]').select().focus();
 	// });
 	q('button.publish').addEventListener('click', event => {
-		if (this.isFrozen) return;
 		let doPublish = async _=> {
 			let qs = new URLSearchParams(location.search);
 			let res = await fetch('/bn?requestType=data&updateBn=1', {method:'POST',
@@ -866,17 +885,17 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	let scaling = q('select.scaleimage').value
 	// 	render.Network(Number(scaling), "png");
 	// })
-	q('button.savesnapshot').addEventListener('click', () => {
-		bnDetail.saveSnapshot()
-	})
+	// q('button.savesnapshot').addEventListener('click', () => {
+	// 	bnDetail.saveSnapshot()
+	// })
 	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");
 	})
-	q('button.downloadbase64').addEventListener('click', () => {
-		let scaling = q('select.scaleimage').value
-		render.Network(Number(scaling), "base64");
-	})
+	// q('button.downloadbase64').addEventListener('click', () => {
+	// 	let scaling = q('select.scaleimage').value
+	// 	render.Network(Number(scaling), "base64");
+	// })
 	q('input.influence-as-frame').addEventListener('click', (event) => {
 		bnDetail.drawFrame = event.target.checked
 		bnDetail.$handleUpdate({updateFrameMode:""});
@@ -886,11 +905,26 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.$handleUpdate({updateShowBarChange:""});
 	})
 
-	q('button.frozen-mode').addEventListener('click',() => {
-		
-		this.isFrozen = !this.isFrozen; 
-		console.log('Frozen Mode:', this.isFrozen);
-	})
+	document.querySelector('button.frozen-mode').addEventListener('click', function() {
+		if (!bn.isFrozen) {
+			bn.isFrozen = true;
+			document.querySelector(".bnView").classList.add("frozen");
+			this.classList.add('frozen_box'); 
+
+		} else {
+			bn.isFrozen = false;
+			console.log("Frozen Mode: Only Play Button is clickable.");
+			document.querySelector(".bnView").classList.remove("frozen");
+			this.classList.remove('frozen_box');
+			let verbalBox = document.querySelector("#verbalBox");
+			if (verbalBox) {
+				verbalBox.classList.add("influenceContainer");
+				console.log("Frozen Mode: verbalBox class remains:", verbalBox.classList);
+			}
+			
+		}
+	
+	});
 
 });
 
