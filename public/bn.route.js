@@ -697,7 +697,7 @@ class BnDetail {
 							}
 						});
 						if (displayDetail) {							
-							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
+							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.colliderDiff, bn.arcInfluence, focusEvidence);
 						}
 					}
 				})
@@ -997,6 +997,7 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.colliders = {};
+						bn.colliderDiff = {};
 
 
 						const colliders = findAllColliders(relationships);
@@ -1029,6 +1030,19 @@ module.exports = {
 						console.log('baselineProb:', baselineProb)
 
 						let pathWithRelationship = []
+
+						// Finding the colliders and printing them
+						const colliderDiff = analyzeColliders(
+							net,
+							relationships,
+							evidence,
+							targetNodeName,
+							targetStateIndex,
+							bnKey
+						);
+				
+						console.log("Detected Colliders and Differences:", collider);
+						bn.colliderDiff = colliderDiff;
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.

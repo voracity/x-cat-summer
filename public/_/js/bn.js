@@ -10,6 +10,7 @@ var bn = {
 	beliefs: {},
 	activePaths: {},
 	colliders: {},
+	colliderDiff: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
 	dragFunc: true,
@@ -130,13 +131,10 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
-					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
-					// console.log('reqData.activePaths:', reqData.activePaths);
-					// console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
+					this.colliderDiff = reqData.colliderDiff;
 					this.activePaths = reqData.activePaths;
-					this.classifiedPaths = reqData.classifiedPaths;
-					// console.log('reqData.classifiedPaths:', reqData.classifiedPaths);
+					this.classifiedPaths = reqData.classifiedPaths;					
 				} else {
 					this.influences = {};
 				}
@@ -147,7 +145,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, colliderDiff: this.colliderDiff, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
 	},
 
 	guiUpdateInfoWindows() {
