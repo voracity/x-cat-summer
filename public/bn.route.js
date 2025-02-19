@@ -677,7 +677,7 @@ class BnDetail {
 					// 6. Collects and stores arc contributions for further explanation and analysis.
 					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
 					if (m.arcInfluence && m.activePaths) {												
-						let onlyFirstOrder = true;
+						let onlyFirstOrder = false;
 						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
 					
 						const sortedArcInfluence = sortArcInfluenceByDiff(
