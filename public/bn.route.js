@@ -544,11 +544,12 @@ class BnDetail {
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;		
-					console.log('this.bnView:', this.bnView)		
+					// console.log('this.bnView:', this.bnView)		
 
 					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
-					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
+					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')			
+					console.log('focusEvidence:', focusEvidence)	
 					
 					// console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
@@ -670,7 +671,7 @@ class BnDetail {
 					// 5. Fades inactive arcs by altering their stroke and fill properties.
 					// 6. Collects and stores arc contributions for further explanation and analysis.
 					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
-					if (m.arcInfluence && m.activePaths) {												
+					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
 						let onlyFirstOrder = false;
 						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
 					
@@ -733,7 +734,8 @@ class BnDetail {
 						}, (index + 1) * 850) // start index at 1 so the flashing go first
 					})											
 				} 				
-			}			
+			}		
+			colorTargetBar(listTargetNodes, m)	
 		} 
 	}
 
@@ -962,13 +964,13 @@ module.exports = {
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
-						console.log('evidence:', evidence)
+						// console.log('evidence:', evidence)
 
 						let focusEvidence = null
 
 						if (req.query.focusEvidence) {
 							focusEvidence = req.query.focusEvidence;		
-							console.log('focusEvidence:', focusEvidence)					
+							// console.log('focusEvidence:', focusEvidence)					
 						}
 
 						// the selected state is our Target

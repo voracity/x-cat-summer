@@ -213,7 +213,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
 // "explaining away" and "empowering way".
-function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs = [], arcInfluence, focusEvidence) {
+function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidence) {
   verbalListDisplay.innerHTML = '';
 
   // Basic check
@@ -464,7 +464,7 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
-function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, colliderDiffs, arcInfluence, focusEvidence) {
+function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidence) {
   verbalListDisplay.innerHTML = '';
   // **Sort Paths into Collider and Normal Paths**
   const colliderPaths = [];
@@ -498,7 +498,7 @@ function generateDetailedExplanations(activePaths, arcsContribution, colliderNod
 
   // **Check for Collider Paths First**
   if (colliderPaths.length > 0) {
-    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, colliderDiffs, arcInfluence, focusEvidence);
+    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidence);
     return; // **Exit after printing collider explanation**
   }
 
