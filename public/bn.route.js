@@ -423,6 +423,7 @@ class BnDetail {
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}
+			console.log('m.nodeBeliefs:', m.nodeBeliefs)
 		}
 		/** != null is false only if value is null or undefined **/
 		if (m.scenariosEnabled != null) {
@@ -549,7 +550,7 @@ class BnDetail {
 					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')			
-					console.log('focusEvidence:', focusEvidence)	
+					// console.log('focusEvidence:', focusEvidence)	
 					
 					// console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
@@ -662,15 +663,10 @@ class BnDetail {
 						})
 
 					})
+					console.log('listTargetNodes:', listTargetNodes)					
+					console.log('m.origModel:', m.origModel)
 				
-					// ARCS && Fade Nodes && Arrow Animation
-					// 1. Resets arc influences and prepares the visualization for active paths.
-					// 2. Identifies active nodes from `m.activePaths` and fades out inactive nodes by reducing opacity.
-					// 3. Sorts arcs by influence difference to determine priority for visualization.
-					// 4. Highlights and animates active arcs with directional coloring (normal/reverse) based on their influence.
-					// 5. Fades inactive arcs by altering their stroke and fill properties.
-					// 6. Collects and stores arc contributions for further explanation and analysis.
-					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
+					// Generate detailed explaination for the focus node					
 					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
 						let onlyFirstOrder = false;
 						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
@@ -913,13 +909,13 @@ module.exports = {
 						evidence = JSON.parse(req.query.evidence);
 						
 					}
-					console.log('req.query:--------', req.query)
+					// console.log('req.query:--------', req.query)
 
 					// Initialize 'selectedStates' variable
 					let selectedStates = {};
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-						console.log('selectedStates:', selectedStates)
+						// console.log('selectedStates:', selectedStates)
 					}
 				
 
