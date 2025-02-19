@@ -541,6 +541,7 @@ class BnDetail {
 			} else {						
 				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
+				let arcsContribution = [];
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
@@ -666,7 +667,7 @@ class BnDetail {
 					console.log('listTargetNodes:', listTargetNodes)					
 					console.log('m.origModel:', m.origModel)
 				
-					// Generate detailed explaination for the focus node					
+					// Build up the arcs for the influence for verbal part					
 					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
 						let onlyFirstOrder = false;
 						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
@@ -675,9 +676,7 @@ class BnDetail {
 							m.arcInfluence,
 							m.nodeBeliefs,													
 							evidenceNodeName
-						);						
-													
-						let arcsContribution = [];
+						);																									
 
 						sortedArcInfluence.forEach((arcEntry) => {
 							let parentNodeState = getNodeState(arcEntry.parent, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
@@ -692,19 +691,20 @@ class BnDetail {
 											color: arcEntry.color,
 									});
 							}
-						});
-						if (displayDetail) {							
-							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, focusEvidence);
-						}
+						});						
 					}
 				})
 
 				// color target bar every time a new evidence is added
 				colorTargetBar(listTargetNodes, m)	
+
+				// Generate detailed explaination for the focus node
+				if (m.classifiedPaths && displayDetail) {					
+					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);
+				}
 				
 				// Animation when new focus node is added
-				if (m.classifiedPaths) {								
-					
+				if (m.classifiedPaths && window.animation) {																
 					reset(m.arcInfluence, bn, this.bnView);
 					resetTargetBar(listTargetNodes)
 					
