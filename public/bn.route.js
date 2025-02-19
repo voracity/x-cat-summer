@@ -702,12 +702,16 @@ class BnDetail {
 						}
 					}
 				})
+
+				// color target bar every time a new evidence is added
+				colorTargetBar(listTargetNodes, m)	
 				
-				// Animation		
+				// Animation when new focus node is added
 				if (m.classifiedPaths) {								
 					
 					reset(m.arcInfluence, bn, this.bnView);
-
+					resetTargetBar(listTargetNodes)
+					
 					const activeNodes = extractActiveNodes(m.classifiedPaths);	
 					fadeNodes(activeNodes, this.bnView);	
 					fadeAllArrows(activeNodes, m.arcInfluence)
@@ -735,7 +739,7 @@ class BnDetail {
 					})											
 				} 				
 			}		
-			colorTargetBar(listTargetNodes, m)	
+			
 		} 
 	}
 

@@ -141,22 +141,48 @@ function generateAnimationOrder(classifiedPaths) {
 }
 
 function reset(arcInfluence, bn, bnView) {
-    if (arcInfluence) {
-      arcInfluence.forEach((arcEntry) => {
-        let arc = document.querySelector(
-          `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-        );
-        if (arc) {
-          arc.remove();        
-        }
-      });      
-      bn.drawArcs();
-    }
-    bnView.querySelectorAll('div.node').forEach(node => {						
-      node.style.opacity = 1
-      node.style.boxShadow = ""
-    });        
+  if (arcInfluence) {
+    arcInfluence.forEach((arcEntry) => {
+      let arc = document.querySelector(
+        `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+      );
+      if (arc) {
+        arc.remove();        
+      }
+    });      
+    bn.drawArcs();
   }
+  bnView.querySelectorAll('div.node').forEach(node => {						
+    node.style.opacity = 1
+    node.style.boxShadow = ""
+  });        
+}
+
+function resetTargetBar(listTargetNodes) {
+  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+      let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+      if (!barchangeElem) {
+          console.warn(`resetTargetBar: No barchange element found for target node: ${targetNodeName}`);
+          return;
+      }
+
+      // Remove influence-related classes
+      Array.from(barchangeElem.classList).forEach(classname => {
+          if (classname.includes("influence-idx") || classname.includes("-box")) {
+              barchangeElem.classList.remove(classname);
+          }
+      });
+
+      // Reset styles to original state
+      barchangeElem.style.marginLeft = "0";
+      barchangeElem.style.width = "0";
+      barchangeElem.style.backgroundColor = "";
+      barchangeElem.style.opacity = "1"; // Ensure it stays visible
+
+      console.log(`resetTargetBar: Reset color for ${targetNodeName}`);
+  });
+}
   
 function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
   
@@ -380,6 +406,32 @@ function colorTargetBar(listTargetNodes, m) {
       barchangeElem.classList.add(targetColorClass+"-box");
 
   })
+}
+
+function resetTargetBar(listTargetNodes) {
+  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+      let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+      if (!barchangeElem) {
+          console.warn(`resetTargetBar: No barchange element found for target node: ${targetNodeName}`);
+          return;
+      }
+
+      // Remove influence-related classes
+      Array.from(barchangeElem.classList).forEach(classname => {
+          if (classname.includes("influence-idx") || classname.includes("-box")) {
+              barchangeElem.classList.remove(classname);
+          }
+      });
+
+      // Reset styles to original state
+      barchangeElem.style.marginLeft = "0";
+      barchangeElem.style.width = "0";
+      barchangeElem.style.backgroundColor = "";
+      barchangeElem.style.opacity = "1"; // Ensure it stays visible
+
+      console.log(`resetTargetBar: Reset color for ${targetNodeName}`);
+  });
 }
 
 // class AnimationStep {
