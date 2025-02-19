@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders} = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders} = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -697,7 +697,7 @@ class BnDetail {
 							}
 						});
 						if (displayDetail) {							
-							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.colliderDiff, bn.arcInfluence, focusEvidence);
+							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, focusEvidence);
 						}
 					}
 				})
@@ -997,7 +997,7 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.colliders = {};
-						bn.colliderDiff = {};
+						// bn.colliderDiff = {};
 
 
 						const colliders = findAllColliders(relationships);
@@ -1032,17 +1032,17 @@ module.exports = {
 						let pathWithRelationship = []
 
 						// Finding the colliders and printing them
-						const colliderDiff = analyzeColliders(
-							net,
-							relationships,
-							evidence,
-							targetNodeName,
-							targetStateIndex,
-							bnKey
-						);
+						// const colliderDiff = analyzeColliders(
+						// 	net,
+						// 	relationships,
+						// 	evidence,
+						// 	targetNodeName,
+						// 	targetStateIndex,
+						// 	bnKey
+						// );
 				
-						console.log("Detected Colliders and Differences:", collider);
-						bn.colliderDiff = colliderDiff;
+						// console.log("Detected Colliders and Differences:", collider);
+						// bn.colliderDiff = colliderDiff;
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.

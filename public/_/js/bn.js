@@ -10,7 +10,7 @@ var bn = {
 	beliefs: {},
 	activePaths: {},
 	colliders: {},
-	colliderDiff: {},
+	// colliderDiff: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
 	dragFunc: true,
@@ -132,7 +132,7 @@ var bn = {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
 					this.colliders = reqData.colliders;
-					this.colliderDiff = reqData.colliderDiff;
+					// this.colliderDiff = reqData.colliderDiff;
 					this.activePaths = reqData.activePaths;
 					this.classifiedPaths = reqData.classifiedPaths;					
 				} else {
@@ -145,7 +145,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, colliderDiff: this.colliderDiff, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
 	},
 
 	guiUpdateInfoWindows() {

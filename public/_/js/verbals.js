@@ -223,16 +223,16 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
   }
 
   // Determine effect type: "explaining away" or "empowering"
-  let effectType = 'explaining away';
-  let baseDiff = 0, powerDiff = 0;
-  if (colliderDiffs.length > 0) {
-    const c = colliderDiffs[0];
-    baseDiff = c.baseDiff;
-    powerDiff = c.powerDiff;
-    if (powerDiff > baseDiff) {
-      effectType = 'empowering';
-    }
-  }
+  // let effectType = 'explaining away';
+  // let baseDiff = 0, powerDiff = 0;
+  // if (colliderDiffs.length > 0) {
+  //   const c = colliderDiffs[0];
+  //   baseDiff = c.baseDiff;
+  //   powerDiff = c.powerDiff;
+  //   if (powerDiff > baseDiff) {
+  //     effectType = 'empowering';
+  //   }
+  // }
 
   const arc0 = arcsContribution[0];
   const arc1 = arcsContribution[1];
