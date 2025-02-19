@@ -273,7 +273,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
 // "explaining away" and "empowering way".
-function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidence) {
+function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidenceName) {
   verbalListDisplay.innerHTML = '';
 
   // Basic check
@@ -299,8 +299,6 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
   const colliderNode = arc0.to;  // Node receiving two arrows (collider)
   const parent1 = arc0.from;
   const parent2 = arc1.from;
-
-  focusEvidenceName = focusEvidence.getAttribute('data-name')
 
   // **Check if the clicked node is the collider or an evidence node**
   if (focusEvidenceName === colliderNode) {
@@ -423,7 +421,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
   }
 }
 
-function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidence) {
+function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidenceName) {
   verbalListDisplay.innerHTML = '';
 
   // Basic check
@@ -436,9 +434,7 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
   const arc1 = arcsContribution[1];
   const colliderNode = arc0.to;  // Node receiving two arrows (collider)
   const parent1 = arc0.from;
-  const parent2 = arc1.from;
-
-  focusEvidenceName = focusEvidence.getAttribute('data-name')
+  const parent2 = arc1.from;  
 
   // **Check if the clicked node is the collider or an evidence node**
   if (focusEvidenceName === colliderNode) {
@@ -524,7 +520,7 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
-function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidence) {
+function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidenceName) {
   verbalListDisplay.innerHTML = '';
   // **Sort Paths into Collider and Normal Paths**
   const colliderPaths = [];
@@ -558,12 +554,12 @@ function generateDetailedExplanations(activePaths, arcsContribution, colliderNod
 
   // **Check for Collider Paths First**
   if (colliderPaths.length > 0) {
-    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidence);
+    buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, focusEvidenceName);
     return; // **Exit after printing collider explanation**
   }
 
   if (specialPaths.length > 0) {
-    buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidence)
+    buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfluence, focusEvidenceName)
     return;
   }
 

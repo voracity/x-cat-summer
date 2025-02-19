@@ -416,7 +416,7 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
-	static moveFocusEvidence(nodeElement,bn){
+	static removeFocusEvidence(nodeElement,bn){
 		bn.focusEvidence = nodeElement.dataset.name;
 		nodeElement.classList.remove("focusEvidence");
 		document.querySelectorAll(".play-button").forEach(button => button.remove());
@@ -505,7 +505,7 @@ class Node {
 				} else {
 					bn.detail = false;
 					document.querySelectorAll(".play-button").forEach(button => button.remove());
-					Node.moveFocusEvidence(focusEvidenceNode, bn);
+					Node.removeFocusEvidence(focusEvidenceNode, bn);
 					bn.update();
 				}
 				if (focusEvidenceNode.classList.contains("hasEvidence")) {
