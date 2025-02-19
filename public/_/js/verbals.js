@@ -134,24 +134,31 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
   let { evidenceTense, targetTense } = inferTenseFromArcInfluence(arcInfluence, subjectName, targetName);
 
   const connectionsCount = activePaths.length;
-  if (connectionsCount > 1){
-  const introPara = n(
-    'p',
-    `Finding out ${targetName} ${evidenceTense} ${targetState} contributes due to `,
-    n('span', numberToWord(connectionsCount), { class: 'verbalTextBold' }),
-    ' connection',
-    (connectionsCount > 1 ? 's' : ''), 
-    ':'
-  );
-  verbalListDisplay.appendChild(introPara);
-}
+
+  if (connectionsCount > 1) {
+    const introPara = n(
+      'p',
+      'Finding out ',
+      n('span', targetName, { class: 'verbalTextBold' }),
+      ' ',
+      n('span', evidenceTense, { class: 'verbalTextItalic' }),
+      ' ',
+      n('span', targetState, { class: 'verbalTextItalic' }),
+      ' contributes due to ',
+      n('span', numberToWord(connectionsCount), { class: 'verbalTextBold' }),
+      ' connection',
+      (connectionsCount > 1 ? 's' : ''),
+      ':'
+    );
+    verbalListDisplay.appendChild(introPara);
+  }
 
   const seenPaths = new Set();
+
   activePaths.forEach((path) => {
     const pathKey = path.join('->');
     if (seenPaths.has(pathKey)) return;
     seenPaths.add(pathKey);
-
     if (path.length === 2) {
       const [nodeA, nodeB] = path;
       const arc = arcsContribution.find(
@@ -160,14 +167,27 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
           (a.from === nodeB && a.to === nodeA)
       );
       if (arc) {
-        const bulletText = `By direct connection, it ${colorToVerbal(arc.color)} the probability of ${nodeB}.`;
-        verbalListDisplay.appendChild(n('p', '• ' + bulletText));
+        const bulletLine = n(
+          'p',
+          '• By direct connection, it ',
+          n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
+          ' the probability of ',
+          n('span', nodeB, { class: 'verbalTextBold' }),
+          '.'
+        );
+        verbalListDisplay.appendChild(bulletLine);
       } else {
         verbalListDisplay.appendChild(
-          n('p', `• By direct connection, it doesn't change the probability of ${nodeB}.`)
+          n(
+            'p',
+            '• By direct connection, it doesn\'t change the probability of ',
+            n('span', nodeB, { class: 'verbalTextBold' }),
+            '.'
+          )
         );
       }
-    } else {
+    } 
+    else {
       const chainEffects = [];
       for (let i = 0; i < path.length - 1; i++) {
         const fromNode = path[i];
@@ -177,22 +197,63 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
             (a.from === fromNode && a.to === toNode) ||
             (a.from === toNode && a.to === fromNode)
         );
+
         if (arc) {
           if (i === 0) {
-            chainEffects.push(`It ${colorToVerbalShorten(arc.color)} the probability that ${toNode} was ${arc.fromState}`);
+            chainEffects.push(
+              n(
+                'span',
+                'It ',
+                n('span', colorToVerbalShorten(arc.color), { class: 'verbalTextUnderline' }),
+                ' the probability that ',
+                n('span', toNode, { class: 'verbalTextBold' }),
+                ' was ',
+                n('span', arc.fromState, { class: 'verbalTextItalic' })
+              )
+            );
           } else {
-            chainEffects.push(`${colorToVerbal(arc.color)} the probability of ${toNode}`);
+            chainEffects.push(
+              n(
+                'span',
+                n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
+                ' the probability of ',
+                n('span', toNode, { class: 'verbalTextBold' })
+              )
+            );
           }
         } else {
           if (i === 0) {
-            chainEffects.push(`It ${colorToVerbalShorten(arc.color)} the probability of ${toNode} was ${arc.fromState}`);
+            chainEffects.push(
+              n(
+                'span',
+                'It doesn\'t change the probability that ',
+                n('span', toNode, { class: 'verbalTextBold' }),
+                ' was ???'
+              )
+            );
           } else {
-            chainEffects.push(`${colorToVerbal(arc.color)} the probability of ${toNode}`);
+            chainEffects.push(
+              n(
+                'span',
+                'it doesn\'t change the probability of ',
+                n('span', toNode, { class: 'verbalTextBold' })
+              )
+            );
           }
         }
       }
-      const chainSentence = chainEffects.join(', which in turn ');
-      verbalListDisplay.appendChild(n('p', `• ${chainSentence}.`));
+
+      const chainContainer = n('span');
+      chainEffects.forEach((effect, idx) => {
+        chainContainer.appendChild(effect);
+        if (idx < chainEffects.length - 1) {
+          chainContainer.appendChild(n('span', ', which in turn '));
+        }
+      });
+
+      verbalListDisplay.appendChild(
+        n('p', '• ', chainContainer, '.')
+      );
     }
   });
 
@@ -209,7 +270,6 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
     verbalListDisplay.appendChild(overallPara);
   }
 }
-
 
 // Creates combined explanations for contributions in collider scenarios, identifying patterns like 
 // "explaining away" and "empowering way".
