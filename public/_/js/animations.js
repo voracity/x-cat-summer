@@ -67,6 +67,7 @@ function colorNode(nodeName, m) {
     let colorClass = getColor(diff)
 
     let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
+    
     barchangeElem.classList.add(colorClass)						
 
     if (absDiff > 0) {

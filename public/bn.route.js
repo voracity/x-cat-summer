@@ -518,6 +518,8 @@ class BnDetail {
 			let displayDetail = false;
 			let verbalTitle = this.root.querySelector('.verbalTitle');
 			let verbalOverallSentence = this.root.querySelector('.overallSentence');
+			let globalTargetNodeName = '';
+			let globalTargetNodeState = '';
 
 			// Changed to fixed arc size
 			let arcSize = 8;			
@@ -527,6 +529,8 @@ class BnDetail {
 				verbalListDisplay.innerHTML = '';
 				verbalIntroSentence.innerHTML = '';
 				verbalBox.style.display = 'none';
+				globalTargetNodeName = '';
+				globalTargetNodeState = '';
 				
 				verbalOverallSentence.innerHTML = '';
 				displayDetail = false;
@@ -592,6 +596,7 @@ class BnDetail {
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
 						let targetStateElem = targetNode.querySelector(".state.istarget");
 						let targetStateIdx = targetStateElem.dataset.index;
+						
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
@@ -612,7 +617,10 @@ class BnDetail {
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
-						let targetStateName = targetStateElem.querySelector('.label').textContent;						
+						let targetStateName = targetStateElem.querySelector('.label').textContent;
+						globalTargetNodeName = targetNodeName;
+						globalTargetNodeState = targetStateName;
+						
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
@@ -645,11 +653,6 @@ class BnDetail {
 									barchangeElem.classList.remove("frame");
 								}
 							})
-	
-							// barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-							
-							// color of next to state black bar
-							// barchangeElem.classList.add(colorClass);
 						}
 						
 						cellProbabilityElem.classList.add(colorClass);
@@ -673,76 +676,33 @@ class BnDetail {
 					// 5. Fades inactive arcs by altering their stroke and fill properties.
 					// 6. Collects and stores arc contributions for further explanation and analysis.
 					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
-					if (m.arcInfluence && m.activePaths) {
-						let delay = 0;					
-						reset(m.arcInfluence, bn, this.bnView);
-
-						// console.log('---------------------------------------AAAAAAactivePaths')
-						// Fade Nodes										
-						// console.log('m.activePaths is activated: ', m.activePaths)
+					if (m.arcInfluence && m.activePaths) {												
 						let onlyFirstOrder = true;
-						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);
-						console.log('activeNodes:', activeNodes)						
-						// console.log('activeNodes:', activeNodes)
-						console.log('m.activePaths:', m.activePaths)
-						console.log('m.activePaths length:', m.activePaths.length)
-
-						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
-
-						// console.log('evidenceNodeName:', evidenceNodeName)
-						// console.log('activeNodes: ', activeNodes)								
+						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
 					
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
 							m.nodeBeliefs,													
 							evidenceNodeName
 						);						
-								
-					
+													
 						let arcsContribution = [];
 
-						sortedArcInfluence.forEach((arcEntry, index) => {					
-
-							// we know the first child is the colour arc
-							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
-							let selectedParentStateIndex = m.nodeBeliefs[arcEntry.parent]
-								? m.nodeBeliefs[arcEntry.parent].indexOf(1)  // Find explicitly selected state
-								: -1;
-							let parentStateElem = parentNode?.querySelector('.state.istarget .label') ||
-								parentNode?.querySelector(`.state[data-index="${selectedParentStateIndex}"] .label`);
-		  
-		  					let parentNodeState = parentStateElem ? parentStateElem.textContent.trim() : "Unknown";
-		  
-							
-							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-							let selectedStateIndex = m.nodeBeliefs[arcEntry.child]
-								? m.nodeBeliefs[arcEntry.child].indexOf(1) // Find explicitly selected state
-								: -1;
-							let selectedStateElem = childNode?.querySelector('.state.istarget .label') ||
-								childNode?.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
-	   
-	   						let childNodeState = selectedStateElem ? selectedStateElem.textContent.trim() : "Unknown";
-	   
-						
-							// coloring order of arrows
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation ) {
-								arcsContribution.push({
-									from: arcEntry.parent,
-									fromState: parentNodeState,
-									to: arcEntry.child,
-									toState: childNodeState,
-									color: arcEntry.color,
-									// targetNodeName: targetNodeName,
-									// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
-								})
-							} 
+						sortedArcInfluence.forEach((arcEntry) => {
+							let parentNodeState = getNodeState(arcEntry.parent, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
+							let childNodeState = getNodeState(arcEntry.child, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
+					
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation) {
+									arcsContribution.push({
+											from: arcEntry.parent,
+											fromState: parentNodeState,
+											to: arcEntry.child,
+											toState: childNodeState,
+											color: arcEntry.color,
+									});
+							}
 						});
-						console.log('arcsContribution:', arcsContribution)
-						
-						console.log('displayDetail:', displayDetail)
-						if (displayDetail) {
-							
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+						if (displayDetail) {							
 							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
 						}
 					}

@@ -16,6 +16,41 @@ function colorToVerbal(color, pastTense = false) {
   return pastTense ? effects[color][1] : effects[color][0];
 }
 
+function getNodeState(nodeName, globalTargetNodeName, globalTargetNodeState, m, bnView) {
+  if (nodeName === globalTargetNodeName) {
+      return globalTargetNodeState;
+  }
+
+  let node = bnView.querySelector(`div.node[data-name=${nodeName}]`);
+  if (!node) return "Unknown";
+
+  if (node.classList.contains('hasEvidence')) {
+      let selectedStateIndex = m.nodeBeliefs[nodeName]
+          ? m.nodeBeliefs[nodeName].indexOf(1)  // Find explicitly selected state
+          : -1;
+      let selectedStateElem = node?.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
+      
+      return selectedStateElem ? selectedStateElem.textContent.trim() : "Unknown";
+  }
+
+  let currentBelief = m.nodeBeliefs[nodeName];
+  let origBeliefs = m.origModel.find(entry => entry.name == nodeName)?.beliefs;
+
+  if (!currentBelief || !origBeliefs) return "Unknown";
+
+  for (let idx = 0; idx < currentBelief.length; idx++) {
+      let diff = currentBelief[idx] - origBeliefs[idx];
+      let absDiff = diff * 100;
+
+      if (absDiff > 0) {
+          let stateElem = node.querySelector(`.state[data-index="${idx}"]`);
+          return stateElem?.querySelector('.label')?.textContent.trim() || "Unknown";
+      }
+  }
+
+  return "Unknown";
+}
+
 // Simplifies color descriptions into general categories like "increases" or "reduces".
 function colorToVerbalShorten(color) {
   if (color == "influence-idx6" || color == "influence-idx5" || color == "influence-idx4")
