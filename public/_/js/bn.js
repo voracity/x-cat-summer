@@ -416,14 +416,14 @@ class Node {
 
 
 	static setFocusEvidence(nodeElement, bn) {
+		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
 	static moveFocusEvidence(nodeElement,bn){
-	
 		bn.focusEvidence = nodeElement.dataset.name;
+		nodeElement.classList.remove("focusEvidence");
 		document.querySelectorAll(".play-button").forEach(button => button.remove());
-
 
 	}
 
