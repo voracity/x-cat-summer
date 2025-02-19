@@ -756,15 +756,25 @@ class BnDetail {
 
 							// we know the first child is the colour arc
 							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
-							let parentStateElem = parentNode.querySelector('.state.istarget .label');
-							let parentNodeState = parentStateElem ? parentStateElem.textContent.trim() : "Unknown";
+							let selectedParentStateIndex = m.nodeBeliefs[arcEntry.parent]
+								? m.nodeBeliefs[arcEntry.parent].indexOf(1)  // Find explicitly selected state
+								: -1;
+							let parentStateElem = parentNode?.querySelector('.state.istarget .label') ||
+								parentNode?.querySelector(`.state[data-index="${selectedParentStateIndex}"] .label`);
+		  
+		  					let parentNodeState = parentStateElem ? parentStateElem.textContent.trim() : "Unknown";
+		  
 							
 							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-							let selectedStateIndex = m.nodeBeliefs[arcEntry.child]?.indexOf(1);
-
-							let selectedStateElem = childNode.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
-							let childNodeState = selectedStateElem ? selectedStateElem.textContent : "Unknown";
-
+							let selectedStateIndex = m.nodeBeliefs[arcEntry.child]
+								? m.nodeBeliefs[arcEntry.child].indexOf(1) // Find explicitly selected state
+								: -1;
+							let selectedStateElem = childNode?.querySelector('.state.istarget .label') ||
+								childNode?.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
+	   
+	   						let childNodeState = selectedStateElem ? selectedStateElem.textContent.trim() : "Unknown";
+	   
+						
 							// coloring order of arrows
 							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
 								arcsContribution.push({

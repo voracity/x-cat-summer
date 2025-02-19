@@ -322,7 +322,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, col
       `by making the ${colorToVerbalShorten(arc1.color).replace(/s$/, '')} from `,
       n('span', arc0.toState, { class: 'verbalTextItalic' }),'  ',
       n('span', arc0.to, { class: 'verbalTextBold' }),
-      'smaller .'
+      ' smaller .'
     );
     verbalListDisplay.appendChild(finalOverall);
   }
