@@ -10,13 +10,14 @@ var bn = {
 	beliefs: {},
 	activePaths: {},
 	colliders: {},
+	// colliderDiff: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
-	dragFunc:true,
-	showMenu:null,
-	verbal:null,
-	detail:false,
-
+	dragFunc: true,
+	showMenu: null,
+	verbal: null,
+	detail: false,
+	classifiedPaths: null,
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -130,11 +131,10 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
-					// console.log('reqData.arcInfluence:', reqData.arcInfluence);
-					// console.log('reqData.activePaths:', reqData.activePaths);
-					console.log('reqData.colliders:', reqData.colliders);
 					this.colliders = reqData.colliders;
+					// this.colliderDiff = reqData.colliderDiff;
 					this.activePaths = reqData.activePaths;
+					this.classifiedPaths = reqData.classifiedPaths;					
 				} else {
 					this.influences = {};
 				}
@@ -145,14 +145,14 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
 	},
 
 	guiUpdateInfoWindows() {
 		q('div.infoWindow')?.remove();
 		this.ciTableEnabled = !!this.roles?.effect?.length;
 		if (!this.ciTableEnabled)  q('div.ciTableWindow')?.remove();
-		console.log(this.roles?.cause?.length, this.roles?.effect?.length);
+		// console.log(this.roles?.cause?.length, this.roles?.effect?.length);
 		if (this.roles?.cause?.length && this.roles?.effect?.length) {
 			let causes = this.roles.cause;
 			let causeStates = causes.map(cause => this.selectedStates[cause] && this.getNode(cause).model.states[this.selectedStates[cause]]);
@@ -309,7 +309,7 @@ class Node {
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
 		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
 	
-		//this.bn.gui('UpdateInfoWindows');
+		Node.reset();  // **调用 reset() 方法**his.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
 		if (this.role) {
@@ -343,6 +343,7 @@ class Node {
 		allStateElem.forEach((elem) => {
 			elem.style.backgroundColor = "";
 		});
+
 		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
@@ -411,17 +412,18 @@ class Node {
 	}
 
 	static setFocusEvidence(nodeElement, bn) {
-		nodeElement.classList.add("focusEvidence");		
+		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
 	static moveFocusEvidence(nodeElement,bn){
-		nodeElement.classList.remove("focusEvidence");		
 		bn.focusEvidence = nodeElement.dataset.name;
+		nodeElement.classList.remove("focusEvidence");
+		document.querySelectorAll(".play-button").forEach(button => button.remove());
+
 	}
 
 
-	
 	static guiSetupEvents() {
 		bn.initialize();
 
@@ -447,7 +449,7 @@ class Node {
 		}
 
 		q(".bnView").addEventListener("click", (event) => {
-			console.log("move");
+			// console.log("move");
 			event.stopPropagation();
 			let evidenceNodeTitle = event.target.closest('.node h3');
 			let focusEvidenceNode =  event.target.closest('.node');
@@ -461,47 +463,63 @@ class Node {
 					nodeHeader.style.cursor = "default"; 
 				});
 			});
-			if (evidenceNodeTitle) {				
-				
-				document.querySelectorAll(".play-button").forEach(button => button.remove());
-				const existingButton = evidenceNodeTitle.querySelector(".play-button");
-				if (existingButton) {
-					existingButton.remove();
+
+			if (!evidenceNodeTitle) { 
+				if (!bn.isFrozen) {  
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
 				}
-						
+				return;
+			}
+
+	
+			if (evidenceNodeTitle && focusEvidenceNode.classList.contains("hasEvidence")) {  
+				// console.log('evidenceNodeTitle', evidenceNodeTitle);
+
+
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+		
 				const playButton = document.createElement("button");
 				playButton.textContent = "▶";
 				playButton.className = "play-button";
-
-				playButton.addEventListener("click", () => {
-					console.log('Button play');
-					//Hao add backend here
-				});
-
-				evidenceNodeTitle.style.position = "relative"; 
 				playButton.style.position = "absolute";
-				playButton.style.left = "-30px"; 
-				playButton.style.top = "55%"; 
+		
+				playButton.addEventListener("click", () => {
+					// console.log("Play Button Clicked!");
+					Node.flashNode(focusEvidenceNode);
+					bn.update();
+				});
+		
+				let rect = evidenceNodeTitle.getBoundingClientRect();
+				playButton.style.left = `${window.scrollX + rect.left - 30}px`;
+				playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
 				playButton.style.transform = "translateY(-50%)";
-				evidenceNodeTitle.appendChild(playButton);
+				
+				document.body.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
-
-				console.log('-----DEtail:---',bn.detail)
-
-				if (bn.detail === false){
-					console.log('CHANGING--------')
-					Node.setFocusEvidence(focusEvidenceNode, bn);
-					bn.detail = true
-				}
-				else{
+		
+				// console.log('bn.detail:', bn.detail);
+				if (bn.detail === false) {
+					// console.log('--------CHANGING--------');
+					Node.setFocusEvidence(focusEvidenceNode, bn);					
+					bn.detail = true;
+				} else {
+					bn.detail = false;
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.moveFocusEvidence(focusEvidenceNode, bn);
-					bn.detail = false
+					bn.update();
 				}
-				
-				const node = refs.Node(focusEvidenceNode)
-				node.bn.update();																	
+				if (focusEvidenceNode.classList.contains("hasEvidence")) {
+					document.body.appendChild(playButton);
+				}
+		
+				const node = refs.Node(focusEvidenceNode);
+				node.bn.update();                                                                 
+			} else {
+				if (!bn.isFrozen) {  // **Frozen Mode 下不删除 PlayButton**
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+				}
 			}
-				
+					
 			
 			let menuButton = event.target.closest("a.menu");
 			if (menuButton) {
@@ -545,23 +563,24 @@ class Node {
 
 		document.querySelectorAll(".node").forEach((setMoveEl) => {
 			setMoveEl.addEventListener("mousedown", (event) => {
-				console.log('dragfunc:',dragFunc)
+
+				// console.log('dragfunc:',dragFunc)
 				if (!dragFunc){
 					console.log('Drag func disbaled')
 					return
 				}
 
-				console.log("Mousedown triggered");
+				// console.log("Mousedown triggered");
 				let target = event.target.closest(".node");
-				console.log('target:', target);
+				// console.log('target:', target);
 				
 
 				if (target) {
 					let targetNode = target.closest(".node");
 					event.stopPropagation();
 					event.preventDefault();
-					console.log("start dragging");
-					console.log('targetNode.classList:', targetNode.classList);
+					// console.log("start dragging");
+					// console.log('targetNode.classList:', targetNode.classList);
 
 					// define init pos
 					let origX = event.clientX,
@@ -681,10 +700,50 @@ function setupScenarioEvents() {
 	});
 }
 
+
+document.addEventListener("DOMContentLoaded", function() {
+    let influenceBox = document.querySelector(".influenceContainer"); 
+    let nodes = document.querySelectorAll(".node"); 
+    let windowWidth = window.innerWidth; 
+
+    if (influenceBox && nodes.length > 0) {
+        let maxRight = 0;
+        let rightmostNode = null;
+
+        nodes.forEach(node => {
+            let nodeRect = node.getBoundingClientRect();
+            if (nodeRect.right > maxRight) {
+                maxRight = nodeRect.right;
+                rightmostNode = node;
+            }
+        });
+
+        if (rightmostNode) {
+            let nodeRect = rightmostNode.getBoundingClientRect();
+
+
+            let newLeft = nodeRect.right;
+
+            if (newLeft + influenceBox.offsetWidth > windowWidth) {
+                newLeft = windowWidth - influenceBox.offsetWidth - 20;
+                console.log("⚠ Influence box hit right edge, adjusting position.");
+            }
+
+            influenceBox.style.position = "absolute";
+            influenceBox.style.left = `${newLeft}px`;
+        } else {
+            console.log("⚠ No rightmost node found!");
+        }
+    } else {
+        console.log("⚠ No nodes or influenceBox found!");
+    }
+});
+
 document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
 	let verbal = false;
 	let animation = false;
+
 
 	const siteLinksDiv = document.querySelector('.siteLinks');
 
@@ -701,10 +760,16 @@ document.addEventListener('DOMContentLoaded', event => {
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
+		
 		let target = event.target.closest('.target');
 		if (target) {
 			// target.classList.toggle('selected');
 			let possibleEvidenceNode = target.closest('.node.hasEvidence');
+
+			if (!possibleEvidenceNode) {
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+			}
+	
 			
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
@@ -855,17 +920,17 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	let scaling = q('select.scaleimage').value
 	// 	render.Network(Number(scaling), "png");
 	// })
-	q('button.savesnapshot').addEventListener('click', () => {
-		bnDetail.saveSnapshot()
-	})
+	// q('button.savesnapshot').addEventListener('click', () => {
+	// 	bnDetail.saveSnapshot()
+	// })
 	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");
 	})
-	q('button.downloadbase64').addEventListener('click', () => {
-		let scaling = q('select.scaleimage').value
-		render.Network(Number(scaling), "base64");
-	})
+	// q('button.downloadbase64').addEventListener('click', () => {
+	// 	let scaling = q('select.scaleimage').value
+	// 	render.Network(Number(scaling), "base64");
+	// })
 	q('input.influence-as-frame').addEventListener('click', (event) => {
 		bnDetail.drawFrame = event.target.checked
 		bnDetail.$handleUpdate({updateFrameMode:""});
@@ -874,6 +939,28 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.onlyTargetNode = event.target.checked
 		bnDetail.$handleUpdate({updateShowBarChange:""});
 	})
+
+	document.querySelector('button.frozen-mode').addEventListener('click', function() {
+		if (!bn.isFrozen) {
+			bn.isFrozen = true;
+			document.querySelector(".bnView").classList.add("frozen");
+			this.classList.add('frozen_box'); 
+
+		} else {
+			bn.isFrozen = false;
+			console.log("Frozen Mode: Only Play Button is clickable.");
+			document.querySelector(".bnView").classList.remove("frozen");
+			this.classList.remove('frozen_box');
+			let verbalBox = document.querySelector("#verbalBox");
+			if (verbalBox) {
+				verbalBox.classList.add("influenceContainer");
+				console.log("Frozen Mode: verbalBox class remains:", verbalBox.classList);
+			}
+			
+		}
+	
+	});
+
 });
 
 

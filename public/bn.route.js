@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders, analyzeColliders } = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders} = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -291,6 +291,7 @@ class BnDetail {
 					'Only Show Target Node',
 					n('input.influence-target-node', {type:"checkbox"})
 				),
+				n('button.frozen-mode', 'Frozen Mode'),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),
 				n('span.scenarioControls',
@@ -313,7 +314,6 @@ class BnDetail {
 				),
 			),
 
-			
 
 			n('div.infoWindows',
 				/*	
@@ -423,6 +423,7 @@ class BnDetail {
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}
+			console.log('m.nodeBeliefs:', m.nodeBeliefs)
 		}
 		/** != null is false only if value is null or undefined **/
 		if (m.scenariosEnabled != null) {
@@ -504,10 +505,10 @@ class BnDetail {
 		// NODES
 		if (m.influences) {
 			let asFrame = true;
-			console.log("updating influences");
+			// console.log("updating influences");
 			let listTargetNodes = {}			
 			let entries = Object.entries(m.influences)
-			console.log('m.influences', m.influences)					
+			// console.log('m.influences', m.influences)					
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
 			if (verbal){
@@ -518,6 +519,8 @@ class BnDetail {
 			let displayDetail = false;
 			let verbalTitle = this.root.querySelector('.verbalTitle');
 			let verbalOverallSentence = this.root.querySelector('.overallSentence');
+			let globalTargetNodeName = '';
+			let globalTargetNodeState = '';
 
 			// Changed to fixed arc size
 			let arcSize = 8;			
@@ -527,37 +530,42 @@ class BnDetail {
 				verbalListDisplay.innerHTML = '';
 				verbalIntroSentence.innerHTML = '';
 				verbalBox.style.display = 'none';
+				globalTargetNodeName = '';
+				globalTargetNodeState = '';
 				
 				verbalOverallSentence.innerHTML = '';
 				displayDetail = false;
 
-				reset(m.arcInfluence, bn, this.bnView);				
+				reset(m.arcInfluence, bn, this.bnView);
 
-			} else {
-				console.log('entries:', entries)
+			} else {						
+				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
-					if (evidenceNodeName == 'overall') return;
-					console.log('-------------------------------------')
-					// console.log('evidenceNodeName:', evidenceNodeName)			
-					console.log('this.bnView:', this.bnView)		
+					if (evidenceNodeName == 'overall') return;		
+					// console.log('this.bnView:', this.bnView)		
 
 					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
-					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
+					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')			
+					// console.log('focusEvidence:', focusEvidence)	
 					
-					console.log('-----focuse Evidence----- :',focusEvidence)
+					// console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
 						focusEvidenceName = focusEvidence.getAttribute('data-name')
-						focusEvidenceState = focusEvidence.querySelector('.label').textContent
+						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
+						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
+						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+						focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
+						let { evidenceTense } = inferTenseFromArcInfluence(m.arcInfluence, focusEvidenceName, "Dermascare");
+						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} ${evidenceTense} `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
 					}
@@ -573,9 +581,8 @@ class BnDetail {
 
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					console.log('evidenceNode:', evidenceNode)
-					
-									
+					// console.log('evidenceNode:', evidenceNode)
+							
 					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
@@ -585,9 +592,11 @@ class BnDetail {
 						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
 						let targetStateElem = targetNode.querySelector(".state.istarget");
 						let targetStateIdx = targetStateElem.dataset.index;
+						
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+						
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
@@ -604,12 +613,14 @@ class BnDetail {
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
-						let targetStateName = targetStateElem.querySelector('.label').textContent;						
+						let targetStateName = targetStateElem.querySelector('.label').textContent;
+						globalTargetNodeName = targetNodeName;
+						globalTargetNodeState = targetStateName;
+						
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
-												
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName, displayDetail);
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
@@ -617,29 +628,17 @@ class BnDetail {
 							verbalListDisplay.appendChild(findingOutSentence)
 							
 							if (numsEntries >= 2) {
-								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
 							}
-						}												
+						}			
 
-						// Overall Detail Sentence
-						if (displayDetail && m.activePaths.length >= 2) {
-							verbalOverallSentence.innerHTML = '';
-							verbalOverallSentence.appendChild(
-								n('p', `Overall, the findings `, 
-								n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
-								n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
-							));
-						}
-
-						// console.log('colorClass:', colorClass)
-						console.log('-------------------------------------')
-						// set colour and width of the barchange element
+						// console.log('colorClass:', colorClass)						
+						// set colour and width of the barchange element of finding
 
 						if (this.drawOptions.drawChangeBar) {
 							barchangeElem.style.width = absChange+"%";
 							barchangeElem.style.marginLeft = "-"+absChange+"%";
 							// barchangeElem.style.left = `${100 - absChange}%`;
-	
 	
 							Array.from(barchangeElem.classList).forEach(classname => {
 								if (classname.indexOf("influence-idx") == 0) {
@@ -650,10 +649,6 @@ class BnDetail {
 									barchangeElem.classList.remove("frame");
 								}
 							})
-	
-							barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-							
-							barchangeElem.classList.add(colorClass);
 						}
 						
 						cellProbabilityElem.classList.add(colorClass);
@@ -668,235 +663,80 @@ class BnDetail {
 						})
 
 					})
+					console.log('listTargetNodes:', listTargetNodes)					
+					console.log('m.origModel:', m.origModel)
 				
-					// ARCS && Fade Nodes && Arrow Animation
-					// console.log('---------------------------------------AAAAAArcInfluence')
-					if (m.arcInfluence && m.activePaths) {
-						let delay = 0;
-						// console.log("arcInfluence:", m.arcInfluence);			
+					// Generate detailed explaination for the focus node					
+					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
+						let onlyFirstOrder = false;
+						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
 					
-						reset(m.arcInfluence, bn, this.bnView);
-
-						// console.log('---------------------------------------AAAAAAactivePaths')
-						// Fade Nodes										
-						// console.log('m.activePaths is activated: ', m.activePaths)
-						let activeNodes = new Set(m.activePaths.flat())
-						// console.log('activeNodes:', activeNodes)
-						console.log('m.activePaths:', m.activePaths)
-						console.log('m.activePaths length:', m.activePaths.length)
-
-						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
-
-						// console.log('evidenceNodeName:', evidenceNodeName)
-						console.log('activeNodes: ', activeNodes)
-						
-						// Node Fading
-						this.bnView.querySelectorAll('div.node').forEach(node => {
-							let nodeName = node.getAttribute('data-name');
-							if (!activeNodes.has(nodeName) && verbal) {
-								node.style.opacity = 0.3
-							}
-							// console.log('node:', node)	
-							// if (!node.classList.contains('hasEvidence') && !node.classList.contains('istargetnode')) {
-							// 	node.style.opacity = 0.3
-							// }
-						})						
-						// console.log('AAAAAAA---------------------------------------')
-					
-						// console.log("evidenceNodeName:", evidenceNodeName);
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
 							m.nodeBeliefs,													
 							evidenceNodeName
 						);						
-					
-						// console.log("importantMiddleNodes", importantMiddleNodes);
-						// console.log("evidenceNodeLabels", evidenceNodeLabels);
-						// console.log("targetNodeLabel", targetNodeLabel);
-						if (m.activePaths.length >= 2 && displayDetail) {
-							verbalIntroSentence.innerHTML = '';
-							verbalIntroSentence.appendChild(
-								n('p', 'Finding out ', 
-								n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-								' was ',
-								n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-								' contributes due to ',
-								numberToWord(m.activePaths.length),
-								' connections:'
-								))
-						}
-					
-						// console.log("sortedArcInfluence:", sortedArcInfluence);		
-						// let enhanceActivePathsArr = enhanceActivePaths(m.activePaths, sortedArcInfluence, this.bnView);			
-					
+													
 						let arcsContribution = [];
 
-						sortedArcInfluence.forEach((arcEntry, index) => {						
-							let arc = document.querySelector(
-								`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-							);
-							// console.log("index:", index);
-							// console.log("arcEntry:", arcEntry);							
-							// console.log("activeNodes:",activeNodes);
-							// console.log("arcEntry.color:", arcEntry.color);
-							// console.log('arcEntry[child]', arcEntry.child)
-							// console.log('arcEntry[parent]', arcEntry.parent)
-							// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-
-							// we know the first child is the colour arc
-							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
-							let parentNodeState = parentNode.querySelector('.label').textContent;
-							
-							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-							let childNodeState = childNode.querySelector('.label').textContent;
-
-							
-							// coloring order of arrows
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
-								arcsContribution.push({
-									from: arcEntry.parent,
-									fromState: parentNodeState,
-									to: arcEntry.child,
-									toState: childNodeState,
-									color: arcEntry.color,
-									// targetNodeName: targetNodeName,
-									// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
-								})
-
-								let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-								let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");			
-								let animationOrder = 'normal';
-								if (index == 0 && arcEntry.child == evidenceNodeName) {
-									animationOrder = 'reverse';
-								}											
-
-								let combinedElems = Array.from(influeceArcBodyElems).map(
-									(bodyElem, index) => {
-										return {
-											body: bodyElem,
-											head: influeceArcHeadElems[index],
-										};
-									},
-								);
-								let paintColor = getComputedStyle(
-									document.documentElement,
-									).getPropertyValue(`--${arcEntry.color}`);
-
-								setTimeout(() => {														
-									combinedElems.forEach((pair) => {
-										let bodyElem = pair.body;
-										let headElem = pair.head;																						
-										
-										if (animationOrder == 'normal') {
-											// coloring arrow from bottom to top
-											colorElement(bodyElem, paintColor, arcSize, animationOrder);							
-											setTimeout(() => {											
-												colorElement(headElem, paintColor, arcSize, animationOrder);												
-											}, 1000);
-										
-										} else {
-											// coloring arrow from top to bottom														
-											colorElement(bodyElem, paintColor, arcSize, animationOrder);											
-											// don't have to wait to color the head		
-											setTimeout(() => {											
-												colorElement(headElem, paintColor, arcSize, animationOrder);												
-											}, 0);													
-										}										
+						sortedArcInfluence.forEach((arcEntry) => {
+							let parentNodeState = getNodeState(arcEntry.parent, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
+							let childNodeState = getNodeState(arcEntry.child, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
+					
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation) {
+									arcsContribution.push({
+											from: arcEntry.parent,
+											fromState: parentNodeState,
+											to: arcEntry.child,
+											toState: childNodeState,
+											color: arcEntry.color,
 									});
-								}, delay);					
-								delay += 500;
-							} else {	
-								// Fade arrows						
-								// console.log("arc:", arc);
-								let arcBodys = arc.querySelectorAll('path.line')							
-								arcBodys[1].setAttribute('stroke', '#ffffff')
-								// console.log("arcBodys[1]:", arcBodys[1]);
-
-								let arcHeads = arc.querySelectorAll('g.head')							
-								arcHeads[1].setAttribute('fill', '#fafafa')																
-								arcHeads[1].setAttribute('stroke', '#fafafa')	
-								// console.log("arcHeads[1]:", arcHeads[1]);	
-								// arcBodys[1].style.opacity = 0.1
-								// console.log("arcBodys after changing color:", arcBodys[1]);
 							}
 						});
-						console.log('arcsContribution:', arcsContribution)
-						if (displayDetail) {
-							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
+						if (displayDetail) {							
+							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, focusEvidence);
 						}
 					}
 				})
-			}
-			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-				let baseBelief = data.model.beliefs[data.index];
-				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
-				let diff = currentBelief - baseBelief
-				let absDiff = 100*Math.abs(diff)
-				let targetColorClass = getColor(diff)				
-				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
-				Array.from(barchangeElem.classList).forEach(classname=> {
-					if (classname.indexOf("influence-idx") == 0) {
-						barchangeElem.classList.remove(classname);
-						barchangeElem.classList.remove(`${targetColorClass}-box`);
-						barchangeElem.classList.remove(`influence-box`);
-					}
-				})
-
-				if (diff > 0) {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
-				} else {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
-
-				}
-				// shadow-boxes with width 0 still show their glow
-				if (Math.abs(diff)>0)
-					barchangeElem.classList.add(targetColorClass+"-box");
-
-			})
-			
-			if (this.drawOptions.drawChangeBar)
-				// Now set the change of belief for all remaining nodes, so show how their states
-				// changed given all evidence VS no evidence
-				Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
-					let nodelabel = node.getAttribute("data-name");
+				// color target bar every time a new evidence is added
+				colorTargetBar(listTargetNodes, m)	
+				
+				// Animation when new focus node is added
+				if (m.classifiedPaths) {								
 					
-					let currentBelief = m.nodeBeliefs[nodelabel];
-					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
-
-					currentBelief.forEach((curBelief, idx) => {
-						let diff = curBelief - origBeliefs[idx]
-						let absDiff = diff * 100;
-						
-						// let colorClass = getColor(/curBelief/origBeliefs[idx])
-						let colorClass = getColor(diff)
-
-						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-						barchangeElem.classList.add(colorClass)						
-
-						if (absDiff > 0) {
-							// overlay change over the current belief bar
-							barchangeElem.style.marginLeft = `-${absDiff}%`;
-							barchangeElem.style.width = `${absDiff}%`;
-						} else {
-							// the change will be placed right next to the original belief bar
-							barchangeElem.style.width = `${absDiff}%`;
-						}
-					})
-				})
-
-		} else {
-
-
-			// Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
-			// 	let barchange = targetNode.querySelector(".barchange");
-			// 	barchange.style.width = ""
-			// })
-
-		}
+					reset(m.arcInfluence, bn, this.bnView);
+					resetTargetBar(listTargetNodes)
+					
+					const activeNodes = extractActiveNodes(m.classifiedPaths);	
+					fadeNodes(activeNodes, this.bnView);	
+					fadeAllArrows(activeNodes, m.arcInfluence)
+										
+					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
+					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
+													
+					// console.log('animationOrderBN:', animationOrderBN)
+					// console.log('arcColorDict:', arcColorDict)
+					
+					animationOrderBN.forEach((path, index) => {
+						setTimeout(() => {
+							if (path.type == 'arrow') {
+								const { arcParent, arcChildren } = getArcEndpoints(path);							
+								const color = arcColorDict[`${arcParent}, ${arcChildren}`]							
+								colorArrows(arcParent, arcChildren, path.direction, color)							
+							}
+							else if (path.type == 'node') {
+								colorNode(path.name, m)
+							}
+							else if (path.type == 'target'){
+								colorTargetBar(listTargetNodes, m)
+							}
+						}, (index + 1) * 850) // start index at 1 so the flashing go first
+					})											
+				} 				
+			}		
+			
+		} 
 	}
 
 	saveSnapshot() {
@@ -1068,13 +908,13 @@ module.exports = {
 						evidence = JSON.parse(req.query.evidence);
 						
 					}
-					console.log('req.query:-----------------------', req.query)
+					// console.log('req.query:--------', req.query)
 
 					// Initialize 'selectedStates' variable
 					let selectedStates = {};
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-						console.log('selectedStates:', selectedStates)
+						// console.log('selectedStates:', selectedStates)
 					}
 				
 
@@ -1123,11 +963,13 @@ module.exports = {
 
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
+						// console.log('evidence:', evidence)
 
 						let focusEvidence = null
 
 						if (req.query.focusEvidence) {
-							focusEvidence = req.query.focusEvidence;							
+							focusEvidence = req.query.focusEvidence;		
+							// console.log('focusEvidence:', focusEvidence)					
 						}
 
 						// the selected state is our Target
@@ -1156,11 +998,13 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.colliders = {};
+						// bn.colliderDiff = {};
 
 
 						const colliders = findAllColliders(relationships);
 						bn.colliders = colliders;
-						console.log('Collider:', bn.colliders);
+						// console.log('Collider:', bn.colliders);
+
 
 						// Ensure only one selected target node
 						const targetNames = Object.keys(selectedStates);
@@ -1188,16 +1032,18 @@ module.exports = {
 
 						let pathWithRelationship = []
 
-						const collider = analyzeColliders(
-							net,
-							relationships,
-							evidence,
-							targetNodeName,
-							targetStateIndex,
-							bnKey
-						);
-						
-						console.log("Detected Colliders and Differences:", collider);
+						// Finding the colliders and printing them
+						// const colliderDiff = analyzeColliders(
+						// 	net,
+						// 	relationships,
+						// 	evidence,
+						// 	targetNodeName,
+						// 	targetStateIndex,
+						// 	bnKey
+						// );
+				
+						// console.log("Detected Colliders and Differences:", collider);
+						// bn.colliderDiff = colliderDiff;
 
 						for (let evidenceNodeName of Object.keys(evidence)) {
 							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
@@ -1226,35 +1072,23 @@ module.exports = {
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
 							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
-							console.log('allPaths:', allPaths)					
-						
-							// filterActivePaths
-							// let activePaths = filterActivePaths(allPaths,relationships,evidence);		
-											
-							// activePaths = filterShortestPaths(ActivePaths);							
-						
-							// const nonActiveNodes = Object.keys(evidence);
-							// console.log("activePaths: ", activePaths);
-
 						
 							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
 							for (const path of allPaths) {
 								bn.activePaths.push(path)				
-								// console.log('bn.activePaths:', bn.activePaths)					
-							}
-							
-
-							let pathRel = activePathWithRelationships(allPaths[0], relationships)
-							// console.log('pathRel:', pathRel)
-							pathWithRelationship.push(pathRel)														
+								let pathRel = activePathWithRelationships(path, relationships)															
+								pathWithRelationship.push(pathRel)																					
+							}							
 
 							if (focusEvidence !== 'null'){
-								// console.log('pathWithRelationship:', pathWithRelationship)	
+								console.log('pathWithRelationship:', pathWithRelationship)	
+								// console.log('allPaths:', allPaths)	
 								// console.log('bn.activePaths:', bn.activePaths)
 								// console.log('focusEvidence:', focusEvidence)
 								// console.log('targetNodeName:', targetNodeName)								
-								let pathClassified = classifyPaths(pathWithRelationship, bn.activePaths, focusEvidence, targetNodeName)
-								const {firstOrderPaths, secondOrderPaths} = pathClassified
+								let classifiedPaths = classifyPaths(pathWithRelationship, focusEvidence, targetNodeName)
+								bn.classifiedPaths = classifiedPaths
+								const {firstOrderPaths, secondOrderPaths} = classifiedPaths
 								console.log('firstOrderPaths:', firstOrderPaths)
 								console.log('secondOrderPaths:', secondOrderPaths)
 							}							
@@ -1275,11 +1109,15 @@ module.exports = {
 						// calculate arc importances
 						let arcs = []
 						// reset network
-						net = new Net(bnKey);
+						net = new Net(bnKey);						
+						
 						net.nodes().forEach(child => {
-							let childname = child.name();
+							let childname = child.name();			
+										
+
 							child.parents().forEach(parent => {
-								let parentname = parent.name();
+								
+								let parentname = parent.name();							
 								
 								let netWithnewCPT = new Net(bnKey);
 								let newcpt = marginalizeParentArc(child, parent, true);
@@ -1290,7 +1128,7 @@ module.exports = {
 								newchild.cpt(newcpt);
 								
 								for (let [nodeName,stateI] of Object.entries(evidence)) {
-									netWithnewCPT.node(nodeName).finding(Number(stateI));
+									netWithnewCPT.node(nodeName).finding(Number(stateI));									
 								}
 
 								netWithnewCPT.update();
@@ -1327,8 +1165,7 @@ module.exports = {
 					let selectedStates = null;
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-					}
-					console.log({selectedStates});
+					}					
 					
 					/// Update selected states if there are joint causes
 					console.log({roles});
