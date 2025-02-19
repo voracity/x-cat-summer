@@ -680,7 +680,9 @@ class BnDetail {
 						// console.log('---------------------------------------AAAAAAactivePaths')
 						// Fade Nodes										
 						// console.log('m.activePaths is activated: ', m.activePaths)
-						let activeNodes = new Set(m.activePaths.flat())
+						let onlyFirstOrder = true;
+						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);
+						console.log('activeNodes:', activeNodes)						
 						// console.log('activeNodes:', activeNodes)
 						console.log('m.activePaths:', m.activePaths)
 						console.log('m.activePaths length:', m.activePaths.length)
@@ -688,15 +690,7 @@ class BnDetail {
 						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
 
 						// console.log('evidenceNodeName:', evidenceNodeName)
-						console.log('activeNodes: ', activeNodes)
-						
-						// Node Fading
-						this.bnView.querySelectorAll('div.node').forEach(node => {
-							let nodeName = node.getAttribute('data-name');
-							if (!activeNodes.has(nodeName) && verbal) {
-								node.style.opacity = 0.3
-							}
-						})						
+						// console.log('activeNodes: ', activeNodes)								
 					
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
@@ -731,7 +725,7 @@ class BnDetail {
 	   
 						
 							// coloring order of arrows
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation ) {
 								arcsContribution.push({
 									from: arcEntry.parent,
 									fromState: parentNodeState,

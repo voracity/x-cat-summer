@@ -413,8 +413,6 @@ class Node {
 		toggleFlash(); 		
 	}
 
-
-
 	static setFocusEvidence(nodeElement, bn) {
 		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
@@ -427,7 +425,6 @@ class Node {
 
 	}
 
-	
 
 	static guiSetupEvents() {
 		bn.initialize();

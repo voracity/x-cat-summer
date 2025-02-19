@@ -13,11 +13,20 @@ function fadeNodes(classifiedPaths, bnView) {
   });
 }
 
-function extractActiveNodes(classifiedPaths) {
-  return new Set([
-    ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
-    ...classifiedPaths.secondOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
+function extractActiveNodes(classifiedPaths, onlyFirstOrder=false) {
+  let activeNodes = new Set([
+    ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat()
   ]);
+
+  if (!onlyFirstOrder) {
+    classifiedPaths.secondOrderPaths.forEach(path => {
+      path.forEach(subpath => {
+        activeNodes.add(subpath[0]);
+      });
+    });
+  }
+
+  return activeNodes;
 }
 
 function fadeNodes(activeNodes, bnView) {										
