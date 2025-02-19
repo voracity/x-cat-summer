@@ -12,10 +12,10 @@ var bn = {
 	colliders: {},
 	ciTableEnabled: false,
 	focusEvidence: null,
-	dragFunc:true,
-	showMenu:null,
-	verbal:null,
-	detail:false,
+	dragFunc: true,
+	showMenu: null,
+	verbal: null,
+	detail: false,
 	classifiedPaths: null,
 	
 	drawArcs() {
@@ -502,9 +502,10 @@ class Node {
 				document.body.appendChild(playButton);
 				Node.flashNode(focusEvidenceNode);
 		
+				console.log('bn.detail:', bn.detail);
 				if (bn.detail === false) {
 					console.log('--------CHANGING--------');
-					Node.setFocusEvidence(focusEvidenceNode, bn);
+					Node.setFocusEvidence(focusEvidenceNode, bn);					
 					bn.detail = true;
 				} else {
 					bn.detail = false;

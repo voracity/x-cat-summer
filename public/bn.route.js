@@ -545,25 +545,27 @@ class BnDetail {
 				let numsEntries = entries.length;				
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
-					if (evidenceNodeName == 'overall') return;
-					// console.log('-------------------------------------')
-					// console.log('evidenceNodeName:', evidenceNodeName)			
-					// console.log('this.bnView:', this.bnView)		
+					if (evidenceNodeName == 'overall') return;		
+					console.log('this.bnView:', this.bnView)		
 
-					// Activate Evidence - Flash Node - Shining Node - Focus Node
+					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')				
 					
-					// console.log('-----focuse Evidence----- :',focusEvidence)
+					console.log('-----focuse Evidence----- :',focusEvidence)
 					let focusEvidenceName = ''
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
 						focusEvidenceName = focusEvidence.getAttribute('data-name')
-						focusEvidenceState = focusEvidence.querySelector('.label').textContent
+						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
+						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
+						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+						let focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
 
 						displayDetail = true;
 						verbalTitle.innerHTML = '';
-						verbalTitle.appendChild(n('p', `Details: Finding out how ${focusEvidenceName} was `, 
+						let { evidenceTense } = inferTenseFromArcInfluence(m.arcInfluence, focusEvidenceName, "Dermascare");
+						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} ${evidenceTense} `, 
 							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
 						
 					}
@@ -579,9 +581,8 @@ class BnDetail {
 
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
-					// console.log('evidenceNode:', evidenceNode)
-					
-									
+					console.log('evidenceNode:', evidenceNode)
+							
 					// console.log('evidenceNode:', evidenceNode)									
 					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
@@ -594,6 +595,7 @@ class BnDetail {
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+						
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
@@ -610,13 +612,11 @@ class BnDetail {
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
 						let stateName = stateElem.querySelector('.label').textContent;	
 						
-						let targetStateName = targetStateElem.querySelector('.label').textContent;								
-
+						let targetStateName = targetStateElem.querySelector('.label').textContent;						
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
-												
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName, displayDetail);
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
@@ -624,19 +624,9 @@ class BnDetail {
 							verbalListDisplay.appendChild(findingOutSentence)
 							
 							if (numsEntries >= 2) {
-								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, targetStateColor, targetNodeName, targetStateName));
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
 							}
-						}												
-
-						// Overall Detail Sentence
-						if (displayDetail && m.activePaths.length >= 2) {
-							verbalOverallSentence.innerHTML = '';
-							verbalOverallSentence.appendChild(
-								n('p', `Overall, the findings `, 
-								n('span', `${colorToVerbal(colorClass)}`, {class: 'verbalTextUnderline'}), ' the probability of ',
-								n('span', `${targetNodeName}`, {class: 'verbalTextBold'}), '.',	
-							));
-						}
+						}			
 
 						// console.log('colorClass:', colorClass)						
 						// set colour and width of the barchange element of finding
@@ -754,9 +744,12 @@ class BnDetail {
 							} 
 						});
 						console.log('arcsContribution:', arcsContribution)
+						
+						console.log('displayDetail:', displayDetail)
 						if (displayDetail) {
+							
 							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
-							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
+							generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
 						}
 					}
 				})
