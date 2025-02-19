@@ -704,6 +704,45 @@ function setupScenarioEvents() {
 	});
 }
 
+
+document.addEventListener("DOMContentLoaded", function() {
+    let influenceBox = document.querySelector(".influenceContainer"); 
+    let nodes = document.querySelectorAll(".node"); 
+    let windowWidth = window.innerWidth; 
+
+    if (influenceBox && nodes.length > 0) {
+        let maxRight = 0;
+        let rightmostNode = null;
+
+        nodes.forEach(node => {
+            let nodeRect = node.getBoundingClientRect();
+            if (nodeRect.right > maxRight) {
+                maxRight = nodeRect.right;
+                rightmostNode = node;
+            }
+        });
+
+        if (rightmostNode) {
+            let nodeRect = rightmostNode.getBoundingClientRect();
+
+
+            let newLeft = nodeRect.right;
+
+            if (newLeft + influenceBox.offsetWidth > windowWidth) {
+                newLeft = windowWidth - influenceBox.offsetWidth - 20;
+                console.log("⚠ Influence box hit right edge, adjusting position.");
+            }
+
+            influenceBox.style.position = "absolute";
+            influenceBox.style.left = `${newLeft}px`;
+        } else {
+            console.log("⚠ No rightmost node found!");
+        }
+    } else {
+        console.log("⚠ No nodes or influenceBox found!");
+    }
+});
+
 document.addEventListener('DOMContentLoaded', event => {
 	let showMenu = false; 
 	let verbal = false;
