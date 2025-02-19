@@ -81,6 +81,52 @@ function isActivePath(path, relationships, evidence) {
     return descendants;
   }
 
+
+// Builds a mapping of nodes to their parent nodes.
+function buildParentMap(relationships) {
+  const parentMap = {};
+  relationships.forEach(({ from, to }) => {
+    if (!parentMap[to]) {
+      parentMap[to] = [];
+    }
+    parentMap[to].push(from);
+  });
+  return parentMap;
+}
+
+// Builds a mapping of nodes to their child nodes (directed graph).
+function buildAdjacencyMap(relationships) {
+  const adjacencyMap = {};
+  relationships.forEach(({ from, to }) => {
+    if (!adjacencyMap[from]) {
+      adjacencyMap[from] = [];
+    }
+    adjacencyMap[from].push(to);
+  });
+  return adjacencyMap;
+}
+
+// Determines if a node is a collider (both incoming edges) based on its parent relationships.
+function isCollider(node, prevNode, nextNode, parentMap) {
+  if (!parentMap[node]) return false;
+  const parents = parentMap[node];
+  return parents.includes(prevNode) && parents.includes(nextNode);
+}
+
+function isSpecialCase(node, prevNode, nextNode, parentMap) {
+  if (!parentMap[node]) return false;
+  if (!parentMap[nextNode]) return false;
+
+  const nextparents = parentMap[nextNode];
+  const parents = parentMap[node];
+
+  if (nextparents.includes(node) && parents.includes(prevNode)) {
+   
+    return true;
+  }
+  return false;
+}
+
   // Helper function to check if a node has a descendant in the evidence
   function hasDescendantInEvidence(node) {
     const descendants = getDescendants(node);
@@ -212,6 +258,7 @@ function classifyPaths(pathWithRelationship, focusNode, targetNode) {
       secondOrderPaths
   };
 }
+
 
 
 

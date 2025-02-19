@@ -676,66 +676,89 @@ class BnDetail {
 					})
 				
 					// ARCS && Fade Nodes && Arrow Animation
-					// console.log('---------------------------------------AAAAAArcInfluence')
-					// unused function
-					// async function animateNodes(m, bn, bnView) {
-					// 	if (m.arcInfluence && m.activePaths && m.focusEvidence) {
-					// 		let delay = 0;
-					// 		// console.log("arcInfluence:", m.arcInfluence);			
-						
-					// 		reset(m.arcInfluence, bn, bnView);
-							
-					// 		let activeNodes = new Set(m.activePaths.flat())
-							
-					// 		const sortedArcInfluence = sortArcInfluenceByDiff(
-					// 			m.arcInfluence,
-					// 			m.nodeBeliefs,													
-					// 			evidenceNodeName
-					// 		);						
-					// 		if (m.activePaths.length >= 2 && displayDetail) {
-					// 			verbalIntroSentence.innerHTML = '';
-					// 			verbalIntroSentence.appendChild(
-					// 				n('p', 'Finding out ', 
-					// 				n('span', focusEvidenceName, {class: 'verbalTextBold'}),
-					// 				' was ',
-					// 				n('span', focusEvidenceState, {class: 'verbalTextItalic'}),
-					// 				' contributes due to ',
-					// 				numberToWord(m.activePaths.length),
-					// 				' connections:'
-					// 				))
-					// 		}
-						
-					// 		let arcsContribution = [];
+					// 1. Resets arc influences and prepares the visualization for active paths.
+					// 2. Identifies active nodes from `m.activePaths` and fades out inactive nodes by reducing opacity.
+					// 3. Sorts arcs by influence difference to determine priority for visualization.
+					// 4. Highlights and animates active arcs with directional coloring (normal/reverse) based on their influence.
+					// 5. Fades inactive arcs by altering their stroke and fill properties.
+					// 6. Collects and stores arc contributions for further explanation and analysis.
+					// 7. Generates detailed explanations for active paths, arc influences, and their relationships with evidence.
+					if (m.arcInfluence && m.activePaths) {
+						let delay = 0;					
+						reset(m.arcInfluence, bn, this.bnView);
 
-					// 		sortedArcInfluence.forEach((arcEntry, index) => {						
-					// 			let arc = document.querySelector(
-					// 				`[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`,
-					// 			);
+						// console.log('---------------------------------------AAAAAAactivePaths')
+						// Fade Nodes										
+						// console.log('m.activePaths is activated: ', m.activePaths)
+						let activeNodes = new Set(m.activePaths.flat())
+						// console.log('activeNodes:', activeNodes)
+						console.log('m.activePaths:', m.activePaths)
+						console.log('m.activePaths length:', m.activePaths.length)
 
-					// 			// we know the first child is the colour arc
-					// 			let parentNode = bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);								
-					// 			let parentNodeState = parentNode.querySelector('.label').textContent;								
+						// let targetNodeName = m.activePaths[0][m.activePaths[0].length - 1]
+
+						// console.log('evidenceNodeName:', evidenceNodeName)
+						console.log('activeNodes: ', activeNodes)
+						
+						// Node Fading
+						this.bnView.querySelectorAll('div.node').forEach(node => {
+							let nodeName = node.getAttribute('data-name');
+							if (!activeNodes.has(nodeName) && verbal) {
+								node.style.opacity = 0.3
+							}
+						})						
+					
+						const sortedArcInfluence = sortArcInfluenceByDiff(
+							m.arcInfluence,
+							m.nodeBeliefs,													
+							evidenceNodeName
+						);						
 								
-					// 			let childNode = bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
-					// 			let childNodeState = childNode.querySelector('.label').textContent;
+					
+						let arcsContribution = [];
 
-					// 			// coloring order of arrows       
-					// 			if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
-					// 				arcsContribution.push({
-					// 					from: arcEntry.parent,
-					// 					fromState: parentNodeState,
-					// 					to: arcEntry.child,
-					// 					toState: childNodeState,
-					// 					color: arcEntry.color,										
-					// 				})
-					// 			} 
-					// 		});
-					// 		console.log('arcsContribution:', arcsContribution)
-					// 		if (displayDetail) {								
-					// 			generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay);
-					// 		}
-					// 	}
-					// }
+						sortedArcInfluence.forEach((arcEntry, index) => {					
+
+							// we know the first child is the colour arc
+							let parentNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.parent}]`);
+							let selectedParentStateIndex = m.nodeBeliefs[arcEntry.parent]
+								? m.nodeBeliefs[arcEntry.parent].indexOf(1)  // Find explicitly selected state
+								: -1;
+							let parentStateElem = parentNode?.querySelector('.state.istarget .label') ||
+								parentNode?.querySelector(`.state[data-index="${selectedParentStateIndex}"] .label`);
+		  
+		  					let parentNodeState = parentStateElem ? parentStateElem.textContent.trim() : "Unknown";
+		  
+							
+							let childNode = this.bnView.querySelector(`div.node[data-name=${arcEntry.child}]`);
+							let selectedStateIndex = m.nodeBeliefs[arcEntry.child]
+								? m.nodeBeliefs[arcEntry.child].indexOf(1) // Find explicitly selected state
+								: -1;
+							let selectedStateElem = childNode?.querySelector('.state.istarget .label') ||
+								childNode?.querySelector(`.state[data-index="${selectedStateIndex}"] .label`);
+	   
+	   						let childNodeState = selectedStateElem ? selectedStateElem.textContent.trim() : "Unknown";
+	   
+						
+							// coloring order of arrows
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)&& window.animation ) {
+								arcsContribution.push({
+									from: arcEntry.parent,
+									fromState: parentNodeState,
+									to: arcEntry.child,
+									toState: childNodeState,
+									color: arcEntry.color,
+									// targetNodeName: targetNodeName,
+									// endSentence: arcEntry.child == targetNodeName || arcEntry.parent == targetNodeName ,
+								})
+							} 
+						});
+						console.log('arcsContribution:', arcsContribution)
+						if (displayDetail) {
+							// buildDetailSentenceList(m.activePaths, arcsContribution, verbalListDisplay);
+							generateDetailedExplanations( m.activePaths, arcsContribution, m.colliders, verbalListDisplay, m.collider, bn.arcInfluence, focusEvidence);
+						}
+					}
 				})
 				
 				// Animation		
