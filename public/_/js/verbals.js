@@ -93,7 +93,8 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
           n('span', evidenceState, { class: 'verbalTextItalic' }), ' ',
           n('span', colorToVerbal(colorContribute), { class: 'verbalTextUnderline' }), 
           ` the probability of `,
-          n('span', targetNodeName, { class: 'verbalTextBold' }),
+          n('span', targetNodeName, { class: 'verbalTextBold' }),` ${targetTense} `, 
+          n('span', targetState, { class: 'verbalTextItalic' }),
           `, by direct connection.`
       );
   }
