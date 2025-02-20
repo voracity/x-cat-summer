@@ -8,7 +8,17 @@ var bn = {
 	roles: {},
 	selectedStates: {},
 	beliefs: {},
+	activePaths: {},
+	colliders: {},
+	// colliderDiff: {},
 	ciTableEnabled: false,
+	focusEvidence: null,
+	dragFunc: true,
+	showMenu: null,
+	verbal: null,
+	detail: false,
+	classifiedPaths: null,
+	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
 		for (let node of bn.model) {
@@ -32,10 +42,67 @@ var bn = {
 			this['gui'+method](...args);
 		}
 	},
+	initialize() {
+        const urlParams = new URLSearchParams(window.location.search);
+        this.limitedMode = urlParams.get('limitedmode') === 'true';
+		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+		this.verbalMode = urlParams.get('verbal') === 'false';
+		this.animationMode = urlParams.get('animation') === 'false';
+		// limited mode
+        if (this.limitedMode) {
+            this.enableLimitedMode(); 
+        }
+		else{
+            this.disableLimitedMode(); 
+		}
+		// menu Dispaly
+		if (this.MenuDisplay) {
+			ShowMenu = false
+            console.log("Menu disbaled");
+
+        }
+		else{
+            console.log("Menu abled");
+			ShowMenu = true
+		}
 	
+		// verbal mode
+		if (this.verbalMode) {
+			verbal = false
+            console.log("Verbal mode disabled");
+
+        }
+		else{
+            console.log("Verbal mode enabled");
+			verbal = true
+		}
+
+		// animaton mode
+		if (this.animationMode) {
+			window.animation = false
+            console.log("Animation mode disbaled");
+
+        }
+		else{
+            console.log("Animation mode enabaled");
+			window.animation = true
+		}
+
+    },
+
+    enableLimitedMode() {
+        console.log("Limited mode");
+		dragFunc = false
+    },
+	disableLimitedMode() {
+        console.log("Func mode");
+		dragFunc = true
+    },
+
 	
 	async update(evidence = {}) {
-		console.log(evidence);
+		// console.log('-----------bn.js evidence:', evidence);
+		// console.log('-----------Object.entries():', Object.entries());
 		for (let [k,v] of Object.entries(evidence)) {
 			if (v === null) {
 				delete this.evidence[k];
@@ -48,11 +115,14 @@ var bn = {
 		/// er, not quite yet...
 		await (async _=>{
 			let reqData;
-			if (this.calculateTargetChange)
-				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=targetInfluence&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
+
+			if (this.calculateTargetChange) {										
+				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=targetInfluence&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates)+'&focusEvidence='+this.focusEvidence)).json();				
+			}
 			else
 				reqData = await (await fetch(window.location.href + '&requestType=data&returnType=beliefs&evidence='+JSON.stringify(this.evidence)+'&roles='+JSON.stringify(this.roles)+'&selectedStates='+JSON.stringify(this.selectedStates))).json();
 			//let nodeBeliefs = {};
+			// console.log('reqData:', reqData)
 			if (reqData.model) {
 				for (let node of reqData.model) {
 					this.beliefs[node.name] = node.beliefs;
@@ -61,6 +131,10 @@ var bn = {
 				if (reqData.influences) {
 					this.influences = reqData.influences;
 					this.arcInfluence = reqData.arcInfluence;
+					this.colliders = reqData.colliders;
+					// this.colliderDiff = reqData.colliderDiff;
+					this.activePaths = reqData.activePaths;
+					this.classifiedPaths = reqData.classifiedPaths;					
 				} else {
 					this.influences = {};
 				}
@@ -71,14 +145,14 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
 	},
 
 	guiUpdateInfoWindows() {
 		q('div.infoWindow')?.remove();
 		this.ciTableEnabled = !!this.roles?.effect?.length;
 		if (!this.ciTableEnabled)  q('div.ciTableWindow')?.remove();
-		console.log(this.roles?.cause?.length, this.roles?.effect?.length);
+		// console.log(this.roles?.cause?.length, this.roles?.effect?.length);
 		if (this.roles?.cause?.length && this.roles?.effect?.length) {
 			let causes = this.roles.cause;
 			let causeStates = causes.map(cause => this.selectedStates[cause] && this.getNode(cause).model.states[this.selectedStates[cause]]);
@@ -233,8 +307,9 @@ class Node {
 		}
 		/// Update selected states
 		let selStates = this.bn.selectedStates[this.nodeName] || [];
-		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));
-		//this.bn.gui('UpdateInfoWindows');
+		this.el().querySelectorAll('.target input').forEach((inp,i) => inp.checked = selStates.includes(i));		
+	
+		Node.reset();  // **调用 reset() 方法**his.bn.gui('UpdateInfoWindows');
 		/// Update view
 		this.el().querySelectorAll('.setCause, .setEffect').forEach(e => e.classList.remove('on'));
 		if (this.role) {
@@ -265,10 +340,11 @@ class Node {
 		let nodeEl = this.el();		
     let allStateElem = nodeEl.querySelectorAll(".state");
 
-    allStateElem.forEach((elem) => {
-      elem.style.backgroundColor = "";
-    });
-    nodeEl.style.boxShadow = "";
+		allStateElem.forEach((elem) => {
+			elem.style.backgroundColor = "";
+		});
+
+		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
 			//delete bn.evidence[nodeName];
@@ -291,22 +367,6 @@ class Node {
 			//bn.evidence[nodeName] = state.dataset.index;
 			evidence[nodeName] = stateIndex;
 			this.el().classList.add('hasEvidence');
-			// Flashing Node when activated
-      let flashes = 2;
-      let flashDuration = 200;
-      let flash = (count) => {
-        if (count > 0) {
-          nodeEl.style.boxShadow =
-            count % 2 === 0 ? "0px 0px 12px rgba(255,0,0,0.9)" : "";
-          setTimeout(() => flash(count - 1), flashDuration);
-        } else {
-          nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
-        }
-      };
-
-      flash(flashes * 2);
-
-      nodeEl.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)";
 		}
 		if (o.update)  bn.update(evidence);
 	}
@@ -332,74 +392,237 @@ class Node {
 		menu.popup({left,top:bottom});
 	}
 	
+
+	static flashNode(nodeElement) {
+		let flashes = 2; 
+		let flashDuration = 200;
+		let count = flashes * 2;
+
+		function toggleFlash() {
+			if (count > 0) {
+				nodeElement.style.boxShadow = count % 2 === 0 ? '0 0 12px rgba(255,0,0,0.9)' : '';
+				count--;
+				setTimeout(toggleFlash, flashDuration);
+			} 
+			else {
+				nodeElement.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)"
+			}
+		}
+		toggleFlash(); 		
+	}
+
+	static removeFlashNode(nodeElement) {
+		nodeElement.style.boxShadow = "";
+	}
+
+	static setFocusEvidence(nodeElement, bn) {
+		document.querySelectorAll('.focusEvidence').forEach(node => {
+			node.classList.remove('focusEvidence');
+		});
+		nodeElement.classList.add("focusEvidence");
+		bn.focusEvidence = nodeElement.dataset.name;
+	}
+
+	static removeFocusEvidence(nodeElement,bn){
+		bn.focusEvidence = nodeElement.dataset.name;
+		nodeElement.classList.remove("focusEvidence");
+		document.querySelectorAll(".play-button").forEach(button => button.remove());
+
+	}
+
+
 	static guiSetupEvents() {
-		q('.bnView').addEventListener('click', event => {
+		bn.initialize();
+
+		const controlsDiv = document.querySelector('.controls');
+		const headerDiv = document.querySelector('.header')
+		const verbalPart = document.querySelector('#verbalBox')
+
+
+		if (!ShowMenu) {
+			controlsDiv.style.display = 'none';
+			headerDiv.style.display = 'none';
+		} else {
+			controlsDiv.style.display = 'block'; 
+			headerDiv.style.removeProperty('display')
+		}
+
+		if (!verbal) {
+
+			verbalPart.style.display = 'none';
+
+		} else {
+			verbalPart.style.display = 'block'; 
+		}
+
+		q(".bnView").addEventListener("click", (event) => {
+			// console.log("move");
 			event.stopPropagation();
-			let menuButton = event.target.closest('a.menu');
+			let evidenceNodeTitle = event.target.closest('.node h3');
+			let focusEvidenceNode =  event.target.closest('.node');
+
+			document.querySelectorAll(".node h3").forEach((nodeHeader) => {
+				nodeHeader.addEventListener("mouseenter", () => {
+					nodeHeader.style.cursor = "pointer"; 
+				});
+
+				nodeHeader.addEventListener("mouseleave", () => {
+					nodeHeader.style.cursor = "default"; 
+				});
+			});
+
+			if (!evidenceNodeTitle) { 
+				if (!bn.isFrozen) {  
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+				}
+				return;
+			}
+
+	
+			if (evidenceNodeTitle && focusEvidenceNode.classList.contains("hasEvidence")) {  
+				// console.log('evidenceNodeTitle', evidenceNodeTitle);
+
+
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+		
+				const playButton = document.createElement("button");
+				playButton.textContent = "▶";
+				playButton.className = "play-button";
+				playButton.style.position = "absolute";
+		
+				playButton.addEventListener("click", () => {
+					// console.log("Play Button Clicked!");
+					Node.flashNode(focusEvidenceNode);
+					bn.update();
+				});
+		
+				let rect = evidenceNodeTitle.getBoundingClientRect();
+				playButton.style.left = `${window.scrollX + rect.left - 30}px`;
+				playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
+				playButton.style.transform = "translateY(-50%)";
+				
+				document.body.appendChild(playButton);
+						
+				// console.log('bn.detail:', bn.detail);
+				if (bn.detail === false) {
+					// console.log('--------CHANGING--------');
+					Node.flashNode(focusEvidenceNode);
+					Node.setFocusEvidence(focusEvidenceNode, bn);					
+					bn.detail = true;
+				} else {
+					bn.detail = false;
+					Node.removeFlashNode(focusEvidenceNode);
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+					Node.removeFocusEvidence(focusEvidenceNode, bn);
+					bn.update();
+				}
+				if (focusEvidenceNode.classList.contains("hasEvidence")) {
+					document.body.appendChild(playButton);
+				}
+		
+				const node = refs.Node(focusEvidenceNode);
+				node.bn.update();                                                                 
+			} else {
+				if (!bn.isFrozen) {  // **Frozen Mode 下不删除 PlayButton**
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+				}
+			}
+					
+			
+			let menuButton = event.target.closest("a.menu");
 			if (menuButton) {
 				refs.Node(event.target).guiPopupMenu();
 			}
-			menuButton = event.target.closest('a.setCause, a.setEffect');
+			menuButton = event.target.closest("a.setCause, a.setEffect");
 			if (menuButton) {
 				let node = refs.Node(event.target);
-				if (menuButton.matches('.on')) {
+				if (menuButton.matches(".on")) {
 					node.setRole(null);
 					/// Not sure why I was clearing evidence on this node?
 					//node.bn.update({[node.nodeName]: null});
 					node.bn.update();
-				}
-				else if (menuButton.matches('.setCause')) {
-					node.setRole('cause');
+				} else if (menuButton.matches(".setCause")) {
+					node.setRole("cause");
+					node.bn.update();
+				} else if (menuButton.matches(".setEffect")) {
+					node.setRole("effect");
 					node.bn.update();
 				}
-				else if (menuButton.matches('.setEffect')) {
-					node.setRole('effect');
-					node.bn.update();
-				}
+
 				/// Arrows need updating, and since there's an animation,
 				/// least visually ugly thing to do is sync it with the animation
 				let arrowDraw;
-				node.el().addEventListener('transitionend', _=>{
-					cancelAnimationFrame(arrowDraw);
-				}, {once:true});
-				let nextFrame = _=> {
-					draw.updateArrows(document.querySelector('.bnView'));
+				node.el().addEventListener(
+					"transitionend",
+					(_) => {
+						cancelAnimationFrame(arrowDraw);
+					},
+					{ once: true }
+				);
+				let nextFrame = (_) => {
+					draw.updateArrows(document.querySelector(".bnView"));
 					arrowDraw = requestAnimationFrame(nextFrame);
 				};
 				nextFrame();
 			}
 		});
-		q('.bnView').addEventListener('mousedown', event => {
-			let target = event.target.closest('.node h3');
-			console.log(target);
-			if (target) {
-				let targetNode = target.closest('.node');
-				event.stopPropagation();
-				event.preventDefault();
-				console.log('in');
-				targetNode.classList.add('moving');
-				targetNode.closest('.bnView').classList.add('hasMoving');
-				let origX = event.clientX, origY = event.clientY;
-				let origLeft = parseFloat(targetNode.style.left), origTop = parseFloat(targetNode.style.top);
-				let mm, mu;
-				document.addEventListener('mousemove', mm = event => {
-					//onsole.log('x');
-					let deltaX = event.clientX - origX, deltaY = event.clientY - origY;
-					//onsole.log(origLeft, deltaX);
-					targetNode.style.left = (origLeft + deltaX)+'px';
-					targetNode.style.top = (origTop + deltaY)+'px';
-					/// Update with something more efficient
-					draw.updateArrows(document.querySelector('.bnView'));
-				});
-				document.addEventListener('mouseup', mu = event => {
-					targetNode.classList.remove('moving');
-					target.closest('.bnView').classList.remove('hasMoving');
-					/// Update with something more efficient
-					draw.updateArrows(document.querySelector('.bnView'));
-					document.removeEventListener('mousemove', mm);
-					document.removeEventListener('mouseup', mu);
-				});
-			}
+
+	
+
+		document.querySelectorAll(".node").forEach((setMoveEl) => {
+			setMoveEl.addEventListener("mousedown", (event) => {
+
+				// console.log('dragfunc:',dragFunc)
+				if (!dragFunc){
+					console.log('Drag func disbaled')
+					return
+				}
+
+				// console.log("Mousedown triggered");
+				let target = event.target.closest(".node");
+				// console.log('target:', target);
+				
+
+				if (target) {
+					let targetNode = target.closest(".node");
+					event.stopPropagation();
+					event.preventDefault();
+					// console.log("start dragging");
+					// console.log('targetNode.classList:', targetNode.classList);
+
+					// define init pos
+					let origX = event.clientX,
+						origY = event.clientY;
+					let origLeft = parseFloat(targetNode.style.left),
+						origTop = parseFloat(targetNode.style.top);
+					let mm, mu;
+
+					document.addEventListener(
+						"mousemove",
+						(mm = (event) => {
+							let deltaX = event.clientX - origX,
+								deltaY = event.clientY - origY;
+							//onsole.log(origLeft, deltaX);
+							target.style.cursor = 'grabbing';
+							targetNode.style.left = origLeft + deltaX + "px";
+							targetNode.style.top = origTop + deltaY + "px";
+							/// Update with something more efficient
+							draw.updateArrows(document.querySelector(".bnView"));
+						})
+					);
+					document.addEventListener(
+						"mouseup",
+						(mu = (event) => {
+							target.closest(".bnView").classList.remove("grabbing");
+							/// Update with something more efficient
+							draw.updateArrows(document.querySelector(".bnView"));
+							document.removeEventListener("mousemove", mm);
+							document.removeEventListener("mouseup", mu);
+
+						})
+					);
+				}
+			});
 		});
 	}
 }
@@ -485,21 +708,105 @@ function setupScenarioEvents() {
 	});
 }
 
+
+document.addEventListener("DOMContentLoaded", function() {
+    let influenceBox = document.querySelector(".influenceContainer"); 
+    let nodes = document.querySelectorAll(".node"); 
+    let windowWidth = window.innerWidth; 
+
+    if (influenceBox && nodes.length > 0) {
+        let maxRight = 0;
+        let rightmostNode = null;
+
+        nodes.forEach(node => {
+            let nodeRect = node.getBoundingClientRect();
+            if (nodeRect.right > maxRight) {
+                maxRight = nodeRect.right;
+                rightmostNode = node;
+            }
+        });
+
+        if (rightmostNode) {
+            let nodeRect = rightmostNode.getBoundingClientRect();
+
+
+            let newLeft = nodeRect.right;
+
+            if (newLeft + influenceBox.offsetWidth > windowWidth) {
+                newLeft = windowWidth - influenceBox.offsetWidth - 20;
+                console.log("⚠ Influence box hit right edge, adjusting position.");
+            }
+
+            influenceBox.style.position = "absolute";
+            influenceBox.style.left = `${newLeft}px`;
+        } else {
+            console.log("⚠ No rightmost node found!");
+        }
+    } else {
+        console.log("⚠ No nodes or influenceBox found!");
+    }
+});
+
 document.addEventListener('DOMContentLoaded', event => {
+	let showMenu = false; 
+	let verbal = false;
+	let animation = false;
+
+
+	const siteLinksDiv = document.querySelector('.siteLinks');
+
+	if (!showMenu) {
+		siteLinksDiv.remove(); 
+	} else {
+		const header = document.querySelector('.header');
+		const newDiv = document.createElement('div');
+		newDiv.className = 'siteLinks';
+		header.appendChild(newDiv); 
+	}
+
+
 	window.bnDetail = new BnDetail;
 	bnDetail.make(document.querySelector('.bnDetail'));
 	document.querySelector('.bnView').addEventListener('click', async event => {
+		
 		let target = event.target.closest('.target');
 		if (target) {
 			// target.classList.toggle('selected');
 			let possibleEvidenceNode = target.closest('.node.hasEvidence');
+
+			if (!possibleEvidenceNode) {
+				document.querySelectorAll(".play-button").forEach(button => button.remove());
+			}
+	
 			
 			// Don't react, if node is an evidence node
 			if (possibleEvidenceNode)
 				return;
+			
 
 			target.closest('.state').classList.toggle('istarget');
 			target.closest('.node').classList.toggle('istargetnode');
+
+			// Add event listener to checkboxes
+			document.querySelectorAll('.hiddencheckbox').forEach(checkbox => {
+				checkbox.addEventListener('change', function () {
+						if (this.checked) {
+		
+								// Add 'not-checked' class to other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										if (cb !== this) {
+												cb.classList.add('not-checked');
+										}
+								});
+						} else {
+								// Remove 'not-checked' class from other checkboxes
+								document.querySelectorAll('.hiddencheckbox').forEach(cb => {
+										cb.classList.remove('not-checked');
+								});
+						}
+				});
+			});
+
 			let stateI = Number(target.closest('.state').dataset.index);
 			let nodeName = target.closest('.node').dataset.name;
 			let thisInput = target.querySelector('input');
@@ -621,17 +928,17 @@ document.addEventListener('DOMContentLoaded', event => {
 	// 	let scaling = q('select.scaleimage').value
 	// 	render.Network(Number(scaling), "png");
 	// })
-	q('button.savesnapshot').addEventListener('click', () => {
-		bnDetail.saveSnapshot()
-	})
+	// q('button.savesnapshot').addEventListener('click', () => {
+	// 	bnDetail.saveSnapshot()
+	// })
 	q('button.downloadsvg').addEventListener('click', () => {
 		let scaling = q('select.scaleimage').value
 		render.Network(Number(scaling), "svg");
 	})
-	q('button.downloadbase64').addEventListener('click', () => {
-		let scaling = q('select.scaleimage').value
-		render.Network(Number(scaling), "base64");
-	})
+	// q('button.downloadbase64').addEventListener('click', () => {
+	// 	let scaling = q('select.scaleimage').value
+	// 	render.Network(Number(scaling), "base64");
+	// })
 	q('input.influence-as-frame').addEventListener('click', (event) => {
 		bnDetail.drawFrame = event.target.checked
 		bnDetail.$handleUpdate({updateFrameMode:""});
@@ -640,12 +947,44 @@ document.addEventListener('DOMContentLoaded', event => {
 		bnDetail.onlyTargetNode = event.target.checked
 		bnDetail.$handleUpdate({updateShowBarChange:""});
 	})
+
+	document.querySelector('button.frozen-mode').addEventListener('click', function() {
+		if (!bn.isFrozen) {
+			bn.isFrozen = true;
+			document.querySelector(".bnView").classList.add("frozen");
+			this.classList.add('frozen_box'); 
+
+		} else {
+			bn.isFrozen = false;
+			console.log("Frozen Mode: Only Play Button is clickable.");
+			document.querySelector(".bnView").classList.remove("frozen");
+			this.classList.remove('frozen_box');
+			let verbalBox = document.querySelector("#verbalBox");
+			if (verbalBox) {
+				verbalBox.classList.add("influenceContainer");
+				console.log("Frozen Mode: verbalBox class remains:", verbalBox.classList);
+			}
+			
+		}
+	
+	});
+
 });
+
+
+
+
+
+function onMouseUp() {
+  isDragging = false;
+
+  document.removeEventListener('mousemove', onMouseMove);
+  document.removeEventListener('mouseup', onMouseUp);
+}
 
 // drag and drop
 document.addEventListener('DOMContentLoaded', (event) => {
 
-  
 	function handleDragEnter(e) {
 	  this.classList.add('over');
 
@@ -674,4 +1013,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
 	items.onmouseleave = handleDragLeave
 	items.onmousemove = handleDragMove
 
-  });
+	let verbalBox = document.querySelector('.influenceContainer');
+	verbalBox.onmousedown = handleDragEnter
+	verbalBox.onmouseup = handleDragLeave
+	verbalBox.onmouseleave = handleDragLeave
+	verbalBox.onmousemove = handleDragMove
+});
+
+
+

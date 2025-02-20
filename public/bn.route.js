@@ -1,96 +1,10 @@
 var {n, toHtml} = require('htm');
 var {sitePath, ...siteUtils} = require('siteUtils');
 var {Net, Node} = require('../bni_smile');
+var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
+var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-
-function addJointChild(net, parentNames, tempNodeName = null) {
-	let stateList = [];
-	let stateIndexes = parentNames.map(_=>0);
-	do {
-		stateList.push('s'+stateIndexes.join('_'));
-	} while (Net.nextCombination(stateIndexes, parentNames.map(c => net.node(c))));
-	/// XXX: Add support to bni_smile for deterministic nodes
-	tempNodeName = tempNodeName || ('s'+String(Math.random()).slice(2));
-	//console.log('IDENTITY',stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	net
-		.addNode(tempNodeName, null, stateList)
-		.addParents(parentNames)
-		/// Essentially, create an identity matrix for now (later, replace with det node)
-		.cpt(stateList.map((_,i)=>stateList.map((_,j)=> i==j ? 1 : 0)));
-	return tempNodeName;
-}
-
-
-function marginalizeParentArc(child, parentToRemove, reduce = false) {
-	function getRowIndex(parIndexes) {
-		let rowIndex = 0;
-		for (let i=0; i<parIndexes.length; i++) {
-			if (i!=0)  rowIndex *= pars[i].states().length;
-			rowIndex += parIndexes[i];
-		}
-		return rowIndex;
-	}
-	
-	function addWeightedVec(vec1, vec2, weight) {
-		return vec1.map((v,i) => v + vec2[i]*weight);
-	}
-
-	let net = child.net;
-	
-	/// The CPT (we'll modify in place)
-	let cpt = child.cpt();
-	
-	let pars = child.parents();
-	let toRemoveIndex = pars.findIndex(p => p.name() == parentToRemove.name());
-	
-	let marginals = parentToRemove.beliefs();
-	
-	let parIndexes = pars.map(_=>0);
-	/// For each row, do weighted average (by the weight of parentToRemove's marginals --- note: order not verified)
-	do {
-		let row = child.states().map(_=>0);
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			//console.log(parIndexes, rowI);
-			row = addWeightedVec(row, cpt[rowI], marginals[i]);
-		}
-		let marginalizedRow = row;
-		
-		/// Replace all the matching rows with the weighted combination
-		for (let i=0; i<marginals.length; i++) {
-			parIndexes[toRemoveIndex] = i;
-			let rowI = getRowIndex(parIndexes);
-			cpt[rowI] = marginalizedRow;
-		}
-	} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-	
-	if (reduce) {
-		/// Resize the CPT (i.e. remove the redundant rows)
-		let parIndexes = pars.map(_=>0);
-		let newCpt = [];
-		do {
-			newCpt.push(cpt[getRowIndex(parIndexes)]);
-		} while (Net.nextCombination(parIndexes, pars, [toRemoveIndex]));
-		
-		return newCpt;
-	}
-	else {
-		/// Full-size CPT (with redundant rows). This will behave exactly as if the parent's been deleted,
-		/// without actually removing the link. (Potentially a bit faster than changing the BN structure/recompiling.)
-		return cpt;
-	}
-}
-
-function pick(obj, keys) {
-	let newObj = {};
-	for (let key of keys) {
-		if (key in obj) {
-			newObj[key] = obj[key];
-		}
-	}
-	return newObj;
-}
+var {findAllColliders, analyzeColliders} = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -349,23 +263,24 @@ class BnDetail {
 		})
 	}
 	make(root) {
+		
 		this.root = root || n('div.bnDetail',
 			n('script', {src: 'https://code.jquery.com/jquery-3.4.1.slim.min.js'}),
 			n('script', {src: sitePath('/_/js/arrows.js')}),
 			n('script', {src: sitePath('/_/js/bn.js')}),
 			n('div.controls',
 				// n('button.downloadpng', 'Download As PNG'),
-				n('button.savesnapshot', 'Save Snapshot'),
+				// n('button.savesnapshot', 'Save Snapshot'),
 				n('button.downloadsvg', 'Download As SVG'),
-				n('button.downloadbase64', 'Download As Base64'),
-				n('label', 
-					'Scale Image',
-					n('select.scaleimage', 
-						n('option', "1x", {value:1}),
-						n('option', "2x", {value:2}),
-						n('option', "3x", {value:3}),
-					),
-					),
+				// n('button.downloadbase64', 'Download As Base64'),
+				// n('label', 
+				// 	'Scale Image',
+				// 	n('select.scaleimage', 
+				// 		n('option', "1x", {value:1}),
+				// 		n('option', "2x", {value:2}),
+				// 		n('option', "3x", {value:3}),
+				// 	),
+				// 	),
 				// n('button.save', 'Save to My Library'),
 					
 				n('label', 
@@ -376,6 +291,7 @@ class BnDetail {
 					'Only Show Target Node',
 					n('input.influence-target-node', {type:"checkbox"})
 				),
+				n('button.frozen-mode', 'Frozen Mode'),
 				n('button.publish', 'Publish to Public Library'),
 				n('span.gap'),
 				n('span.scenarioControls',
@@ -389,7 +305,16 @@ class BnDetail {
 				),
 			),
 			n('div.bnView',
+				n('div.influenceContainer',
+					{id:"verbalBox", class: 'influenceContainer'},
+					n('p', 'Summary: What all the findings contribute', {class: 'verbalTitle'}),
+					n('p', { class: 'introSentence'}),
+					n('p', { class: 'influenceList'}),
+					n('p', { class: 'overallSentence'})
+				),
 			),
+
+
 			n('div.infoWindows',
 				/*	
 				n('div.help',
@@ -402,16 +327,16 @@ class BnDetail {
 				),
 				*/
 				n("div", {class:"evidence-scale"}, 
-					n("div", {class:"evidence-scale-header"}, "Evidence impact scale"),
+					n("div", {class:"evidence-scale-header"}, "Contribution Scale"),
 					// n("div", "Colour scale showing the influence of evidence on the target."),
 					n("table", {class:"influencelegend"} ,
-						n("tr", n("td", "greatly increases", {class:`influence-idx0`})),
-						n("tr", n("td", "moderately increases", {class:`influence-idx1`})),
-						n("tr", n("td", "slightly increases", {class:`influence-idx2`})),
-						n("tr", n("td", "barely changes", {class:`influence-idx3`})),
-						n("tr", n("td", "slightly decreases", {class:`influence-idx4`})),
-						n("tr", n("td", "moderately decreases", {class:`influence-idx5`})),
-						n("tr", n("td", "greatly decreases", {class:`influence-idx6`})),
+						n("tr", n("td", "greatly increases (31-100%)", {class:`influence-idx0`})),
+						n("tr", n("td", "moderately increases (16-30%)", {class:`influence-idx1`})),
+						n("tr", n("td", "slightly increases (1-15%)", {class:`influence-idx2`})),
+						n("tr", n("td", "doesn't changes (0%)", {class:`influence-idx3`})),
+						n("tr", n("td", "slightly reduces (1-15%)", {class:`influence-idx4`})),
+						n("tr", n("td", "moderately reduces (16-30%)", {class:`influence-idx5`})),
+						n("tr", n("td", "greatly reduces (31-100%)", {class:`influence-idx6`})),
 					),
 					n("div", {style:"text-align:center; padding:3px;"}, "probability of"),
 					n("div", n("div", {class:"target"}, "target state"))
@@ -423,28 +348,12 @@ class BnDetail {
 	}
 	
 	toHtml() { return this.root.outerHTML; }
-	
-	getColor(changerate) {
-		if (changerate <= -0.3) 
-			return "influence-idx6";
-		else if (-0.3 < changerate && changerate <= -0.15)
-			return "influence-idx5";
-		else if (-0.15 < changerate  && changerate < 0)
-			return "influence-idx4";
-		else if (changerate == 0)
-			return "influence-idx3";
-		else if (0 < changerate && changerate <= 0.15)
-			return "influence-idx2";
-		else if (0.15 < changerate && changerate <= 0.3)
-			return "influence-idx1";
-		else if (0.3 < changerate)
-			return "influence-idx0";
-	}
 
 	$handleUpdate(m) {
-		let barMax = 100; //px
+		let barMax = 100; //px		
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
+			console.log('m.title:', m.title)
 			if (document.body) {
 				q('h1 .text').innerHTML = m.title;
 			}
@@ -454,6 +363,8 @@ class BnDetail {
 		}
 		
 		if (m.model) {
+			// console.log('m.model:', m.model)
+			
 			this.bnView.querySelectorAll('.node').forEach(n => n.remove());
 			let nodes = m.model.map(node => n('div.node',
 				{dataName: node.name},
@@ -477,6 +388,7 @@ class BnDetail {
 						n('div.cellProbability',
 							n('div.propWrapper',
 
+								// This show the checkbox
 								n('div.hiddencheckboxcontainer.target', 
 									n('input', {type: 'checkbox'},{class:`hiddencheckbox`})
 								),
@@ -508,6 +420,7 @@ class BnDetail {
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}
+			// console.log('m.nodeBeliefs:', m.nodeBeliefs)
 		}
 		/** != null is false only if value is null or undefined **/
 		if (m.scenariosEnabled != null) {
@@ -587,60 +500,148 @@ class BnDetail {
 		})
 		
 		// NODES
-		if (m.influences) {			
+		if (m.influences) {
 			let asFrame = true;
-			console.log("updating influences");
-			let listTargetNodes = {}
+			// console.log("updating influences");
+			let listTargetNodes = {}			
 			let entries = Object.entries(m.influences)
-			console.log('m.influences', m.influences)
-			console.log('m.arcInfluence', m.arcInfluence)
-
-			// Nodes that have evidence that contribute to the target node		
-			let importantMiddleNodes = new Set();
-			let evidenceNodeLabels = new Set();
-			let importantArcs = new Set();
-			let targetNodeLabel = null;
-
-			// Changed to fixed arc size
-			let arcSize = 8;			
+			// console.log('m.influences', m.influences)					
 			
+			let verbalBox = this.root.querySelector('.influenceContainer');
+			if (verbal){
+				verbalBox.style.opacity = 1;
+				verbalBox.style.display = 'inline-block';
+			}
+			let verbalIntroSentence = this.root.querySelector('.introSentence');
+			let verbalListDisplay = this.root.querySelector('.influenceList');
+			let displayDetail = false;
+			let verbalTitle = this.root.querySelector('.verbalTitle');
+			let verbalOverallSentence = this.root.querySelector('.overallSentence');
+			let globalTargetNodeName = '';
+			let globalTargetNodeState = '';			
+			
+			// console.log('entries.length:', entries.length)
 			if (entries.length == 0) {
-				reset(m.arcInfluence, bn, this.bnView);				
-			} else {
+				verbalListDisplay.innerHTML = '';
+				verbalIntroSentence.innerHTML = '';
+				verbalBox.style.display = 'none';
+				globalTargetNodeName = '';
+				globalTargetNodeState = '';
+				
+				verbalOverallSentence.innerHTML = '';
+				displayDetail = false;
+
+				reset(m.arcInfluence, bn, this.bnView);
+
+			} else {						
+				// console.log('entries:', entries)
+				verbalListDisplay.innerHTML = '';				
+				let arcsContribution = [];
+				let numsEntries = entries.length;		
+				let evidenceContributions = {}		
 				entries.forEach(([evidenceNodeName, value]) => {
+					verbalIntroSentence.innerHTML = '';
+					if (evidenceNodeName == 'overall') return;		
+					// console.log('this.bnView:', this.bnView)		
+
+					// Activate Evidence - Flash Node - Shining Node
+					// console.log('displayDetail:', displayDetail)
+					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence')			
+					// console.log('focusEvidence:', focusEvidence)	
+					
+					// console.log('-----focuse Evidence----- :',focusEvidence)
+					let focusEvidenceName = ''
+					let focusEvidenceState = ''
+					if (focusEvidence && !displayDetail) {
+						focusEvidenceName = focusEvidence.getAttribute('data-name')
+						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
+						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
+						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+						focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
+
+						displayDetail = true;
+						verbalTitle.innerHTML = '';
+						let { evidenceTense } = inferTenseFromArcInfluence(m.arcInfluence, focusEvidenceName, "Dermascare");
+						verbalTitle.appendChild(n('p', `Detail: How finding out ${focusEvidenceName} ${evidenceTense} `, 
+							n('span', `${focusEvidenceState}`, {style: 'font-style: italic'}), ' contributes'));
+						
+					}
+					else if (focusEvidence === null){
+						verbalTitle.innerHTML = ''; 
+						verbalTitle.appendChild(
+							n(
+								'p', 
+								'Summary: What all the findings contribute'
+							)
+						);
+					}
+
 					let targetBeliefs = value['targetBeliefs'];
 					let evidenceNode = this.bnView.querySelector(`div.node[data-name=${evidenceNodeName}]`)	
+					// console.log('evidenceNode:', evidenceNode)
+							
 					// console.log('evidenceNode:', evidenceNode)									
-					evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
+					// evidenceNodeLabels.add(evidenceNode.getAttribute('data-name'))
 
 					let evidenceStateIdx = m.nodeBeliefs[evidenceNodeName].indexOf(1);
 					Object.entries(targetBeliefs).forEach(([targetNodeName, beliefs]) => {	
-						
-						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)												
-						targetNodeLabel = targetNode.getAttribute('data-name')
-
+												
+						let targetNode = this.bnView.querySelector(`div.node[data-name=${targetNodeName}]`)																		
 						let targetStateElem = targetNode.querySelector(".state.istarget");
 						let targetStateIdx = targetStateElem.dataset.index;
+						
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+						
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
-						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+						let targetStateColor = getTargetStateColor(
+							targetBaseModel.beliefs[targetStateIdx], 
+							m.nodeBeliefs[targetNodeName][targetStateIdx]
+						);
+
+						// console.log('targetStateColor:', targetStateColor)
+
+						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];						
 						let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
 						let absChange = Math.abs(relativeBeliefChange * 100);
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
+						let stateName = stateElem.querySelector('.label').textContent;	
+						
+						let targetStateName = targetStateElem.querySelector('.label').textContent;
+						globalTargetNodeName = targetNodeName;
+						globalTargetNodeState = targetStateName;
+						
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
-						let colorClass = this.getColor(relativeBeliefChange);
-						// set colour and width of the barchange element
+						let colorClass = getColor(relativeBeliefChange);
+
+						evidenceContributions[evidenceNodeName] = {
+							contribution: absChange,
+							color: colorClass,
+						}
+
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
+						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
+						// console.log('outputSentence:', )
+						// console.log('findingOutSentence:', findingOutSentence)
+						if (!displayDetail) {
+							verbalListDisplay.appendChild(findingOutSentence)
+							
+							if (numsEntries >= 2) {
+								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
+							}
+						}			
+
+						// console.log('colorClass:', colorClass)						
+						// set colour and width of the barchange element of finding
 
 						if (this.drawOptions.drawChangeBar) {
 							barchangeElem.style.width = absChange+"%";
 							barchangeElem.style.marginLeft = "-"+absChange+"%";
 							// barchangeElem.style.left = `${100 - absChange}%`;
-	
 	
 							Array.from(barchangeElem.classList).forEach(classname => {
 								if (classname.indexOf("influence-idx") == 0) {
@@ -651,10 +652,6 @@ class BnDetail {
 									barchangeElem.classList.remove("frame");
 								}
 							})
-	
-							barchangeElem.style.display = this.onlyTargetNode ? 'none' : "inline-block";
-							
-							barchangeElem.classList.add(colorClass);
 						}
 						
 						cellProbabilityElem.classList.add(colorClass);
@@ -669,269 +666,85 @@ class BnDetail {
 						})
 
 					})
-
-				})
-				// ARCS
-				if (m.arcInfluence) {
-          let delay = 0;
-          // console.log("arcInfluence:", m.arcInfluence);
-
-					this.bnView.querySelectorAll(`div.node`).forEach(node => {						
-						node.style.opacity = 1
-					})
-
-          reset(m.arcInfluence, bn, this.bnView);
-
-          const sortedArcInfluence = sortArcInfluenceByDiff(
-            m.arcInfluence,
-            m.nodeBeliefs,
-						this.getColor
-          );
-
-					console.log('importantMiddleNodes', importantMiddleNodes)	
-					console.log('evidenceNodeLabels', evidenceNodeLabels)
-					console.log('targetNodeLabel', targetNodeLabel)
+					// console.log('listTargetNodes:', listTargetNodes)					
+					// console.log('m.origModel:', m.origModel)
+				
+					// Build up the arcs for the influence for verbal part					
+					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
+						let onlyFirstOrder = false;
+						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
 					
-          console.log("sortedArcInfluence:", sortedArcInfluence);
+						const sortedArcInfluence = sortArcInfluenceByDiff(
+							m.arcInfluence,
+							m.nodeBeliefs,													
+							evidenceNodeName
+						);																									
 
-          sortedArcInfluence.forEach((arcEntry) => {
-            console.log("arcEntry:", arcEntry);
-            let arc = document.querySelector(
-              `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-            );
-						// console.log('arcEntry[child]', arcEntry.child)						
-						// console.log('arcEntry[parent]', arcEntry.parent)
-													
-
-						if (evidenceNodeLabels.has(arcEntry.child) && arcEntry.color != "influence-idx3" && arcEntry.child != targetNodeLabel) {
-							importantMiddleNodes.add(arcEntry.parent)
-						}
-
-						if (evidenceNodeLabels.has(arcEntry.parent) && arcEntry.color != "influence-idx3" && arcEntry.parent != targetNodeLabel) {
-							importantMiddleNodes.add(arcEntry.child)
-						}
-
-						// if (importantMiddleNodes.has(arcEntry.child) && importantMiddleNodes.has(arcEntry.parent)) {
-						// 	importantArcs.add(arcEntry)
-						// }
-
-						// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-						// we know the first child is the colour arc
-						// coloring order of arrows
-						setTimeout(() => {
-							let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-							let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-
-							let combinedElems = Array.from(influeceArcBodyElems).map(
-								(bodyElem, index) => {
-									return {
-										body: bodyElem,
-										head: influeceArcHeadElems[index],
-									};
-								}
-							);
-
-							combinedElems.forEach((pair, index) => {
-								let bodyElem = pair.body;
-								let headElem = pair.head;
-
-								let bodyColor = getComputedStyle(
-									document.documentElement
-								).getPropertyValue(`--${arcEntry.color}`);
-								bodyElem.style.stroke = bodyColor;
-								bodyElem.style.strokeWidth = arcSize;
-
-								let bodyLength = bodyElem.getTotalLength();
-								bodyElem.style.strokeDasharray = bodyLength;
-								bodyElem.style.strokeDashoffset = bodyLength;
-								bodyElem.style.transition = "none";
-
-								bodyElem.getBoundingClientRect();
-
-								bodyElem.style.transition =
-									"stroke-dashoffset 1s ease-in-out";
-								
-								bodyElem.style.strokeDashoffset = "0";
-
-								setTimeout(() => {
-									let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
-									headElem.style.stroke = headColor;
-									headElem.style.strokeWidth = arcSize;
-
-									let headLength = headElem.getTotalLength();
-									headElem.style.strokeDasharray = headLength;
-									headElem.style.strokeDashoffset = headLength;
-									headElem.style.transition = "none";
-
-									headElem.getBoundingClientRect();
-
-									headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-
-									setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
-								}, 1000);
-							});
-						}, delay);
-
-						delay += 500;
-					}
-				);
-					console.log('-------------------------------------------')
-					console.log('importantMiddleNodes', importantMiddleNodes)	
-					console.log('evidenceNodeLabels', evidenceNodeLabels)
-					console.log('targetNodeLabel', targetNodeLabel)
-					let mergedSetNodes = new Set([...importantMiddleNodes, ...evidenceNodeLabels, targetNodeLabel])
-					console.log('mergedSetNodes', mergedSetNodes)
-					console.log('importantArcs', importantArcs)
-
-					// this.bnView.querySelectorAll(`div.node`).forEach(node => {
-					// 	let nodeName = node.getAttribute('data-name')
-					// 	if (!mergedSetNodes.has(nodeName)) {
-					// 		node.style.opacity = 0.5
-					// }})
+						sortedArcInfluence.forEach((arcEntry) => {
+							let parentNodeState = getNodeState(arcEntry.parent, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
+							let childNodeState = getNodeState(arcEntry.child, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
 					
-					// importantArcs.forEach((arcEntry) => {
-          //   console.log("arcEntry:", arcEntry);
-          //   let arc = document.querySelector(
-          //     `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
-          //   );
-					// 	// console.log('arcEntry[child]', arcEntry.child)						
-					// 	// console.log('arcEntry[parent]', arcEntry.parent)													
-
-					// 	// console.log("Block of log: ", arcEntry.child, arcEntry.parent, diff, arcSize, arcEntry.color);
-					// 	// we know the first child is the colour arc
-					// 	// coloring order of arrows
-					// 	setTimeout(() => {
-					// 		let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
-					// 		let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
-
-					// 		let combinedElems = Array.from(influeceArcBodyElems).map(
-					// 			(bodyElem, index) => {
-					// 				return {
-					// 					body: bodyElem,
-					// 					head: influeceArcHeadElems[index],
-					// 				};
-					// 			}
-					// 		);
-
-					// 		combinedElems.forEach((pair, _) => {
-					// 			let bodyElem = pair.body;
-					// 			let headElem = pair.head;
-
-					// 			let bodyColor = getComputedStyle(
-					// 				document.documentElement
-					// 			).getPropertyValue(`--${arcEntry.color}`);
-					// 			bodyElem.style.stroke = bodyColor;
-					// 			bodyElem.style.strokeWidth = arcSize;
-
-					// 			let bodyLength = bodyElem.getTotalLength();
-					// 			bodyElem.style.strokeDasharray = bodyLength;
-					// 			bodyElem.style.strokeDashoffset = bodyLength;
-					// 			bodyElem.style.transition = "none";
-
-					// 			bodyElem.getBoundingClientRect();
-
-					// 			bodyElem.style.transition =
-					// 				"stroke-dashoffset 1s ease-in-out";
-								
-					// 			bodyElem.style.strokeDashoffset = "0";
-
-					// 			setTimeout(() => {
-					// 				let headColor = getComputedStyle(document.documentElement).getPropertyValue(`--${arcEntry.color}`);
-					// 				headElem.style.stroke = headColor;
-					// 				headElem.style.strokeWidth = arcSize;
-
-					// 				let headLength = headElem.getTotalLength();
-					// 				headElem.style.strokeDasharray = headLength;
-					// 				headElem.style.strokeDashoffset = headLength;
-					// 				headElem.style.transition = "none";
-
-					// 				headElem.getBoundingClientRect();
-
-					// 				headElem.style.transition = "stroke-dashoffset 1s ease-in-out";
-
-					// 				setTimeout(() => {headElem.style.strokeDashoffset = "0";}, 0);
-					// 			}, 1000);
-					// 		});
-					// 	}, delay);
-
-					// 	delay += 500;
-					// });
-        }
-			}
-			Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-				let baseBelief = data.model.beliefs[data.index];
-				let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
-				let diff = currentBelief - baseBelief
-				let absDiff = 100*Math.abs(diff)
-				let colorClass = this.getColor(diff)
-				let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
-
-				Array.from(barchangeElem.classList).forEach(classname=> {
-					if (classname.indexOf("influence-idx") == 0) {
-						barchangeElem.classList.remove(classname);
-						barchangeElem.classList.remove(`${colorClass}-box`);
-						barchangeElem.classList.remove(`influence-box`);
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation) {
+									arcsContribution.push({
+											from: arcEntry.parent,
+											fromState: parentNodeState,
+											to: arcEntry.child,
+											toState: childNodeState,
+											color: arcEntry.color,
+									});
+							}
+						});						
 					}
 				})
 
-				if (diff > 0) {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
-				} else {
-					barchangeElem.style.marginLeft = `-${absDiff}%`;
-					barchangeElem.style.width = `${absDiff}%`;
+				// color target bar every time a new evidence is added
+				colorTargetBar(listTargetNodes, m)		
 
-				}
-				// shadow-boxes with width 0 still show their glow
-				if (Math.abs(diff)>0)
-					barchangeElem.classList.add(colorClass+"-box");
-
-			})
-			
-			if (this.drawOptions.drawChangeBar)
-				// Now set the change of belief for all remaining nodes, so show how their states
-				// changed given all evidence VS no evidence
-				Array.from(document.querySelectorAll(".node")).filter(n=>!n.classList.contains("hasEvidence") && !n.classList.contains("istargetnode")).forEach(node => {
-					let nodelabel = node.getAttribute("data-name");
-					
-					let currentBelief = m.nodeBeliefs[nodelabel];
-					let origBeliefs = m.origModel.find(entry => entry.name == nodelabel).beliefs;
-
-					currentBelief.forEach((curBelief, idx) => {
-						let diff = curBelief - origBeliefs[idx]
-						let absDiff = diff * 100;
+				// Generate detailed explaination for the focus node
+				if (m.classifiedPaths && displayDetail) {					
+					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
+					// Animation when new focus node is added
+					if (window.animation) {																
+						reset(m.arcInfluence, bn, this.bnView);
+						resetTargetBar(listTargetNodes)
 						
-						// let colorClass = this.getColor(/curBelief/origBeliefs[idx])
-						let colorClass = this.getColor(diff)
+						const activeNodes = extractActiveNodes(m.classifiedPaths);	
+						fadeNodes(activeNodes, this.bnView);	
+						fadeAllArrows(activeNodes, m.arcInfluence)
+											
+						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
+						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
+						
+						for (let index = 0; index < animationOrderBN.length; index++) {
+							setTimeout(() => {
+								const path = animationOrderBN[index];
+								if (path.type == 'arrow') {
+									const { arcParent, arcChildren } = getArcEndpoints(path);							
+									const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
+									colorArrows(arcParent, arcChildren, path.direction, color);	
+									
+								} else if (path.type == 'node') {
+									let nextPath = animationOrderBN[index + 1];
+									// temporary solution
+									colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
 
-						let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)
-						barchangeElem.classList.add(colorClass)
-
-						if (absDiff > 0) {
-							// overlay change over the current belief bar
-							barchangeElem.style.marginLeft = `-${absDiff}%`;
-							barchangeElem.style.width = `${absDiff}%`;
-						} else {
-							// the change will be placed right next to the original belief bar
-							barchangeElem.style.width = `${absDiff}%`;
+								} else if (path.type == 'target') {
+									colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes);
+								}
+							}, (index + 1) * 850); // start index at 1 so the flashing go first
 						}
-					})
-				})
-
-		} else {
-
-
-			// Array.from(this.bnView.querySelectorAll(".node.istargetnode")).forEach(targetNode => {
-			// 	let barchange = targetNode.querySelector(".barchange");
-			// 	barchange.style.width = ""
-			// })
-
-		}
+					} 
+				}	else {				
+					// Summary mode	
+					displayAllNodes(this.bnView)
+					displayAllArrows(m.arcInfluence)
+					uncolorAllArrows(m.arcInfluence)
+				}								
+			}					
+		} 
 	}
 
 	saveSnapshot() {
-
-
 		
 		let btnOK = n("button", "OK", {type:'button', on:{click: () => {
 			// let snapshotNode = document.querySelector('.bnView .snapshots')
@@ -960,7 +773,6 @@ class BnDetail {
 		], {buttons:[btnOK, btnCANCEL]})
 		document.getElementById("snapshotname").focus()
 		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
-		
 	}
 
 }
@@ -970,6 +782,13 @@ module.exports = {
 	component: BnDetail,
 	noUserRequired: true,
 	async prepareData(req,res,db,cache) {
+
+		const isLimitedMode = req.query.limitedMode === 'true';
+
+		if (isLimitedMode) {
+			console.log("Limited mode is enabled on the server side.");
+		}
+	
 		// Probably don't need to get this as in server already
 		let userInfo = await db.get('select userId from user_sessions where sessionId = ?', req.cookies.sessionId);
 		console.log('x');
@@ -985,7 +804,7 @@ module.exports = {
 		}
 		else if (req.query.updateBn) {
 			console.log('UPDATING');
-			let updates = JSON.parse(req.body.updates);
+			let updates = JSON.parse(req.body.updates);			
 			let updParams = {};
 			for (let [k,v] of Object.entries(updates)) {
 				updParams['$'+k] = v;
@@ -1072,7 +891,8 @@ module.exports = {
 						for (let nodeName of nodeNames) {
 							if (role == 'cause') {
 								let orig = net.node(nodeName).cpt1d().slice();
-								console.log(orig);
+								// console.log('---------------------------- Cause role ----------------------------')
+								console.log('orig', orig);
 								backupCpts[nodeName] = orig;
 								let numStates = net.node(nodeName).states().length;
 								net.node(nodeName).cpt1d(Array.from({length: orig.length}, _=> 1/numStates));
@@ -1086,23 +906,90 @@ module.exports = {
 				}
 				
 				if (req.query.returnType == 'targetInfluence') {
+
+					// Initialize 'evidence' variable
+					let evidence = {};
+					if (req.query.evidence) {
+						evidence = JSON.parse(req.query.evidence);
+						
+					}
+					// console.log('req.query:--------', req.query)
+
+					// Initialize 'selectedStates' variable
+					let selectedStates = {};
+					if (req.query.selectedStates) {
+						selectedStates = JSON.parse(req.query.selectedStates);
+						// console.log('selectedStates:', selectedStates)
+					}
+				
+
+					// set all evidence
+					for (let [nodeName, stateI] of Object.entries(evidence)) {
+						net.node(nodeName).finding(Number(stateI));
+					}					
+					net.update();
+
+					// console.log('Object.keys(selectedStates):', Object.keys(selectedStates))
+
+					let baselineBeliefs = {};
+					// Object.keys(selectedStates).forEach(targetNodeName => {
+					// 	baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();						
+					// });
+					var targetNodeName = Object.keys(selectedStates)[0];
+					baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();												
+
+					let relationships = [];		
+					// console.log('net.nodes():', net.nodes())			
+
+					net.nodes().forEach(node => {
+						// Get all parents of the node
+						node.parents().forEach(parent => {										
+					
+							// Add the relationship to the list
+							relationships.push({
+								from: parent.name(),
+								to: node.name(),
+								// contribute: contribute
+							});
+						});
+					});
+
+					// console.log("relationships",relationships)					
+
+					const graph = buildUndirectedGraph(relationships);
+
+					// Edge map for contribute values
+					const edgeMap = {};
+					relationships.forEach(rel => {
+						const edgeKey = `${rel.from}->${rel.to}`;
+						edgeMap[edgeKey] = rel.contribute;
+					});
+					
+
 					if (req.query.evidence) {
 						let evidence = JSON.parse(req.query.evidence);
+						// console.log('evidence:', evidence)
+
+						let focusEvidence = null
+
+						if (req.query.focusEvidence) {
+							focusEvidence = req.query.focusEvidence;		
+							// console.log('focusEvidence:', focusEvidence)					
+						}
 
 						// the selected state is our Target
-						// and we want to monitor its change when we en/disable evidence 
-
+						
 						if (req.query.selectedStates) {
 							selectedStates = JSON.parse(req.query.selectedStates);
 						}
 
 						// get network with all evidence 
 						for (let [nodeName,stateI] of Object.entries(evidence)) {
-							console.log(nodeName, stateI);
+							console.log('nodeName, stateI:', nodeName, stateI);
 							net.node(nodeName).finding(Number(stateI));
 							// origNet.node(nodeName).finding(Number(stateI));
 						}
-						// reset one particular evidence to see its influence
+					
 						
 						console.time('update');
 						net.update();
@@ -1113,38 +1000,129 @@ module.exports = {
 						if (Object.keys(evidence).length == 0) {
 							return bn;
 						}
-						//disable one by one with the remaining all active
 						bn.influences = {};
-						for (let nonActiveNodeName of Object.keys(evidence)) {
-							net = new Net(bnKey);
-							for (let [nodeName,stateI] of Object.entries(evidence)) {
-								if (nodeName != nonActiveNodeName) {
-									console.log(nodeName, stateI);
-									net.node(nodeName).finding(Number(stateI));
-								}
-								// origNet.node(nodeName).finding(Number(stateI));
-							}
-							// reset one particular evidence to see its influence
-							
-							// console.time('update');
-							console.log("rerunning without", nonActiveNodeName)
-							net.update();
-							// console.timeEnd('update');
-							bn.influences[nonActiveNodeName]= {targetBeliefs : {}};
-							Object.keys(selectedStates).forEach(targetNodeName => {
-								bn.influences[nonActiveNodeName].targetBeliefs[targetNodeName] = net.node(targetNodeName).beliefs()
-							})
+						bn.activePaths = [];
+						bn.colliders = {};
+						// bn.colliderDiff = {};
+
+
+						const colliders = findAllColliders(relationships);
+						bn.colliders = colliders;
+						// console.log('Collider:', bn.colliders);
+
+
+						// Ensure only one selected target node
+						const targetNames = Object.keys(selectedStates);
+						if (targetNames.length !== 1) {
+							throw new Error("Only one selected state is allowed.");
 						}
+						const targetNodeName = targetNames[0];
+						let targetStateIndexArray = selectedStates[targetNodeName];
+						if (!targetStateIndexArray || !Array.isArray(targetStateIndexArray) || targetStateIndexArray.length === 0) {
+							console.error(`No selected states for target node ${targetNodeName}`);
+							
+						}
+						const targetStateIndex = targetStateIndexArray[0];
+
+						// Get the baseline beliefs with all evidence applied
+						let netWithAllEvidence = new Net(bnKey);
+						netWithAllEvidence.compile();
+						for (let [nodeName, stateI] of Object.entries(evidence)) {
+							netWithAllEvidence.node(nodeName).finding(Number(stateI));
+						}
+						netWithAllEvidence.update();
+						const baselineBelief = netWithAllEvidence.node(targetNodeName).beliefs();
+						const baselineProb = baselineBelief[targetStateIndex];
+						console.log('baselineProb:', baselineProb)
+
+						let pathWithRelationship = []
+
+						// Finding the colliders and printing them
+						// const colliderDiff = analyzeColliders(
+						// 	net,
+						// 	relationships,
+						// 	evidence,
+						// 	targetNodeName,
+						// 	targetStateIndex,
+						// 	bnKey
+						// );
+				
+						// console.log("Detected Colliders and Differences:", collider);
+						// bn.colliderDiff = colliderDiff;
+
+						for (let evidenceNodeName of Object.keys(evidence)) {
+							// Initialize a temporary array to store the sentences generated for this specific nonActiveNode.
+							// let nodeSentences = [];
+						
+							// Create a new network instance to represent the scenario where we remove one piece of evidence.
+							let netWithoutOneEvidence = new Net(bnKey);
+							netWithoutOneEvidence.compile();					
+						
+							// Set all evidence except the one corresponding to the current evidenceNodeName.
+							for (let [nodeName, stateI] of Object.entries(evidence)) {
+								if (nodeName != evidenceNodeName) {
+									netWithoutOneEvidence.node(nodeName).finding(Number(stateI));
+								}
+							}
+						
+							// Update the network to propagate the changes in evidence and compute new beliefs.
+							netWithoutOneEvidence.update();
+						
+							bn.influences[evidenceNodeName] = { targetBeliefs: {} };
+							let influenceData = bn.influences[evidenceNodeName];
+							// console.log('influenceData:', influenceData)
+							
+							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
+							influenceData.targetBeliefs[targetNodeName] = newBelief;
+						
+							// Find all paths between the current nonActiveNode and the target node in the network.
+							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
+						
+							// For each filtered path, generate a sentence describing how the current nonActiveNode influences the target.
+							for (const path of allPaths) {
+								bn.activePaths.push(path)				
+								let pathRel = activePathWithRelationships(path, relationships)															
+								pathWithRelationship.push(pathRel)																					
+							}							
+
+							if (focusEvidence !== 'null'){
+								console.log('pathWithRelationship:', pathWithRelationship)	
+								// console.log('allPaths:', allPaths)	
+								// console.log('bn.activePaths:', bn.activePaths)
+								// console.log('focusEvidence:', focusEvidence)
+								// console.log('targetNodeName:', targetNodeName)								
+								let classifiedPaths = classifyPaths(pathWithRelationship, focusEvidence, targetNodeName)
+								bn.classifiedPaths = classifiedPaths
+								const {firstOrderPaths, secondOrderPaths} = classifiedPaths
+								console.log('firstOrderPaths:', firstOrderPaths)
+								console.log('secondOrderPaths:', secondOrderPaths)
+							}							
+						}					
+						// console.log('evidence:', evidence)
+						// console.log('evidence.getT:', evidence['T'])				
+						
+						// console.log('pathWithRelationship:', pathWithRelationship)
+						// classifyPaths(pathWithRelationship, evidence, focusEvidence, targetNodeName)
+
+						// pathWithRelationship.forEach((path) => {
+						// 	console.log('---------------------------')	
+						// 	for (let [node, type] of path) {															
+						// 		console.log('node:', node, 'type:', type)								
+						// 	}
+						// })
 
 						// calculate arc importances
-
 						let arcs = []
 						// reset network
-						net = new Net(bnKey);
+						net = new Net(bnKey);						
+						
 						net.nodes().forEach(child => {
-							let childname = child.name();
+							let childname = child.name();			
+										
+
 							child.parents().forEach(parent => {
-								let parentname = parent.name();
+								
+								let parentname = parent.name();							
 								
 								let netWithnewCPT = new Net(bnKey);
 								let newcpt = marginalizeParentArc(child, parent, true);
@@ -1155,7 +1133,7 @@ module.exports = {
 								newchild.cpt(newcpt);
 								
 								for (let [nodeName,stateI] of Object.entries(evidence)) {
-									netWithnewCPT.node(nodeName).finding(Number(stateI));
+									netWithnewCPT.node(nodeName).finding(Number(stateI));									
 								}
 
 								netWithnewCPT.update();
@@ -1170,10 +1148,12 @@ module.exports = {
 									entry.targetBelief[targetNodeName] = netWithnewCPT.node(targetNodeName).beliefs()
 								})
 								
-								arcs.push(entry)
+								arcs.push(entry)								
 							})
-						})
+						})						
 						bn.arcInfluence = arcs;
+						// console.log('bn.activePaths:', bn.activePaths)
+						// console.log('bn:', bn)
 
 						return bn;
 					}
@@ -1190,8 +1170,7 @@ module.exports = {
 					let selectedStates = null;
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-					}
-					console.log({selectedStates});
+					}					
 					
 					/// Update selected states if there are joint causes
 					console.log({roles});

@@ -1,6 +1,12 @@
 node_modules/*
 build/config.gypi
-package-lock.json
 public/bns
 *.sqlite
 public/minh.route.js
+public/Yang.js
+public/hao_formatupdate.js
+.idx
+.vscode
+.history
+package-lock.json
+yarn.lock
