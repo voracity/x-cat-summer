@@ -173,7 +173,9 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
           '• By direct connection, it ',
           n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
           ' the probability of ',
-          n('span', nodeB, { class: 'verbalTextBold' }),
+          n('span', nodeB, { class: 'verbalTextBold' }), ' ',
+          n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
+          n('span', arc.toState),
           '.'
         );
         verbalListDisplay.appendChild(bulletLine);
@@ -207,9 +209,9 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
                 'It ',
                 n('span', colorToVerbalShorten(arc.color), { class: 'verbalTextUnderline' }),
                 ' the probability that ',
-                n('span', toNode, { class: 'verbalTextBold' }),
-                ' was ',
-                n('span', arc.fromState, { class: 'verbalTextItalic' })
+                n('span', toNode, { class: 'verbalTextBold' }),' ',
+                n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
+                n('span', arc.fromState)
               )
             );
           } else {
@@ -218,7 +220,9 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
                 'span',
                 n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
                 ' the probability of ',
-                n('span', toNode, { class: 'verbalTextBold' })
+                n('span', toNode, { class: 'verbalTextBold' }), ' ',
+                n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
+                n('span', arc.toState)
               )
             );
           }
@@ -265,7 +269,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
       'Overall, the finding ',
       n('span', colorToVerbal(overallColor), { class: 'verbalTextUnderline' }),
       ' the probability of ',
-      n('span', arcsContribution[0].to, { class: 'verbalTextBold' }),
+      n('span', arcsContribution[0].to, { class: 'verbalTextBold' }), 
       '.'
     );
     verbalListDisplay.appendChild(overallPara);
