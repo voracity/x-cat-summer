@@ -452,10 +452,10 @@ function colorTargetBar(listTargetNodes, m) {
       barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
     } else {
-      barchangeElem.style.marginRight = `-${absDiff}%`;
+      barchangeElem.style.marginRight = `${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
-      barchangeElem.classList.add(color+"-box");
-      barchangeElem.style.backgroundColor = "black";
+      barchangeElem.classList.add(targetColorClass+"-box");
+      // barchangeElem.style.backgroundColor = `gray`;
     }
     // shadow-boxes with width 0 still show their glow
 
@@ -477,22 +477,21 @@ function colorTargetBarByFocusEvidence(evidenceContributions, focusEvidence, lis
     Array.from(barchangeElem.classList).forEach(classname=> {
       if (classname.indexOf("influence-idx") == 0) {
         barchangeElem.classList.remove(classname);
-        barchangeElem.classList.remove(`${targetColorClass}-box`);
+        barchangeElem.classList.remove(`${color}-box`);
         barchangeElem.classList.remove(`influence-box`);
       }
     })
     
-    if (colorNum < 3) {
+    if (colorNum <= 3) {
       barchangeElem.style.marginLeft = `-${contribution}%`;
       barchangeElem.style.width = `${contribution}%`;
       barchangeElem.classList.add(color+"-box");
     } else if (colorNum > 3) {
-      barchangeElem.style.marginRight = `-${contribution}%`;
+      barchangeElem.style.marginRight = `${contribution}%`;
       barchangeElem.style.width = `${contribution}%`;
       barchangeElem.classList.add(color+"-box");
-      barchangeElem.style.backgroundColor = "black";
-    }
-
+      // barchangeElem.style.backgroundColor = `var(${color})`;
+    } 
   });
 }
 
