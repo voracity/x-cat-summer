@@ -411,6 +411,10 @@ class Node {
 		toggleFlash(); 		
 	}
 
+	static removeFlashNode(nodeElement) {
+		nodeElement.style.boxShadow = "";
+	}
+
 	static setFocusEvidence(nodeElement, bn) {
 		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
@@ -495,15 +499,16 @@ class Node {
 				playButton.style.transform = "translateY(-50%)";
 				
 				document.body.appendChild(playButton);
-				Node.flashNode(focusEvidenceNode);
-		
+						
 				// console.log('bn.detail:', bn.detail);
 				if (bn.detail === false) {
 					// console.log('--------CHANGING--------');
+					Node.flashNode(focusEvidenceNode);
 					Node.setFocusEvidence(focusEvidenceNode, bn);					
 					bn.detail = true;
 				} else {
 					bn.detail = false;
+					Node.removeFlashNode(focusEvidenceNode);
 					document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.removeFocusEvidence(focusEvidenceNode, bn);
 					bn.update();

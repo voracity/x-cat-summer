@@ -1,18 +1,5 @@
 var { getColor} = require('./utils.js');
 
-function fadeNodes(classifiedPaths, bnView) {						
-  let activeNodes = new Set([
-    ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
-    ...classifiedPaths.secondOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),	
-  ]);						
-  bnView.querySelectorAll('div.node').forEach(node => {
-    let nodeName = node.getAttribute('data-name');
-    if (!activeNodes.has(nodeName)) {
-      node.style.opacity = 0.3;
-    }
-  });
-}
-
 function extractActiveNodes(classifiedPaths) {
   return new Set([
     ...classifiedPaths.firstOrderPaths.map(path => path.map(subpath => subpath[0])).flat(),
@@ -46,6 +33,12 @@ function fadeNodes(activeNodes, bnView) {
   });
 }
 
+function displayAllNodes(bnView) {
+  bnView.querySelectorAll('div.node').forEach(node => {
+    node.style.opacity = 1;
+  });
+}
+
 function fadeAllArrows(activeNodes, arcInfluence) {
   arcInfluence.forEach((arcEntry) => {    
     if (!activeNodes.has(arcEntry.child) || !activeNodes.has(arcEntry.parent)) {      
@@ -53,6 +46,19 @@ function fadeAllArrows(activeNodes, arcInfluence) {
     }
   });
 }
+
+function displayAllArrows(arcInfluence) {
+  arcInfluence.forEach((arcEntry) => {
+    let arc = document.querySelector(
+      `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+    );
+    if (arc) {
+      arc.style.opacity = 1;
+    }
+  });
+}
+
+
 
 function colorNode(nodeName, m) {
   // Find the node with the given data-name
@@ -290,41 +296,19 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
   });
 }
 
-async function extractColoredArrows(animationOrderBN) {
-  const coloredArcs = new Set();
-  animationOrderBN.forEach((path) => {
-    if (path.type === "arrow") {
-      let { arcParent, arcChildren } = getArcEndpoints(path);
-      let key = `${arcParent}, ${arcChildren}`;
-      coloredArcs.add(key);
-    }
-  });
-  return coloredArcs;
-}
-
-function fadeArrow(arcParent, arcChildren) {
-  let arc = document.querySelector(
-      `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
-  );    
-
-  if (!arc) {
-      console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);
-      return;
-  }
-
-  let arcBodys = arc.querySelectorAll('path.line'); 
-  let arcHeads = arc.querySelectorAll('g.head');
-  
-  arcBodys[1].setAttribute('stroke', '#DBDBDB');
-  arcHeads[1].setAttribute('fill', '#DBDBDB');
-  arcHeads[1].setAttribute('stroke', '#DBDBDB');  
-}
-
-
-function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = true) {
+function colorElement(elem, paintColor, arcSize = 8, direction = 'normal', isBody = true) {
   if (!elem) {
       console.warn("colorElement: Element is null or undefined");
       return;
+  }
+
+  if (paintColor === "original") {
+    elem.style.stroke = "";
+    elem.style.strokeWidth = "";
+    elem.style.strokeDasharray = "";
+    elem.style.strokeDashoffset = "";
+    elem.style.transition = "";    
+    return;
   }
 
   elem.style.stroke = paintColor;
@@ -366,6 +350,45 @@ function colorElement(elem, paintColor, arcSize, direction = 'normal', isBody = 
   
   // Animate stroke from hidden to full visibility
   elem.style.strokeDashoffset = 0;
+}
+
+function uncolorAllArrows(arcInfluence){
+  arcInfluence.forEach((arcEntry) => {
+    let arc = document.querySelector(
+      `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+    );
+    if (arc) {
+      let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
+      let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
+      let combinedElems = Array.from(influeceArcBodyElems).map(
+        (bodyElem, index) => {
+          return {
+            body: bodyElem,
+            head: influeceArcHeadElems[index],
+          };
+        },
+      );
+      combinedElems.forEach((pair) => {
+        let bodyElem = pair.body;
+        let headElem = pair.head;
+        colorElement(bodyElem, "original");
+        colorElement(headElem, "original");
+      });
+    }
+  });
+}
+
+function fadeArrow(arcParent, arcChildren) {
+  let arc = document.querySelector(
+      `[data-child="${arcChildren}"][data-parent="${arcParent}"]`
+  );    
+
+  if (!arc) {
+      console.warn(`fadeArc: Arc not found - Parent: ${arcParent}, Child: ${arcChildren}`);
+      return;
+  }
+
+  arc.style.opacity = 0.3;
 }
 
 function getArcEndpoints(path) {

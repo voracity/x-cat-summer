@@ -350,10 +350,7 @@ class BnDetail {
 	toHtml() { return this.root.outerHTML; }
 
 	$handleUpdate(m) {
-		let barMax = 100; //px
-		// console.log('---------------------------------------')
-		// console.log('m:', m)
-		// console.log('---------------------------------------')
+		let barMax = 100; //px		
 		if (m.title) {
 			/// XXX Hack: Find a way of getting the page component
 			console.log('m.title:', m.title)
@@ -520,10 +517,7 @@ class BnDetail {
 			let verbalTitle = this.root.querySelector('.verbalTitle');
 			let verbalOverallSentence = this.root.querySelector('.overallSentence');
 			let globalTargetNodeName = '';
-			let globalTargetNodeState = '';
-
-			// Changed to fixed arc size
-			let arcSize = 8;			
+			let globalTargetNodeState = '';			
 			
 			// console.log('entries.length:', entries.length)
 			if (entries.length == 0) {
@@ -700,42 +694,47 @@ class BnDetail {
 
 				// Generate detailed explaination for the focus node
 				if (m.classifiedPaths && displayDetail) {					
-					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);
-				}
-				
-				// Animation when new focus node is added
-				if (m.classifiedPaths && window.animation) {																
-					reset(m.arcInfluence, bn, this.bnView);
-					resetTargetBar(listTargetNodes)
-					
-					const activeNodes = extractActiveNodes(m.classifiedPaths);	
-					fadeNodes(activeNodes, this.bnView);	
-					fadeAllArrows(activeNodes, m.arcInfluence)
-										
-					let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
-					const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)
-													
-					// console.log('animationOrderBN:', animationOrderBN)
-					// console.log('arcColorDict:', arcColorDict)
-					
-					animationOrderBN.forEach((path, index) => {
-						setTimeout(() => {
-							if (path.type == 'arrow') {
-								const { arcParent, arcChildren } = getArcEndpoints(path);							
-								const color = arcColorDict[`${arcParent}, ${arcChildren}`]							
-								colorArrows(arcParent, arcChildren, path.direction, color)							
-							}
-							else if (path.type == 'node') {
-								colorNode(path.name, m)
-							}
-							else if (path.type == 'target'){
-								colorTargetBar(listTargetNodes, m)
-							}
-						}, (index + 1) * 850) // start index at 1 so the flashing go first
-					})											
-				} 				
-			}		
-			
+					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
+					// Animation when new focus node is added
+					if (window.animation) {																
+						reset(m.arcInfluence, bn, this.bnView);
+						resetTargetBar(listTargetNodes)
+						
+						const activeNodes = extractActiveNodes(m.classifiedPaths);	
+						fadeNodes(activeNodes, this.bnView);	
+						fadeAllArrows(activeNodes, m.arcInfluence)
+											
+						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
+						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)						
+														
+						// console.log('animationOrderBN:', animationOrderBN)
+						// console.log('arcColorDict:', arcColorDict)
+						
+						animationOrderBN.forEach((path, index) => {
+							setTimeout(() => {
+								if (path.type == 'arrow') {
+									const { arcParent, arcChildren } = getArcEndpoints(path);							
+									const color = arcColorDict[`${arcParent}, ${arcChildren}`]												
+									colorArrows(arcParent, arcChildren, path.direction, color)							
+								}
+								else if (path.type == 'node') {
+									colorNode(path.name, m)
+								}
+								else if (path.type == 'target'){
+									colorTargetBar(listTargetNodes, m)
+								}
+							}, (index + 1) * 850) // start index at 1 so the flashing go first
+						})	
+						console.log('DDDDDDetail Mode')
+						console.log('coloredArrows:', coloredArrows)											
+					} 
+				}	else {
+					console.log('SSSSSSSSSSummary Mode')
+					displayAllNodes(this.bnView)
+					displayAllArrows(m.arcInfluence)
+					uncolorAllArrows(m.arcInfluence)
+				}								
+			}					
 		} 
 	}
 
