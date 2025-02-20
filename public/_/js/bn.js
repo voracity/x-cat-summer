@@ -18,6 +18,7 @@ var bn = {
 	verbal: null,
 	detail: false,
 	classifiedPaths: null,
+	currentDetailNode: null,
 	
 	drawArcs() {
 		let bnView = document.querySelector('.bnView');
@@ -415,10 +416,7 @@ class Node {
 		nodeElement.style.boxShadow = "";
 	}
 
-	static setFocusEvidence(nodeElement, bn) {
-		document.querySelectorAll('.focusEvidence').forEach(node => {
-			node.classList.remove('focusEvidence');
-		});
+	static setFocusEvidence(nodeElement, bn) {		
 		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
@@ -503,19 +501,30 @@ class Node {
 				
 				document.body.appendChild(playButton);
 						
-				// console.log('bn.detail:', bn.detail);
-				if (bn.detail === false) {
-					// console.log('--------CHANGING--------');
-					Node.flashNode(focusEvidenceNode);
-					Node.setFocusEvidence(focusEvidenceNode, bn);					
-					bn.detail = true;
-				} else {
-					bn.detail = false;
-					Node.removeFlashNode(focusEvidenceNode);
+				// If a different node is in detail mode, deactivate it first
+				if (bn.detail && bn.currentDetailNode && bn.currentDetailNode !== focusEvidenceNode) {
+					Node.removeFlashNode(bn.currentDetailNode);
 					document.querySelectorAll(".play-button").forEach(button => button.remove());
-					Node.removeFocusEvidence(focusEvidenceNode, bn);
-					bn.update();
+					Node.removeFocusEvidence(bn.currentDetailNode, bn);
+					bn.detail = false; // Reset detail mode
 				}
+		
+				// activate detail mode for the selected node
+				if (!bn.detail || bn.currentDetailNode !== focusEvidenceNode) {
+						Node.flashNode(focusEvidenceNode);
+						Node.setFocusEvidence(focusEvidenceNode, bn);
+						bn.detail = true;
+						bn.currentDetailNode = focusEvidenceNode; // Store the currently active detail node
+				} else {
+						// If the same node is clicked again, deactivate detail mode
+						bn.detail = false;
+						Node.removeFlashNode(focusEvidenceNode);
+						document.querySelectorAll(".play-button").forEach(button => button.remove());
+						Node.removeFocusEvidence(focusEvidenceNode, bn);
+						bn.currentDetailNode = null;
+				}
+
+				bn.update();
 				if (focusEvidenceNode.classList.contains("hasEvidence")) {
 					document.body.appendChild(playButton);
 				}
