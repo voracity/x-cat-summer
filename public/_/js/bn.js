@@ -81,7 +81,6 @@ var bn = {
 		if (this.animationMode) {
 			window.animation = false
 			console.log("Animation mode disbaled");
-
 		}
 		else{
 			console.log("Animation mode enabaled");
@@ -494,16 +493,15 @@ class Node {
 						Node.flashNode(focusEvidenceNode);
 						bn.update();
 					});
-			
 					
+					let rect = evidenceNodeTitle.getBoundingClientRect();
+
 					playButton.style.left = `${window.scrollX + rect.left - 30}px`;
 					playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
 					playButton.style.transform = "translateY(-50%)";
 					
 					document.body.appendChild(playButton);
-				}
-
-				let rect = evidenceNodeTitle.getBoundingClientRect();
+				}				
 						
 				// If a different node is in detail mode, deactivate it first
 				if (bn.detail && bn.currentDetailNode && bn.currentDetailNode !== focusEvidenceNode) {
