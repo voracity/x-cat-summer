@@ -724,12 +724,10 @@ class BnDetail {
 									colorTargetBar(listTargetNodes, m)
 								}
 							}, (index + 1) * 850) // start index at 1 so the flashing go first
-						})	
-						console.log('DDDDDDetail Mode')
-						console.log('coloredArrows:', coloredArrows)											
+						})										
 					} 
-				}	else {
-					console.log('SSSSSSSSSSummary Mode')
+				}	else {				
+					// Summary mode	
 					displayAllNodes(this.bnView)
 					displayAllArrows(m.arcInfluence)
 					uncolorAllArrows(m.arcInfluence)
