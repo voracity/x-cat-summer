@@ -184,9 +184,7 @@ function resetTargetBar(listTargetNodes) {
       barchangeElem.style.marginLeft = "0";
       barchangeElem.style.width = "0";
       barchangeElem.style.backgroundColor = "";
-      barchangeElem.style.opacity = "1"; // Ensure it stays visible
-
-      console.log(`resetTargetBar: Reset color for ${targetNodeName}`);
+      barchangeElem.style.opacity = "1"; // Ensure it stays visible      
   });
 }
   
@@ -237,6 +235,8 @@ function getArcColors(arcInfluence, nodeBeliefs) {
           const targetStateElem = targetNode.querySelector(".state.istarget");
           const targetStateIdx = targetStateElem.dataset.index;
 
+          // console.log('targetNodeName:', targetNodeName, 'targetStateIdx:', targetStateIdx, 'arcBeliefs:', arcBeliefs, 'nodeBeliefs:', nodeBeliefs[targetNodeName]);
+
           // Calculate diff for this target
           return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
       });
@@ -258,7 +258,7 @@ function getArcColors(arcInfluence, nodeBeliefs) {
 function colorArrows(arcParent, arcChildren, colorOrder, color) {
   let arc = document.querySelector(
     `[data-child=${arcChildren}][data-parent=${arcParent}]`,
-  );
+  );  
 
   let influeceArcBodyElems = arc.querySelectorAll("[data-influencearc=body]");
   let influeceArcHeadElems = arc.querySelectorAll("[data-influencearc=head]");
@@ -418,44 +418,50 @@ function colorTargetBar(listTargetNodes, m) {
       barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
     } else {
-      barchangeElem.style.marginLeft = `-${absDiff}%`;
+      barchangeElem.style.marginRight = `-${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
-
+      barchangeElem.classList.add(color+"-box");
+      barchangeElem.style.backgroundColor = "black";
     }
     // shadow-boxes with width 0 still show their glow
 
     // target bar color
-    if (Math.abs(diff)>0)
+    if (Math.abs(diff) > 0)
       barchangeElem.classList.add(targetColorClass+"-box");
 
   })
 }
 
-function resetTargetBar(listTargetNodes) {
-  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
-      let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+function colorTargetBarByFocusEvidence(evidenceContributions, focusEvidence, listTargetNodes) {
+  const {contribution, color} = evidenceContributions[focusEvidence];
+  const colorNum = parseInt(color[color.length-1], 10);
+  
 
-      if (!barchangeElem) {
-          console.warn(`resetTargetBar: No barchange element found for target node: ${targetNodeName}`);
-          return;
+  Object.entries(listTargetNodes).forEach(([_, data]) => {
+    let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
+
+    Array.from(barchangeElem.classList).forEach(classname=> {
+      if (classname.indexOf("influence-idx") == 0) {
+        barchangeElem.classList.remove(classname);
+        barchangeElem.classList.remove(`${targetColorClass}-box`);
+        barchangeElem.classList.remove(`influence-box`);
       }
+    })
+    
+    if (colorNum < 3) {
+      barchangeElem.style.marginLeft = `-${contribution}%`;
+      barchangeElem.style.width = `${contribution}%`;
+      barchangeElem.classList.add(color+"-box");
+    } else if (colorNum > 3) {
+      barchangeElem.style.marginRight = `-${contribution}%`;
+      barchangeElem.style.width = `${contribution}%`;
+      barchangeElem.classList.add(color+"-box");
+      barchangeElem.style.backgroundColor = "black";
+    }
 
-      // Remove influence-related classes
-      Array.from(barchangeElem.classList).forEach(classname => {
-          if (classname.includes("influence-idx") || classname.includes("-box")) {
-              barchangeElem.classList.remove(classname);
-          }
-      });
-
-      // Reset styles to original state
-      barchangeElem.style.marginLeft = "0";
-      barchangeElem.style.width = "0";
-      barchangeElem.style.backgroundColor = "";
-      barchangeElem.style.opacity = "1"; // Ensure it stays visible
-
-      console.log(`resetTargetBar: Reset color for ${targetNodeName}`);
   });
 }
+
 
 // class AnimationStep {
 //     repeats = 1;

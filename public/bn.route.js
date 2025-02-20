@@ -420,7 +420,7 @@ class BnDetail {
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}
-			console.log('m.nodeBeliefs:', m.nodeBeliefs)
+			// console.log('m.nodeBeliefs:', m.nodeBeliefs)
 		}
 		/** != null is false only if value is null or undefined **/
 		if (m.scenariosEnabled != null) {
@@ -536,7 +536,8 @@ class BnDetail {
 				// console.log('entries:', entries)
 				verbalListDisplay.innerHTML = '';				
 				let arcsContribution = [];
-				let numsEntries = entries.length;				
+				let numsEntries = entries.length;		
+				let evidenceContributions = {}		
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
 					if (evidenceNodeName == 'overall') return;		
@@ -602,7 +603,7 @@ class BnDetail {
 
 						// console.log('targetStateColor:', targetStateColor)
 
-						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];
+						// let relativeBeliefChange = (m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx]) / m.nodeBeliefs[targetNodeName][targetStateIdx];						
 						let relativeBeliefChange = m.nodeBeliefs[targetNodeName][targetStateIdx] - beliefs[targetStateIdx];
 						let absChange = Math.abs(relativeBeliefChange * 100);
 						let stateElem = evidenceNode.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
@@ -615,6 +616,12 @@ class BnDetail {
 						let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
+
+						evidenceContributions[evidenceNodeName] = {
+							contribution: absChange,
+							color: colorClass,
+						}
+
 						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
@@ -658,8 +665,8 @@ class BnDetail {
 						})
 
 					})
-					console.log('listTargetNodes:', listTargetNodes)					
-					console.log('m.origModel:', m.origModel)
+					// console.log('listTargetNodes:', listTargetNodes)					
+					// console.log('m.origModel:', m.origModel)
 				
 					// Build up the arcs for the influence for verbal part					
 					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
@@ -690,7 +697,9 @@ class BnDetail {
 				})
 
 				// color target bar every time a new evidence is added
-				colorTargetBar(listTargetNodes, m)	
+				colorTargetBar(listTargetNodes, m)		
+
+				// console.log('evidenceContributions:', evidenceContributions)
 
 				// Generate detailed explaination for the focus node
 				if (m.classifiedPaths && displayDetail) {					
@@ -705,26 +714,25 @@ class BnDetail {
 						fadeAllArrows(activeNodes, m.arcInfluence)
 											
 						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
-						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)						
-														
-						// console.log('animationOrderBN:', animationOrderBN)
-						// console.log('arcColorDict:', arcColorDict)
+						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
 						
 						animationOrderBN.forEach((path, index) => {
 							setTimeout(() => {
 								if (path.type == 'arrow') {
 									const { arcParent, arcChildren } = getArcEndpoints(path);							
-									const color = arcColorDict[`${arcParent}, ${arcChildren}`]												
-									colorArrows(arcParent, arcChildren, path.direction, color)							
+									const color = arcColorDict[`${arcParent}, ${arcChildren}`]			
+									
+									colorArrows(arcParent, arcChildren, path.direction, color)	
+									
 								}
 								else if (path.type == 'node') {
 									colorNode(path.name, m)
 								}
 								else if (path.type == 'target'){
-									colorTargetBar(listTargetNodes, m)
+									colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes)
 								}
 							}, (index + 1) * 850) // start index at 1 so the flashing go first
-						})										
+						})															
 					} 
 				}	else {				
 					// Summary mode	

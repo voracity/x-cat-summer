@@ -212,7 +212,7 @@ function classifyPaths(pathWithRelationship, focusNode, targetNode) {
   console.log('------------classifyPaths:--------------')
 
   pathWithRelationship.forEach((path) => {
-    console.log('path:', path)  
+    // console.log('path:', path)  
       if (path[0][0] === focusNode && path[path.length - 1][0] === targetNode) {
           let pathString = JSON.stringify(path); 
           if (!firstOrderPathsSet.has(pathString)) {
