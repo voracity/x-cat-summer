@@ -335,7 +335,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', parent1, { class: 'verbalTextBold' }), ' was ',
       n('span', arc0.fromState, { class: 'verbalTextItalic' }), ", ",
       `which has ${colorToVerbal(arc1.color, true)} the probability that `,
-      n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
+      n('span', arc0.toState , { class: 'verbalTextItalic' }), " ",
       n('span', colliderNode, { class: 'verbalTextBold' }), ' will occur without ',
       n('span', parent2, { class: 'verbalTextBold' }), '.'
     );
@@ -441,13 +441,13 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 
     const step1 = n('p',
       n('span', '1.', { style: 'fontWeight:bold' }), ' ',
-      `If we didn’t know about the`,
+      `If we didn’t know about the `,
       n('span', parent1, { class: 'verbalTextBold' }),
-      `, then finding out the`,
+      `, then finding out the `,
       n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
       n('span', arc0.toState, { class: 'verbalTextItalic' }), ' ',
       `would greatly increase the probability of `,
-      n('span', parent2, { class: 'verbalTextBold' }),
+      n('span', parent2, { class: 'verbalTextBold' }), ' ',
       n('span', arc1.fromState, { class: 'verbalTextItalic' }),
       `, by direct connection.`
     );
@@ -707,6 +707,132 @@ function numberToWord(num) {
   return num;
 }
 
+function findColliders(net, relationships) {
+    const colliders = [];
+    const incomingEdges = {};
+
+    relationships.forEach(rel => {
+        if (!incomingEdges[rel.to]) incomingEdges[rel.to] = [];
+        incomingEdges[rel.to].push(rel.from);
+    });
+
+    for (const [node, parents] of Object.entries(incomingEdges)) {
+        if (parents.length > 1) {
+            const hasDirectPath = parents.some(parentA =>
+                parents.some(parentB =>
+                    relationships.some(rel => 
+                        (rel.from === parentA && rel.to === parentB) || 
+                        (rel.from === parentB && rel.to === parentA)
+                    )
+                )
+            );
+
+            if (!hasDirectPath) colliders.push({ node, parents });
+        }
+    }
+
+    return colliders;
+}
+
+function calculateBaseDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
+    const baselineNet = new Net(bnKey);
+    const evidenceNet = new Net(bnKey);
+    evidenceNet.compile();
+
+    Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
+        if (baselineNet.node(nodeName)) baselineNet.node(nodeName).finding(Number(stateIndex));
+        if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
+    });
+
+    evidenceNet.node(targetNode).finding(targetStateIndex);
+    let baseDiff = Infinity;
+
+    parents.forEach(parent => {
+        const parentNode = evidenceNet.node(parent);
+        if (!parentNode) return;
+
+        parentNode.states().forEach((_, stateIndex) => {
+            parentNode.finding(stateIndex);
+            evidenceNet.update();
+
+            const probWithEvidence = evidenceNet.node(colliderNode).beliefs()[targetStateIndex];
+            const probWithoutEvidence = baselineNet.node(colliderNode).beliefs()[targetStateIndex];
+
+            const diff = Math.abs(probWithEvidence - probWithoutEvidence);
+            baseDiff = Math.min(baseDiff, diff);
+        });
+
+        parentNode.retractFindings();
+    });
+
+    return baseDiff;
+}
+
+function calculatePowerDiff(net, colliderNode, parents, targetNode, evidence, targetStateIndex, bnKey) {
+    const evidenceNet = new Net(bnKey);
+    evidenceNet.compile();
+
+    evidenceNet.node(targetNode).finding(targetStateIndex);
+    Object.entries(evidence).forEach(([nodeName, stateIndex]) => {
+        if (evidenceNet.node(nodeName)) evidenceNet.node(nodeName).finding(Number(stateIndex));
+    });
+
+    evidenceNet.update();
+
+    let powerDiff = 0;
+
+    parents.forEach(parent => {
+        const parentNode = evidenceNet.node(parent);
+        if (!parentNode) return;
+
+        parentNode.states().forEach((_, stateIndex) => {
+            parentNode.finding(stateIndex);
+            evidenceNet.update();
+
+            const beliefs = evidenceNet.node(colliderNode).beliefs();
+            const probWithEvidence = beliefs[targetStateIndex];
+            const probWithoutEvidence = 1 - probWithEvidence;
+
+            powerDiff += Math.abs(probWithEvidence - probWithoutEvidence);
+        });
+
+        parentNode.retractFindings();
+    });
+
+    return powerDiff;
+}
+
+function analyzeColliders(net, relationships, evidence, targetNode, targetStateIndex, bnKey) {
+  const colliders = findColliders(net, relationships);
+  const results = [];
+
+  colliders.forEach(collider => {
+      const baseDiff = calculateBaseDiff(
+          net,
+          collider.node,
+          collider.parents,
+          targetNode,
+          evidence,
+          targetStateIndex,
+          bnKey
+      );
+
+      const powerDiff = calculatePowerDiff(
+          net,
+          collider.node,
+          collider.parents,
+          targetNode,
+          evidence,
+          targetStateIndex,
+          bnKey
+      );
+
+      results.push({ colliderNode: collider.node, baseDiff, powerDiff });
+  });
+
+  return results;
+}
+
 // Identifies collider nodes in the network relationships (alternative method).
 function findColliders(net, relationships) {
     const colliders = [];
@@ -903,6 +1029,7 @@ function analyzeColliders(net, relationships, evidence, targetNode, targetStateI
 
 module.exports = {
   findAllColliders,
+  analyzeColliders,
   analyzeColliders,
   inferTenseFromArcInfluence
 }

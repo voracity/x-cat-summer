@@ -767,7 +767,6 @@ class BnDetail {
 		], {buttons:[btnOK, btnCANCEL]})
 		document.getElementById("snapshotname").focus()
 		// dlg.querySelector('.controls').append(n('button', 'Cancel', {type: 'button', on: {click: ui.dismissDialogs}}));
-		
 	}
 
 }
