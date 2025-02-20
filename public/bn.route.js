@@ -306,7 +306,7 @@ class BnDetail {
 			),
 			n('div.bnView',
 				n('div.influenceContainer',
-					{id:"verbalBox", class: 'influenceContainer', style: 'display: none'},
+					{id:"verbalBox", class: 'influenceContainer'},
 					n('p', 'Summary: What all the findings contribute', {class: 'verbalTitle'}),
 					n('p', { class: 'introSentence'}),
 					n('p', { class: 'influenceList'}),
@@ -509,7 +509,8 @@ class BnDetail {
 			
 			let verbalBox = this.root.querySelector('.influenceContainer');
 			if (verbal){
-				verbalBox.style.display = 'block';
+				verbalBox.style.opacity = 1;
+				verbalBox.style.display = 'inline-block';
 			}
 			let verbalIntroSentence = this.root.querySelector('.introSentence');
 			let verbalListDisplay = this.root.querySelector('.influenceList');

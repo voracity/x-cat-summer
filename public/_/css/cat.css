@@ -46,15 +46,16 @@ h2 { margin: 0; margin-bottom: 0.5em; }
 
 
 .influenceContainer {
-    position: absolute;
-    top: 40px;
+	opacity: 0;
+	position: absolute;
+	top: 40px;
 	right: -450px;
-    left: 800px;
-    border: 1.5px solid black;
-    display: inline-block;
-    width: 400px;
-    padding: 12px;
-    background: white;
+	left: 800px;
+	border: 1.5px solid black;
+	display: inline-block;
+	width: 400px;
+	padding: 12px;
+	background: white;
 }
 
 .influenceContainer:hover {
