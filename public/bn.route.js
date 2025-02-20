@@ -304,7 +304,11 @@ class BnDetail {
 					n('button.renameScenario', 'Rename'),
 				),
 			),
-			n('div.bnView',
+			n('div', {class: 'bigContainer'},
+			
+				n('div.bnView',
+					
+				),
 				n('div.influenceContainer',
 					{id:"verbalBox", class: 'influenceContainer'},
 					n('p', 'Summary: What all the findings contribute', {class: 'verbalTitle'}),
@@ -314,18 +318,7 @@ class BnDetail {
 				),
 			),
 
-
 			n('div.infoWindows',
-				/*	
-				n('div.help',
-					n('h2', 'Help'),
-					n('div.tip.infoContent',
-						n('p', `Hover over a node and click 'E' to set an effect, which will display the causal information with all other nodes below.`),
-						n('p', `To see the effect of a `, n('em', 'combined'), ` set of causes, click 'C' (Cause) on one or more other nodes, which will display an information window below.`),
-						n('p', `To focus on the causal information for just specific states, click the checkbox next to the state name. To select multiple such states, hold down 'Shift'.`),
-					),
-				),
-				*/
 				n("div", {class:"evidence-scale"}, 
 					n("div", {class:"evidence-scale-header"}, "Contribution Scale"),
 					// n("div", "Colour scale showing the influence of evidence on the target."),
@@ -340,7 +333,18 @@ class BnDetail {
 					),
 					n("div", {style:"text-align:center; padding:3px;"}, "probability of"),
 					n("div", n("div", {class:"target"}, "target state"))
-				)
+				),
+				/*	
+				n('div.help',
+					n('h2', 'Help'),
+					n('div.tip.infoContent',
+						n('p', `Hover over a node and click 'E' to set an effect, which will display the causal information with all other nodes below.`),
+						n('p', `To see the effect of a `, n('em', 'combined'), ` set of causes, click 'C' (Cause) on one or more other nodes, which will display an information window below.`),
+						n('p', `To focus on the causal information for just specific states, click the checkbox next to the state name. To select multiple such states, hold down 'Shift'.`),
+					),
+				),
+				*/
+				
 			),
 		);
 		this.titleEl = this.root.querySelector('.title');
@@ -684,7 +688,7 @@ class BnDetail {
 							let parentNodeState = getNodeState(arcEntry.parent, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
 							let childNodeState = getNodeState(arcEntry.child, globalTargetNodeName, globalTargetNodeState, m, this.bnView);
 					
-							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent) && window.animation) {
+							if (activeNodes.has(arcEntry.child) && activeNodes.has(arcEntry.parent)) {
 									arcsContribution.push({
 											from: arcEntry.parent,
 											fromState: parentNodeState,
