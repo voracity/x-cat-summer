@@ -95,6 +95,40 @@ function colorNode(nodeName, m) {
   });
 }
 
+function colorNodeByColorArrow(nodeName, path, arcColorDict, m) { 
+    
+    const { arcParent, arcChildren } = getArcEndpoints(path);		
+    let color = arcColorDict[`${arcParent}, ${arcChildren}`]	
+
+    let node = document.querySelector(`.node[data-name="${nodeName}"]:not(.focusEvidence)`);
+
+    if (!node) {
+        console.warn(`Node with name "${nodeName}" not found.`);
+        return;
+    }
+
+    let currentBelief = m.nodeBeliefs[nodeName];
+    let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
+    
+    currentBelief.forEach((curBelief, idx) => {
+      let diff = curBelief - origBeliefs[idx]
+      let absDiff = diff * 100;
+      let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
+      
+      barchangeElem.classList.add(color)						
+
+      if (absDiff > 0) {
+        // overlay change over the current belief bar
+        barchangeElem.style.marginLeft = `-${absDiff}%`;
+        barchangeElem.style.width = `${absDiff}%`;
+      } else {
+        // the change will be placed right next to the original belief bar
+        barchangeElem.style.width = `${absDiff}%`;
+      }
+    });
+  
+}
+
 function generateAnimationOrder(classifiedPaths) {
   let {firstOrderPaths, secondOrderPaths} = classifiedPaths;
   let animationOrder = [];

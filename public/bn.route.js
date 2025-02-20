@@ -699,8 +699,6 @@ class BnDetail {
 				// color target bar every time a new evidence is added
 				colorTargetBar(listTargetNodes, m)		
 
-				// console.log('evidenceContributions:', evidenceContributions)
-
 				// Generate detailed explaination for the focus node
 				if (m.classifiedPaths && displayDetail) {					
 					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
@@ -716,23 +714,24 @@ class BnDetail {
 						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
 						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
 						
-						animationOrderBN.forEach((path, index) => {
+						for (let index = 0; index < animationOrderBN.length; index++) {
 							setTimeout(() => {
+								const path = animationOrderBN[index];
 								if (path.type == 'arrow') {
 									const { arcParent, arcChildren } = getArcEndpoints(path);							
-									const color = arcColorDict[`${arcParent}, ${arcChildren}`]			
+									const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
+									colorArrows(arcParent, arcChildren, path.direction, color);	
 									
-									colorArrows(arcParent, arcChildren, path.direction, color)	
-									
+								} else if (path.type == 'node') {
+									let nextPath = animationOrderBN[index + 1];
+									// temporary solution
+									colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
+
+								} else if (path.type == 'target') {
+									colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes);
 								}
-								else if (path.type == 'node') {
-									colorNode(path.name, m)
-								}
-								else if (path.type == 'target'){
-									colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes)
-								}
-							}, (index + 1) * 850) // start index at 1 so the flashing go first
-						})															
+							}, (index + 1) * 850); // start index at 1 so the flashing go first
+						}
 					} 
 				}	else {				
 					// Summary mode	
