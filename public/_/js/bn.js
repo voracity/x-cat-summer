@@ -44,61 +44,60 @@ var bn = {
 		}
 	},
 	initialize() {
-        const urlParams = new URLSearchParams(window.location.search);
-        this.limitedMode = urlParams.get('limitedmode') === 'true';
-		this.MenuDisplay = urlParams.get('showmenu') === 'false';
+		const urlParams = new URLSearchParams(window.location.search);
+		this.limitedMode = urlParams.get('limitedMode') === 'true';
+		this.menuDisplay = urlParams.get('showMenu') === 'false';
 		this.verbalMode = urlParams.get('verbal') === 'false';
 		this.animationMode = urlParams.get('animation') === 'false';
 		// limited mode
-        if (this.limitedMode) {
-            this.enableLimitedMode(); 
-        }
+		if (this.limitedMode) {
+				this.enableLimitedMode(); 
+		}
 		else{
-            this.disableLimitedMode(); 
+				this.disableLimitedMode(); 
 		}
 		// menu Dispaly
-		if (this.MenuDisplay) {
-			ShowMenu = false
-            console.log("Menu disbaled");
-
-        }
+		if (this.menuDisplay) {
+			showMenu = false
+			console.log("Menu disbaled");
+		}
 		else{
-            console.log("Menu abled");
-			ShowMenu = true
+			console.log("Menu abled");
+			showMenu = true
 		}
 	
 		// verbal mode
 		if (this.verbalMode) {
 			verbal = false
-            console.log("Verbal mode disabled");
+			console.log("Verbal mode disabled");
 
-        }
+		}
 		else{
-            console.log("Verbal mode enabled");
+			console.log("Verbal mode enabled");
 			verbal = true
 		}
 
 		// animaton mode
 		if (this.animationMode) {
 			window.animation = false
-            console.log("Animation mode disbaled");
+			console.log("Animation mode disbaled");
 
-        }
+		}
 		else{
-            console.log("Animation mode enabaled");
+			console.log("Animation mode enabaled");
 			window.animation = true
 		}
 
     },
 
-    enableLimitedMode() {
-        console.log("Limited mode");
+	enableLimitedMode() {
+		console.log("Limited mode");
 		dragFunc = false
-    },
+	},
 	disableLimitedMode() {
-        console.log("Func mode");
+		console.log("Func mode");
 		dragFunc = true
-    },
+	},
 
 	
 	async update(evidence = {}) {
@@ -409,7 +408,9 @@ class Node {
 				nodeElement.style.boxShadow = "0px 0px 12px rgba(255,0,0,0.9)"
 			}
 		}
-		toggleFlash(); 		
+		if (window.animation) {
+			toggleFlash(); 		
+		}
 	}
 
 	static removeFlashNode(nodeElement) {
@@ -437,7 +438,7 @@ class Node {
 		const verbalPart = document.querySelector('#verbalBox')
 
 
-		if (!ShowMenu) {
+		if (!showMenu) {
 			controlsDiv.style.display = 'none';
 			headerDiv.style.display = 'none';
 		} else {
@@ -480,26 +481,29 @@ class Node {
 			if (evidenceNodeTitle && focusEvidenceNode.classList.contains("hasEvidence")) {  
 				// console.log('evidenceNodeTitle', evidenceNodeTitle);
 
+				if (window.animation) {
+					document.querySelectorAll(".play-button").forEach(button => button.remove());
+			
+					const playButton = document.createElement("button");
+					playButton.textContent = "▶";
+					playButton.className = "play-button";
+					playButton.style.position = "absolute";
+			
+					playButton.addEventListener("click", () => {
+						// console.log("Play Button Clicked!");
+						Node.flashNode(focusEvidenceNode);
+						bn.update();
+					});
+			
+					
+					playButton.style.left = `${window.scrollX + rect.left - 30}px`;
+					playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
+					playButton.style.transform = "translateY(-50%)";
+					
+					document.body.appendChild(playButton);
+				}
 
-				document.querySelectorAll(".play-button").forEach(button => button.remove());
-		
-				const playButton = document.createElement("button");
-				playButton.textContent = "▶";
-				playButton.className = "play-button";
-				playButton.style.position = "absolute";
-		
-				playButton.addEventListener("click", () => {
-					// console.log("Play Button Clicked!");
-					Node.flashNode(focusEvidenceNode);
-					bn.update();
-				});
-		
 				let rect = evidenceNodeTitle.getBoundingClientRect();
-				playButton.style.left = `${window.scrollX + rect.left - 30}px`;
-				playButton.style.top = `${window.scrollY + rect.top + rect.height / 2}px`;
-				playButton.style.transform = "translateY(-50%)";
-				
-				document.body.appendChild(playButton);
 						
 				// If a different node is in detail mode, deactivate it first
 				if (bn.detail && bn.currentDetailNode && bn.currentDetailNode !== focusEvidenceNode) {
