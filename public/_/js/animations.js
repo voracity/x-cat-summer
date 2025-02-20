@@ -137,6 +137,14 @@ function generateAnimationOrder(classifiedPaths) {
   let targetNode = null; // Store target node to ensure it's added at the end
 
   function processPath(path) {
+    if (path.length === 0) return;
+
+    let [firstNode] = path[0];
+
+    if (!visitedNodes.has(firstNode)) {
+        animationOrder.push({ type: "node", name: firstNode });
+        visitedNodes.add(firstNode);
+    }
     for (let i = 0; i < path.length - 1; i++) {
       let [currentNode, relation] = path[i];
       let [nextNode, nextRelation] = path[i + 1];

@@ -416,6 +416,9 @@ class Node {
 	}
 
 	static setFocusEvidence(nodeElement, bn) {
+		document.querySelectorAll('.focusEvidence').forEach(node => {
+			node.classList.remove('focusEvidence');
+		});
 		nodeElement.classList.add("focusEvidence");
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
