@@ -335,7 +335,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', parent1, { class: 'verbalTextBold' }), ' was ',
       n('span', arc0.fromState, { class: 'verbalTextItalic' }), ", ",
       `which has ${colorToVerbal(arc1.color, true)} the probability that `,
-      n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
+      n('span', arc0.toState , { class: 'verbalTextItalic' }), " ",
       n('span', colliderNode, { class: 'verbalTextBold' }), ' will occur without ',
       n('span', parent2, { class: 'verbalTextBold' }), '.'
     );
@@ -441,13 +441,13 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 
     const step1 = n('p',
       n('span', '1.', { style: 'fontWeight:bold' }), ' ',
-      `If we didn’t know about the`,
+      `If we didn’t know about the `,
       n('span', parent1, { class: 'verbalTextBold' }),
-      `, then finding out the`,
+      `, then finding out the `,
       n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
       n('span', arc0.toState, { class: 'verbalTextItalic' }), ' ',
       `would greatly increase the probability of `,
-      n('span', parent2, { class: 'verbalTextBold' }),
+      n('span', parent2, { class: 'verbalTextBold' }), ' ',
       n('span', arc1.fromState, { class: 'verbalTextItalic' }),
       `, by direct connection.`
     );
