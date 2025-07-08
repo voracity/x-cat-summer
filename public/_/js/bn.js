@@ -509,16 +509,19 @@ class Node {
 					document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.removeFocusEvidence(bn.currentDetailNode, bn);
 					bn.detail = false; // Reset detail mode
+					console.log("If a different node is in detail mode, deactivate it first");
 				}
 		
 				// activate detail mode for the selected node
 				if (!bn.detail || bn.currentDetailNode !== focusEvidenceNode) {
+						console.log("activate detail mode for the selected node");
 						Node.flashNode(focusEvidenceNode);
 						Node.setFocusEvidence(focusEvidenceNode, bn);
 						bn.detail = true;
 						bn.currentDetailNode = focusEvidenceNode; // Store the currently active detail node
 				} else {
 						// If the same node is clicked again, deactivate detail mode
+						console.log("If the same node is clicked again, deactivate detail mode");
 						bn.detail = false;
 						Node.removeFlashNode(focusEvidenceNode);
 						document.querySelectorAll(".play-button").forEach(button => button.remove());

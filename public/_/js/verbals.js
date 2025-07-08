@@ -359,6 +359,12 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
   const parent1 = arc0.from;
   const parent2 = arc1.from;
 
+  console.log("arc0", arc0);
+  console.log("arc1", arc1);
+  console.log("colliderNode", colliderNode);
+  console.log("parent1", parent1);
+  console.log("parent2", parent2);
+
   // **Check if the clicked node is the collider or an evidence node**
   if (focusEvidenceName === colliderNode) {
     console.log("Collider node selected – Printing Image 1 format");
@@ -417,7 +423,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
 
     // **Image 2 Format (Evidence Node Selected)**
     const introParagraph = n('p',
-      n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
+      "Either ",
+      n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
       n('span', colliderNode, { class: 'verbalTextBold' }), " ",
       "can be caused by the ",
       n('span', parent1, { class: 'verbalTextBold' }), " being ",
