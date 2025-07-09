@@ -413,7 +413,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       `So, finding out `,
       n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
-      `now only ${colorToVerbal(arc1.color)} the probability of `,
+      `now only ${colorToVerbal(arc0.color)} the probability of `,
       n('span', parent2, { class: 'verbalTextBold' }), '.'
     );
     verbalListDisplay.appendChild(step3);
@@ -423,28 +423,47 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
 
     // **Image 2 Format (Evidence Node Selected)**
     const introParagraph = n('p',
-      "Either ",
-      n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
+      n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
       n('span', colliderNode, { class: 'verbalTextBold' }), " ",
       "can be caused by the ",
-      n('span', parent1, { class: 'verbalTextBold' }), " being ",
-      n('span', arc0.fromState, { class: 'verbalTextItalic' }), " or ",
       n('span', parent2, { class: 'verbalTextBold' }), " being ",
-      n('span', arc1.fromState, { class: 'verbalTextItalic' }), "."
+      n('span', arc1.fromState, { class: 'verbalTextItalic' }), " or ",
+      n('span', parent1, { class: 'verbalTextBold' }), " being ",
+      n('span', arc0.fromState, { class: 'verbalTextItalic' }), "."
     );
     verbalListDisplay.appendChild(introParagraph);
+
+    // const introParagraph = n('p',
+    //   "Either ",
+    //   n('span', arc1.fromState, { class: 'verbalTextItalic' }), " ",
+    //   n('span', focusEvidenceName, { class: 'verbalTextBold' }), " or ",
+    //   n('span', arc0.fromState, { class: 'verbalTextItalic' }), " ",
+    //   n('span', parent1, { class: 'verbalTextBold' }), " can directly cause ",
+    //   n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
+    //   n('span', colliderNode, { class: 'verbalTextBold' }), "."
+    // );
+
+    // old step1
+    // const step1 = n('p',
+    //   n('span', '1.', { style: 'fontWeight:bold' }), ' ',
+    //   `If we didn’t know about `,
+    //   n('span', colliderNode, { class: 'verbalTextBold' }),
+    //   `, finding out the `,
+    //   n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' was ',
+    //   n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), ' ',
+    //   n('span', colorToVerbal(arc1.color), { class: 'verbalTextUnderline' }),
+    //   `  the probability of  `,
+    //   n('span', parent2, { class: 'verbalTextBold' }),
+    //   '.'
+    // );
 
     const step1 = n('p',
       n('span', '1.', { style: 'fontWeight:bold' }), ' ',
       `If we didn’t know about `,
       n('span', colliderNode, { class: 'verbalTextBold' }),
       `, finding out the `,
-      n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' was ',
-      n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), ' ',
-      n('span', colorToVerbal(arc1.color), { class: 'verbalTextUnderline' }),
-      `  the probability of  `,
-      n('span', parent2, { class: 'verbalTextBold' }),
-      '.'
+      n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' wouldn’t change ',
+      n('span', parent1, { class: 'verbalTextBold' }), '’s probability.'
     );
     verbalListDisplay.appendChild(step1);
 
@@ -456,7 +475,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       `which has `,
       n('span', colorToVerbal(arc0.color), { class: 'verbalTextUnderline' }),
       ' the probability of ',
-      n('span', parent2, { class: 'verbalTextBold' }), '.'
+      n('span', parent1, { class: 'verbalTextBold' }), '.'
     );
     verbalListDisplay.appendChild(step2);
 
@@ -467,7 +486,8 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), " ",
       `increases the probability that `,
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
-      n('span', colliderNode, { class: 'verbalTextBold' }), " occurred without ",
+      n('span', colliderNode, { class: 'verbalTextBold' }), " occurred ",
+      n('span', 'without', { class: 'verbalTextUnderline' }), " ",
       n('span', arc0.from, { class: 'verbalTextBold' }), ` — so knowing `,
       n('span', colliderNode, { class: 'verbalTextBold' }), " is ",
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
@@ -484,7 +504,7 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', colorToVerbal(arc1.color), { class: 'verbalTextUnderline' }), 
       ' the probability of ',
       n('span', arc0.from, { class: 'verbalTextBold' }), ' by making the ',
-      n('span', colorToVerbalShorten(arc0.color), { class: 'verbalTextUnderline' }),
+      n('span', colorToVerbalShorten(arc0.color)),
       ' from ',
       n('span', arc0.toState, { class: 'verbalTextItalic' }), '   ',
       n('span', arc0.to, { class: 'verbalTextBold' }),
