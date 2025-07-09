@@ -107,25 +107,27 @@ function colorNodeByColorArrow(nodeName, path, arcColorDict, m) {
         return;
     }
 
-    let currentBelief = m.nodeBeliefs[nodeName];
-    let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
-    
-    currentBelief.forEach((curBelief, idx) => {
-      let diff = curBelief - origBeliefs[idx]
-      let absDiff = diff * 100;
-      let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
-      
-      barchangeElem.classList.add(color)						
 
-      if (absDiff > 0) {
-        // overlay change over the current belief bar
-        barchangeElem.style.marginLeft = `-${absDiff}%`;
-        barchangeElem.style.width = `${absDiff}%`;
-      } else {
-        // the change will be placed right next to the original belief bar
-        barchangeElem.style.width = `${absDiff}%`;
-      }
-    });
+    // Barchange coloring
+    // let currentBelief = m.nodeBeliefs[nodeName];
+    // let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
+    
+    // currentBelief.forEach((curBelief, idx) => {
+    //   let diff = curBelief - origBeliefs[idx]
+    //   let absDiff = diff * 100;
+    //   let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
+      
+    //   barchangeElem.classList.add(color)						
+
+    //   if (absDiff > 0) {
+    //     // overlay change over the current belief bar
+    //     barchangeElem.style.marginLeft = `-${absDiff}%`;
+    //     barchangeElem.style.width = `${absDiff}%`;
+    //   } else {
+    //     // the change will be placed right next to the original belief bar
+    //     barchangeElem.style.width = `${absDiff}%`;
+    //   }
+    // });
   
 }
 

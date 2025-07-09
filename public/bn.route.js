@@ -618,7 +618,7 @@ class BnDetail {
 						globalTargetNodeName = targetNodeName;
 						globalTargetNodeState = targetStateName;
 						
-						let barchangeElem = stateElem.querySelector(`span.barchange`);
+						// let barchangeElem = stateElem.querySelector(`span.barchange`);
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
 
@@ -642,21 +642,21 @@ class BnDetail {
 						// console.log('colorClass:', colorClass)						
 						// set colour and width of the barchange element of finding
 
-						if (this.drawOptions.drawChangeBar) {
-							barchangeElem.style.width = absChange+"%";
-							barchangeElem.style.marginLeft = "-"+absChange+"%";
-							// barchangeElem.style.left = `${100 - absChange}%`;
+						// if (this.drawOptions.drawChangeBar) {
+						// 	barchangeElem.style.width = absChange+"%";
+						// 	barchangeElem.style.marginLeft = "-"+absChange+"%";
+						// 	// barchangeElem.style.left = `${100 - absChange}%`;
 	
-							Array.from(barchangeElem.classList).forEach(classname => {
-								if (classname.indexOf("influence-idx") == 0) {
-									cellProbabilityElem.classList.remove(classname);
+						// 	Array.from(barchangeElem.classList).forEach(classname => {
+						// 		if (classname.indexOf("influence-idx") == 0) {
+						// 			cellProbabilityElem.classList.remove(classname);
 	
-									barchangeElem.classList.remove(classname);
-									barchangeElem.classList.remove(colorClass+"-box");
-									barchangeElem.classList.remove("frame");
-								}
-							})
-						}
+						// 			barchangeElem.classList.remove(classname);
+						// 			barchangeElem.classList.remove(colorClass+"-box");
+						// 			barchangeElem.classList.remove("frame");
+						// 		}
+						// 	})
+						// }
 						
 						cellProbabilityElem.classList.add(colorClass);
 
