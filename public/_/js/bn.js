@@ -421,7 +421,7 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
-	static removeFocusEvidence(nodeElement,bn){
+	static removeFocusEvidence(nodeElement, bn){
 		bn.focusEvidence = nodeElement.dataset.name;
 		nodeElement.classList.remove("focusEvidence");
 		document.querySelectorAll(".play-button").forEach(button => button.remove());
@@ -506,7 +506,7 @@ class Node {
 				// If a different node is in detail mode, deactivate it first
 				if (bn.detail && bn.currentDetailNode && bn.currentDetailNode !== focusEvidenceNode) {
 					Node.removeFlashNode(bn.currentDetailNode);
-					document.querySelectorAll(".play-button").forEach(button => button.remove());
+					// document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.removeFocusEvidence(bn.currentDetailNode, bn);
 					bn.detail = false; // Reset detail mode
 					console.log("If a different node is in detail mode, deactivate it first");
@@ -524,7 +524,7 @@ class Node {
 						console.log("If the same node is clicked again, deactivate detail mode");
 						bn.detail = false;
 						Node.removeFlashNode(focusEvidenceNode);
-						document.querySelectorAll(".play-button").forEach(button => button.remove());
+						// document.querySelectorAll(".play-button").forEach(button => button.remove());
 						Node.removeFocusEvidence(focusEvidenceNode, bn);
 						bn.currentDetailNode = null;
 				}

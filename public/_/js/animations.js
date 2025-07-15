@@ -204,7 +204,6 @@ function reset(arcInfluence, bn, bnView) {
   }
   bnView.querySelectorAll('div.node').forEach(node => {						
     node.style.opacity = 1
-    node.style.boxShadow = ""
   });        
 }
 
