@@ -75,7 +75,7 @@ function inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeNa
 }
 
 function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState, 
-  detail = false, arcInfluence, activePaths) 
+  detail = false, arcInfluence, activePaths, m, bnView) 
   {
   let { evidenceTense, targetTense } = inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeName);
 
@@ -93,21 +93,61 @@ function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, c
           n('span', evidenceState, { class: 'verbalTextItalic' }), ' ',
           n('span', colorToVerbal(colorContribute), { class: 'verbalTextUnderline' }), 
           ` the probability of `,
-          n('span', targetNodeName, { class: 'verbalTextBold' }),` ${targetTense} `, 
-          n('span', targetState, { class: 'verbalTextItalic' }),
+          n('span', targetNodeName, { class: 'verbalTextBold' }),
           `, by direct connection.`
       );
   }
 
   // **Existing Functionality for Multiple Paths or Summary Mode**
+  let colliderClause = '';
+
+  if (!detail && m?.colliders?.length > 0) {
+    for (const collider of m.colliders) {
+      const { node: colliderNode, parents } = collider;
+
+      // Case 1: evidence + target are parents of a collider (already works for Mutation)
+      if (parents.includes(evidenceNodeName) && parents.includes(targetNodeName)) {
+        if (m.nodeBeliefs[colliderNode]?.includes(1)) {
+          const colliderState = getNodeState(colliderNode, targetNodeName, targetState, m, bnView);
+          const { evidenceTense: colliderTense } = inferTenseFromArcInfluence(arcInfluence, colliderNode, targetNodeName);
+          colliderClause = [
+            ', given that ',
+            n('span', colliderNode, { class: 'verbalTextBold' }),
+            ` ${colliderTense} `,
+            n('span', colliderState, { class: 'verbalTextItalic' })
+          ];
+          break;
+        }
+      }
+
+      // Case 2: evidence is the collider; target + other node are its parents
+      if (colliderNode === evidenceNodeName && parents.includes(targetNodeName)) {
+        const otherParent = parents.find(p => p !== targetNodeName);
+        if (m.nodeBeliefs[otherParent]?.includes(1)) {
+          const otherState = getNodeState(otherParent, targetNodeName, targetState, m, bnView);
+          const { evidenceTense: otherTense } = inferTenseFromArcInfluence(arcInfluence, otherParent, targetNodeName);
+          colliderClause = [
+            ', given that ',
+            n('span', otherParent, { class: 'verbalTextBold' }),
+            ` ${otherTense} `,
+            n('span', otherState, { class: 'verbalTextItalic' })
+          ];
+          break;
+        }
+      }
+    }
+  }
+
+
   return n('p', `${numsFinding > 1 ? '● ' : ''}Finding out `, 
-      n('span', evidenceNodeName, { class: 'verbalTextBold' }), ` ${evidenceTense} `, 
-      n('span', evidenceState, { class: 'verbalTextItalic' }), ' ', 
-      n('span', colorToVerbal(colorContribute), { class: 'verbalTextUnderline' }), 
-      ' the probability of ', 
-      n('span', targetNodeName, { class: 'verbalTextBold' }), ` ${targetTense} `, 
-      n('span', targetState, { class: 'verbalTextItalic' }),
-      detail ? ', by direct connection.' : ' .'
+    n('span', evidenceNodeName, { class: 'verbalTextBold' }), ` ${evidenceTense} `, 
+    n('span', evidenceState, { class: 'verbalTextItalic' }), ' ', 
+    n('span', colorToVerbal(colorContribute), { class: 'verbalTextUnderline' }), 
+    ' the probability of ', 
+    n('span', targetNodeName, { class: 'verbalTextBold' }), ` ${targetTense} `, 
+    n('span', targetState, { class: 'verbalTextItalic' }),
+    colliderClause,
+    detail ? ', by direct connection.' : ' .'
   );
 }
 
@@ -173,9 +213,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
           '• By direct connection, it ',
           n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
           ' the probability of ',
-          n('span', nodeB, { class: 'verbalTextBold' }), ' ',
-          n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
-          n('span', arc.toState),
+          n('span', nodeB, { class: 'verbalTextBold' }),
           '.'
         );
         verbalListDisplay.appendChild(bulletLine);
@@ -210,7 +248,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
                 n('span', colorToVerbalShorten(primaryArc.color), { class: 'verbalTextUnderline' }),
                 ' the probability that ',
                 n('span', toNode, { class: 'verbalTextBold' }),' ',
-                n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
+                n('span', evidenceTense, { class: 'verbalTextItalic' }), ' ',
                 n('span', arc.fromState)
               )
             );
@@ -220,9 +258,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
                 'span',
                 n('span', colorToVerbal(arc.color), { class: 'verbalTextUnderline' }),
                 ' the probability of ',
-                n('span', toNode, { class: 'verbalTextBold' }), ' ',
-                n('span', targetTense, { class: 'verbalTextItalic' }), ' ',
-                n('span', arc.toState)
+                n('span', toNode, { class: 'verbalTextBold' }), ' '
               )
             );
           }
@@ -315,7 +351,7 @@ function buildDetailSentenceList(activePaths, arcsContribution, verbalListDispla
       );
     }
   });
-
+  console.log("------------------", targetName, subjectName)
   if (connectionsCount > 1) {
     const overallColor = primaryArc.color || 'does not change';
     const overallPara = n(
@@ -374,47 +410,48 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', arc0.toState.charAt(0).toUpperCase() + arc0.toState.slice(1), { class: 'verbalTextItalic' }), " ",
       n('span', colliderNode, { class: 'verbalTextBold' }), " ",
       "can be caused by the ",
-      n('span', parent1, { class: 'verbalTextBold' }), " being ",
-      n('span', arc0.fromState, { class: 'verbalTextItalic' }), " or ",
       n('span', parent2, { class: 'verbalTextBold' }), " being ",
-      n('span', arc1.fromState, { class: 'verbalTextItalic' }), "."
+      n('span', arc1.fromState, { class: 'verbalTextItalic' }), " or ",
+      n('span', parent1, { class: 'verbalTextBold' }), " being ",
+      n('span', arc0.fromState, { class: 'verbalTextItalic' }), "."
     );
     verbalListDisplay.appendChild(introParagraph);
 
     const step1 = n('p',
       n('span', '1.', { style: 'fontWeight:bold' }), ' ',
       `If we didn’t know about `,
-      n('span', parent1, { class: 'verbalTextBold' }),
+      n('span', parent2, { class: 'verbalTextBold' }),
       `, finding out `,
       n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
-      n('span', arc0.toState, { class: 'verbalTextItalic' }), ' ',
+      n('span', arc1.toState, { class: 'verbalTextItalic' }), ' ',
       `would `,
-      n('span', colorToVerbal(arc0.color), { class: 'verbalTextUnderline' }),
+      n('span', colorToVerbal(arc1.color), { class: 'verbalTextUnderline' }),
       ' the probability of ',
-      n('span', parent2, { class: 'verbalTextBold' }),
+      n('span', parent1, { class: 'verbalTextBold' }),
       '.'
     );
     verbalListDisplay.appendChild(step1);
 
     const step2 = n('p',
       n('span', '2a.', { style: 'fontWeight:bold' }), ' ',
-      `But we do already know `,
-      n('span', parent1, { class: 'verbalTextBold' }), ' was ',
-      n('span', arc0.fromState, { class: 'verbalTextItalic' }), ", ",
-      `which has ${colorToVerbal(arc1.color, true)} the probability that `,
-      n('span', arc0.toState , { class: 'verbalTextItalic' }), " ",
-      n('span', colliderNode, { class: 'verbalTextBold' }), ' will occur without ',
-      n('span', parent2, { class: 'verbalTextBold' }), '.'
+      `But we do know `,
+      n('span', parent2, { class: 'verbalTextBold' }), ' was ',
+      n('span', arc1.fromState, { class: 'verbalTextItalic' }), ", ",
+      `which has ${colorToVerbal(arc0.color, true)} the probability that `,
+      n('span', parent1, { class: 'verbalTextBold' }), " will cause ",
+      n('span', arc1.toState , { class: 'verbalTextItalic' }), " ",
+      n('span', colliderNode, { class: 'verbalTextBold' })
+      
     );
     verbalListDisplay.appendChild(step2);
 
     const step3 = n('p',
       n('span', '2b.', { style: 'fontWeight:bold' }), ' ',
-      `So, finding out `,
+      `Now finding out `,
       n('span', colliderNode, { class: 'verbalTextBold' }), ' is ',
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
       `now only ${colorToVerbal(arc0.color)} the probability of `,
-      n('span', parent2, { class: 'verbalTextBold' }), '.'
+      n('span', parent1, { class: 'verbalTextBold' }), '.'
     );
     verbalListDisplay.appendChild(step3);
 
@@ -485,10 +522,9 @@ function buildDetailCombinedExplanation(arcsContribution, verbalListDisplay, foc
       n('span', focusEvidenceName, { class: 'verbalTextBold' }), ' was ',
       n('span', focusEvidenceName === parent1 ? arc0.fromState : arc1.fromState, { class: 'verbalTextItalic' }), " ",
       `increases the probability that `,
+      n('span', arc0.from, { class: 'verbalTextBold' }), " caused ",
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
-      n('span', colliderNode, { class: 'verbalTextBold' }), " occurred ",
-      n('span', 'without', { class: 'verbalTextUnderline' }), " ",
-      n('span', arc0.from, { class: 'verbalTextBold' }), ` — so knowing `,
+      n('span', colliderNode, { class: 'verbalTextBold' }), ` — so knowing `,      
       n('span', colliderNode, { class: 'verbalTextBold' }), " is ",
       n('span', arc0.toState, { class: 'verbalTextItalic' }), " ",
       `now only ${colorToVerbal(arc1.color)} the probability of `,
@@ -626,7 +662,7 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 
 
 // Generates both normal and collider-specific detailed explanations based on active paths.
-function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidenceName) {
+function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidenceName, globalTargetNodeName, globalTargetNodeState) {
   verbalListDisplay.innerHTML = '';
   // **Sort Paths into Collider and Normal Paths**
   const colliderPaths = [];
@@ -677,8 +713,8 @@ function generateDetailedExplanations(activePaths, arcsContribution, colliderNod
   if (directPaths.length === 1 && indirectPaths.length === 0) {
 
       const directPath = directPaths[0];
-      const evidenceNodeName = directPath[0];
-      const targetNodeName = directPath[1];
+      const evidenceNodeName = focusEvidenceName;
+      const targetNodeName = globalTargetNodeName;
 
       const arc = arcsContribution.find(a => 
           (a.from === evidenceNodeName && a.to === targetNodeName) ||
@@ -1136,6 +1172,6 @@ function analyzeColliders(net, relationships, evidence, targetNode, targetStateI
 module.exports = {
   findAllColliders,
   analyzeColliders,
-  analyzeColliders,
+  buildFindingOutSentence,
   inferTenseFromArcInfluence
 }

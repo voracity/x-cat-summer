@@ -4,7 +4,7 @@ var {Net, Node} = require('../bni_smile');
 var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
-var {findAllColliders, analyzeColliders} = require("./_/js/verbals")
+var {findAllColliders, analyzeColliders, buildFindingOutSentence } = require("./_/js/verbals")
 
 var measurePlugins = {
 	do: {
@@ -629,7 +629,7 @@ class BnDetail {
 							color: colorClass,
 						}
 
-						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths);
+						let findingOutSentence = buildFindingOutSentence(numsEntries, evidenceNodeName, stateName, colorClass, targetNodeName, targetStateName ,displayDetail, bn.arcInfluence, bn.activePaths, m, this.bnView);
 						// let outputSentence = (displayDetail && (numsEntries == 1)) ? findingOutSentence + ', by direct connection.' : findingOutSentence;
 						// console.log('outputSentence:', )
 						// console.log('findingOutSentence:', findingOutSentence)
@@ -708,7 +708,7 @@ class BnDetail {
 
 				// Generate detailed explaination for the focus node
 				if (m.classifiedPaths && displayDetail) {					
-					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
+					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence, globalTargetNodeName, globalTargetNodeState);					
 					// Animation when new focus node is added
 					if (window.animation) {																
 						reset(m.arcInfluence, bn, this.bnView);
