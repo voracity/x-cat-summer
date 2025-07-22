@@ -543,6 +543,7 @@ class BnDetail {
 				verbalListDisplay.innerHTML = '';				
 				let arcsContribution = [];
 				let numsEntries = entries.length;		
+
 				let evidenceContributions = {}		
 				entries.forEach(([evidenceNodeName, value]) => {
 					verbalIntroSentence.innerHTML = '';
@@ -560,9 +561,13 @@ class BnDetail {
 					let focusEvidenceState = ''
 					if (focusEvidence && !displayDetail) {
 						focusEvidenceName = focusEvidence.getAttribute('data-name')
-						let focusEvidenceNode = this.bnView.querySelector(`div.node[data-name="${focusEvidenceName}"]`);
+
+						console.log('focusEvidenceName:', focusEvidenceName)
+						console.log('evidenceNodeName:', evidenceNodeName)
+
 						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
-						let focusEvidenceStateElem = focusEvidenceNode?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+						let focusEvidenceStateElem = focusEvidence?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
+
 						focusEvidenceState = focusEvidenceStateElem ? focusEvidenceStateElem.textContent : "Unknown";
 
 						displayDetail = true;
@@ -710,7 +715,13 @@ class BnDetail {
 				if (m.classifiedPaths && displayDetail) {					
 					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
 					// Animation when new focus node is added
-					if (window.animation) {																
+					if (window.animation) {										
+						console.log('numsEntries:', numsEntries)
+
+						// I need to show the arc contribution without the focus node here
+						// how to show the arc contribution without the focus node?
+						// how to show the arc contribution?
+						
 						reset(m.arcInfluence, bn, this.bnView);
 						resetTargetBar(listTargetNodes)
 						
@@ -1120,11 +1131,10 @@ module.exports = {
 						// calculate arc importances
 						let arcs = []
 						// reset network
-						net = new Net(bnKey);						
+						net = new Net(bnKey);			
 						
 						net.nodes().forEach(child => {
 							let childname = child.name();			
-										
 
 							child.parents().forEach(parent => {
 								
@@ -1154,10 +1164,14 @@ module.exports = {
 									entry.targetBelief[targetNodeName] = netWithnewCPT.node(targetNodeName).beliefs()
 								})
 								
+								console.log('-----------------------------------------------')
+								console.log('entry:', entry)
+								
 								arcs.push(entry)								
 							})
 						})						
 						bn.arcInfluence = arcs;
+						// console.log('bn.arcInfluence:', bn.arcInfluence);
 						// console.log('bn.activePaths:', bn.activePaths)
 						// console.log('bn:', bn)
 
@@ -1252,7 +1266,7 @@ module.exports = {
 						let findings = net.findings();
 						//onsole.timeLog('findings');
 						net.retractFindings();
-						//onsole.timeLog('findings');
+						console.timeLog('findings: ', net.retractFindings());
 						let causeName = node.name();
 						roles2.cause = [causeName];
 						//onsole.timeLog('findings');
