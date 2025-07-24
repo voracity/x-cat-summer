@@ -237,6 +237,7 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
     .map((arcEntry) => {
       // Calculate max diff for this arcEntry       
       const diffs = Object.entries(arcEntry.targetBelief).map(
+
         ([targetNodeName, arcBeliefs]) => {
           const targetNode = document.querySelector(
             `div.node[data-name=${targetNodeName}]`
@@ -244,7 +245,7 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
           const targetStateElem = targetNode.querySelector(".state.istarget");
           const targetStateIdx = targetStateElem.dataset.index;
 
-          // Calculate diff for this target
+          // Calculate diff for this target by getting current belief of the target node minus the belief of an arc without the evidence node
           return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
         }
       );
@@ -440,13 +441,37 @@ function getArcEndpoints(path) {
       : { arcParent: path.to, arcChildren: path.from };
 }
 
-function colorTargetBar(listTargetNodes, m) {
+// preAnimation is to display how is everything before getting the focus node
+function colorTargetBar(listTargetNodes, m, preAnimation = false) {
   Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
     let baseBelief = data.model.beliefs[data.index];
-    let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
+    let currentBelief = preAnimation
+    ? m.beliefsWithoutFocusEvidence[targetNodeName][data.index]
+    : m.nodeBeliefs[targetNodeName][data.index];
+    
+    console.log('---------baseBelief:', baseBelief)
+    console.log('---------currentBelief:', currentBelief)
+
+    if (preAnimation) {
+      const targetNode = document.querySelector('.istargetnode');
+      const probSpans = targetNode.querySelectorAll('span.prob');
+
+      topBlackBg = (100 * m.beliefsWithoutFocusEvidence[targetNodeName][0]).toFixed(0)
+      botBlackBg = (100 * m.beliefsWithoutFocusEvidence[targetNodeName][1]).toFixed(0)
+
+      probSpans[0].textContent = topBlackBg;
+      probSpans[1].textContent = botBlackBg;
+
+      const spanBar = targetNode.querySelectorAll('span.bar');
+      spanBar[0].style.width = `${topBlackBg}%`;
+      spanBar[1].style.width = `${botBlackBg}%`;
+    }
+
     let diff = currentBelief - baseBelief
     let absDiff = 100*Math.abs(diff)
-    let targetColorClass = getColor(diff)				
+    let targetColorClass = getColor(diff)			
+
+    console.log('---------targetColorClass:', targetColorClass, 'diff:', diff, 'absDiff:', absDiff)	
     let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
     Array.from(barchangeElem.classList).forEach(classname=> {
@@ -458,8 +483,10 @@ function colorTargetBar(listTargetNodes, m) {
     })
 
     if (diff > 0) {
+      // barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
+      // barchangeElem.style.backgroundColor = `black`;
     } else {
       barchangeElem.style.marginRight = `${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;

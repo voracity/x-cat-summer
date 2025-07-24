@@ -424,7 +424,7 @@ class BnDetail {
 					state.querySelector('.bar').style.width = (beliefs[i]*barMax)+'%';
 				});
 			}
-			// console.log('m.nodeBeliefs:', m.nodeBeliefs)
+			console.log('m.nodeBeliefs:', m.nodeBeliefs)
 		}
 		/** != null is false only if value is null or undefined **/
 		if (m.scenariosEnabled != null) {
@@ -505,6 +505,13 @@ class BnDetail {
 		
 		// NODES
 		if (m.influences) {
+			console.log('________________________m.arcInfluence:________________________', m.arcInfluence)
+			
+			let influencesFocus = m.influencesWithoutFocusEvidence
+			let beliefsFocus = m.beliefsWithoutFocusEvidence
+
+
+
 			let asFrame = true;
 			// console.log("updating influences");
 			let listTargetNodes = {}			
@@ -683,8 +690,8 @@ class BnDetail {
 					// Build up the arcs for the influence for verbal part					
 					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
 						let onlyFirstOrder = false;
-						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);		
-					
+						let activeNodes  = extractActiveNodes(m.classifiedPaths, onlyFirstOrder);								
+
 						const sortedArcInfluence = sortArcInfluenceByDiff(
 							m.arcInfluence,
 							m.nodeBeliefs,													
@@ -708,55 +715,62 @@ class BnDetail {
 					}
 				})
 
-				// color target bar every time a new evidence is added
-				colorTargetBar(listTargetNodes, m)		
+				// color target bar every time a new evidence is added, use focus evidence is true
+				let preAnimation = numsEntries > 1;
+				colorTargetBar(listTargetNodes, m, preAnimation)		
+
+
+
 
 				// Generate detailed explaination for the focus node
-				if (m.classifiedPaths && displayDetail) {					
-					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
-					// Animation when new focus node is added
-					if (window.animation) {										
-						console.log('numsEntries:', numsEntries)
+				// if (m.classifiedPaths && displayDetail) {					
+				// 	generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
+				// 	// Animation when new focus node is added
+					console.log('----------influencesFocus:', influencesFocus)
+					console.log('----------beliefsFocus:', beliefsFocus)
 
-						// I need to show the arc contribution without the focus node here
-						// how to show the arc contribution without the focus node?
-						// how to show the arc contribution?
+				// 	if (window.animation) {										
+				// 		console.log('numsEntries:', numsEntries)
+
+				// 		// I need to show the arc contribution without the focus node here
+				// 		// how to show the arc contribution without the focus node?
+				// 		// how to show the arc contribution?
 						
-						reset(m.arcInfluence, bn, this.bnView);
-						resetTargetBar(listTargetNodes)
+				// 		reset(m.arcInfluence, bn, this.bnView);
+				// 		resetTargetBar(listTargetNodes)
 						
-						const activeNodes = extractActiveNodes(m.classifiedPaths);	
-						fadeNodes(activeNodes, this.bnView);	
-						fadeAllArrows(activeNodes, m.arcInfluence)
+				// 		const activeNodes = extractActiveNodes(m.classifiedPaths);	
+				// 		fadeNodes(activeNodes, this.bnView);	
+				// 		fadeAllArrows(activeNodes, m.arcInfluence)
 											
-						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
-						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
+				// 		let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
+				// 		const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
 						
-						for (let index = 0; index < animationOrderBN.length; index++) {
-							setTimeout(() => {
-								const path = animationOrderBN[index];
-								if (path.type == 'arrow') {
-									const { arcParent, arcChildren } = getArcEndpoints(path);							
-									const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
-									colorArrows(arcParent, arcChildren, path.direction, color);	
+				// 		for (let index = 0; index < animationOrderBN.length; index++) {
+				// 			setTimeout(() => {
+				// 				const path = animationOrderBN[index];
+				// 				if (path.type == 'arrow') {
+				// 					const { arcParent, arcChildren } = getArcEndpoints(path);							
+				// 					const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
+				// 					colorArrows(arcParent, arcChildren, path.direction, color);	
 									
-								} else if (path.type == 'node') {
-									let nextPath = animationOrderBN[index + 1];
-									// temporary solution
-									colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
+				// 				} else if (path.type == 'node') {
+				// 					let nextPath = animationOrderBN[index + 1];
+				// 					// temporary solution
+				// 					colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
 
-								} else if (path.type == 'target') {
-									colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes);
-								}
-							}, (index + 1) * 850); // start index at 1 so the flashing go first
-						}
-					} 
-				}	else {				
-					// Summary mode	
-					displayAllNodes(this.bnView)
-					displayAllArrows(m.arcInfluence)
-					uncolorAllArrows(m.arcInfluence)
-				}								
+				// 				} else if (path.type == 'target') {
+				// 					colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes);
+				// 				}
+				// 			}, (index + 1) * 850); // start index at 1 so the flashing go first
+				// 		}
+				// 	} 
+				// }	else {				
+				// 	// Summary mode	
+				// 	displayAllNodes(this.bnView)
+				// 	displayAllArrows(m.arcInfluence)
+				// 	uncolorAllArrows(m.arcInfluence)
+				// }								
 			}					
 		} 
 	}
@@ -936,7 +950,6 @@ module.exports = {
 					let selectedStates = {};
 					if (req.query.selectedStates) {
 						selectedStates = JSON.parse(req.query.selectedStates);
-						// console.log('selectedStates:', selectedStates)
 					}
 				
 
@@ -953,7 +966,9 @@ module.exports = {
 					// 	baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();						
 					// });
 					var targetNodeName = Object.keys(selectedStates)[0];
-					baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();												
+					baselineBeliefs[targetNodeName] = net.node(targetNodeName).beliefs();	
+					
+					// console.log('baselineBeliefs:', baselineBeliefs)
 
 					let relationships = [];		
 					// console.log('net.nodes():', net.nodes())			
@@ -1020,6 +1035,7 @@ module.exports = {
 						bn.influences = {};
 						bn.activePaths = [];
 						bn.colliders = {};
+						bn.influencesWithoutFocusEvidence = {};
 						// bn.colliderDiff = {};
 
 
@@ -1091,6 +1107,69 @@ module.exports = {
 							
 							let newBelief = netWithoutOneEvidence.node(targetNodeName).beliefs();
 							influenceData.targetBeliefs[targetNodeName] = newBelief;
+
+
+							//  ------------------- Without Focus Evidence --------------------
+							// the idea is to propagate the network belief without the focus evidence
+							// and then calculate the influence of the current evidenceNodeName on the targetNodeName
+
+							// PROPAGATE THE NETWORK BELIEF WITHOUT THE FOCUS EVIDENCE
+							if (focusEvidence && focusEvidence !== 'null') {
+								let netWithoutFocusEvidence = new Net(bnKey);
+								netWithoutFocusEvidence.compile();
+
+								// Set all evidence except the one corresponding to the FocusEvidence.
+								for (let [nodeName, stateI] of Object.entries(evidence)) {
+									if (nodeName != focusEvidence) {
+										netWithoutFocusEvidence.node(nodeName).finding(Number(stateI));
+									}
+								}
+
+								netWithoutFocusEvidence.update();
+
+								const beliefsWithoutFocusEvidence = {}
+								for (let node of netWithoutFocusEvidence.nodes()) {
+										beliefsWithoutFocusEvidence[node.name()] = node.beliefs(); // This returns an array of probabilities
+									}
+
+								// console.log('AAAAAAAAAAAA', beliefsWithoutFocusEvidence);
+								bn.beliefsWithoutFocusEvidence = beliefsWithoutFocusEvidence;
+
+
+								// CALCULATE THE INFLUENCE OF THE CURRENT EVIDENCE NODE ON THE TARGET NODE
+								// Set all evidence except the one corresponding to the current evidenceNodeName.
+
+
+								let netWithoutTwo = new Net(bnKey); // network without the focus evidence and the current evidenceNodeName
+								netWithoutTwo.compile();
+
+								for (let [nodeName, stateI] of Object.entries(evidence)) {
+									if (nodeName != evidenceNodeName && nodeName != focusEvidence) {
+										netWithoutTwo.node(nodeName).finding(Number(stateI));
+									}
+								}
+								
+								netWithoutTwo.update();
+
+								if (focusEvidence != evidenceNodeName) {
+								
+									bn.influencesWithoutFocusEvidence[evidenceNodeName] = { targetBeliefs: {} };
+									let influenceDataWithoutFocusEvidence = bn.influencesWithoutFocusEvidence[evidenceNodeName];
+									// console.log('influenceDataWithoutFocusEvidence:', influenceDataWithoutFocusEvidence)
+
+									let tempBelief = netWithoutTwo.node(targetNodeName).beliefs();
+									influenceDataWithoutFocusEvidence.targetBeliefs[targetNodeName] = tempBelief;
+								}
+
+								// let bnInfluenceCopy = JSON.parse(JSON.stringify(bn.influences))
+								// bnInfluenceCopy[focusEvidence] = { targetBeliefs: {} };
+								// let influenceDataCopy = bnInfluenceCopy[focusEvidence];
+
+								// let newBeliefFocusEvidence = netWithoutFocusEvidence.node(targetNodeName).beliefs();
+								// influenceDataCopy.targetBeliefs[targetNodeName] = newBeliefFocusEvidence;
+								// console.log('bnInfluenceCopy:', bnInfluenceCopy)
+								// console.log('influenceDataCopy:', influenceDataCopy)
+							}
 						
 							// Find all paths between the current nonActiveNode and the target node in the network.
 							let allPaths = findAllPaths(graph, evidenceNodeName, targetNodeName);	
@@ -1266,7 +1345,6 @@ module.exports = {
 						let findings = net.findings();
 						//onsole.timeLog('findings');
 						net.retractFindings();
-						console.timeLog('findings: ', net.retractFindings());
 						let causeName = node.name();
 						roles2.cause = [causeName];
 						//onsole.timeLog('findings');
