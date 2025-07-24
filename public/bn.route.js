@@ -5,6 +5,8 @@ var {addJointChild, marginalizeParentArc} = require('./_/js/utils');
 var {buildUndirectedGraph, findAllPaths, filterActivePaths, classifyPaths, activePathWithRelationships} = require('./_/js/nodepath');
 var fs = require('fs');
 var {findAllColliders, analyzeColliders, buildFindingOutSentence } = require("./_/js/verbals")
+const { setTenseOverride } = require('./_/js/verbals');
+//setTenseOverride("Mutation", { evidenceTense: "is", targetTense: "was" });
 
 var measurePlugins = {
 	do: {

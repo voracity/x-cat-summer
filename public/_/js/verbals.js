@@ -1,5 +1,6 @@
 var {n} = require('htm');
 var {Net} = require('../../../bni_smile');
+var customTenseOverrides = {};
 
 // Converts color codes to verbal descriptions indicating the effect magnitude (e.g., increases, reduces).
 function colorToVerbal(color, pastTense = false) {
@@ -61,17 +62,29 @@ function colorToVerbalShorten(color) {
     return "increases";
 }
 
-// Determines the direction of arrows between evidence and target
+function setTenseOverride(nodeName, override) {
+  if (typeof nodeName === "string" && typeof override === "object") {
+    customTenseOverrides[nodeName] = {
+      evidenceTense: override.evidenceTense || "was",
+      targetTense: override.targetTense || "is"
+    };
+  }
+}
+
 function inferTenseFromArcInfluence(arcInfluence, evidenceNodeName, targetNodeName) {
+  const override = customTenseOverrides?.[evidenceNodeName];
+  if (override && typeof override === 'object') {
+    return {
+      evidenceTense: override.evidenceTense,
+      targetTense: override.targetTense
+    };
+  }
+
   let isParent = arcInfluence.some(arc => arc.parent === evidenceNodeName && arc.child === targetNodeName);
-
-  // Target should always have tense "is"
-  let targetTense = "is";
-
-  // If evidence is "Mutation", it should always have tense "was"
-  let evidenceTense = evidenceNodeName === "Mutation" ? "was" : (isParent ? "was" : "is");
-
-  return { evidenceTense, targetTense };
+  return {
+    evidenceTense: isParent ? "was" : "is",
+    targetTense: "is"
+  };
 }
 
 function buildFindingOutSentence(numsFinding, evidenceNodeName, evidenceState, colorContribute, targetNodeName, targetState, 
@@ -1173,5 +1186,6 @@ module.exports = {
   findAllColliders,
   analyzeColliders,
   buildFindingOutSentence,
-  inferTenseFromArcInfluence
+  inferTenseFromArcInfluence,
+  setTenseOverride
 }

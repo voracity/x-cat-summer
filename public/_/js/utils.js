@@ -117,11 +117,11 @@ function getColor(changerate) {
     return "influence-idx6";
   else if (-0.3 < changerate && changerate <= -0.15)
     return "influence-idx5";
-  else if (-0.15 < changerate  && changerate < -0.099)
+  else if (-0.15 < changerate  && changerate < -0.0099)
     return "influence-idx4";
-  else if (-0.099 <= changerate && changerate <= 0.099)
+  else if (-0.0099 <= changerate  && changerate <= 0.0099)
     return "influence-idx3";
-  else if (0.099 < changerate && changerate <= 0.15)
+  else if (0.0099 < changerate && changerate <= 0.15)
     return "influence-idx2";
   else if (0.15 < changerate && changerate <= 0.3)
     return "influence-idx1";
