@@ -636,6 +636,9 @@ class BnDetail {
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
 
+						// COLOR STATE BAR NODE
+						cellProbabilityElem.classList.add(colorClass);
+
 						evidenceContributions[evidenceNodeName] = {
 							contribution: absChange,
 							color: colorClass,
@@ -652,6 +655,7 @@ class BnDetail {
 								verbalIntroSentence.appendChild(buildSummarySentence(numsEntries, evidenceNodeName, targetStateColor, targetNodeName, targetStateName, bn.arcInfluence));
 							}
 						}			
+						
 
 						// console.log('colorClass:', colorClass)						
 						// set colour and width of the barchange element of finding
@@ -672,16 +676,16 @@ class BnDetail {
 						// 	})
 						// }
 						
-						cellProbabilityElem.classList.add(colorClass);
+						
 
 						// for all elements not being part of the bar set backgroundcolor
-						Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
-							Array.from(elem.classList).forEach(classname=> {
-								if (classname.indexOf("influence-idx") == 0)
-									elem.classList.remove(classname);
-							});
-							elem.classList.add(colorClass);
-						})
+						// Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=> {
+						// 	Array.from(elem.classList).forEach(classname=> {
+						// 		if (classname.indexOf("influence-idx") == 0)
+						// 			elem.classList.remove(classname);
+						// 	});
+						// 	elem.classList.add(colorClass);
+						// })
 
 					})
 					// console.log('listTargetNodes:', listTargetNodes)					
@@ -719,6 +723,11 @@ class BnDetail {
 				let preAnimation = numsEntries > 1;
 				colorTargetBar(listTargetNodes, m, preAnimation)		
 
+				console.log('----------influencesFocus:', influencesFocus)
+				console.log('----------beliefsFocus:', beliefsFocus)
+
+				doPreAnimation(m, this.bnView)
+
 
 
 
@@ -726,8 +735,7 @@ class BnDetail {
 				// if (m.classifiedPaths && displayDetail) {					
 				// 	generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
 				// 	// Animation when new focus node is added
-					console.log('----------influencesFocus:', influencesFocus)
-					console.log('----------beliefsFocus:', beliefsFocus)
+
 
 				// 	if (window.animation) {										
 				// 		console.log('numsEntries:', numsEntries)
@@ -1250,9 +1258,54 @@ module.exports = {
 							})
 						})						
 						bn.arcInfluence = arcs;
-						// console.log('bn.arcInfluence:', bn.arcInfluence);
 						// console.log('bn.activePaths:', bn.activePaths)
 						// console.log('bn:', bn)
+
+						// CALCULATE ARCS INFLUENCE WITHOUT FOCUS EVIDENCE
+						let arcsFocus = []
+						// reset network
+						netFocus = new Net(bnKey);			
+						
+						netFocus.nodes().forEach(child => {
+							let childname = child.name();			
+
+							child.parents().forEach(parent => {
+								
+								let parentname = parent.name();							
+								
+								let netWithnewCPT = new Net(bnKey);
+								let newcpt = marginalizeParentArc(child, parent, true);
+								
+								let newchild = netWithnewCPT.node(childname);
+								let removeparentnode = netWithnewCPT.node(parentname);
+								newchild.removeParents([removeparentnode]);
+								newchild.cpt(newcpt);
+								
+								for (let [nodeName,stateI] of Object.entries(evidence)) {
+									if (nodeName != focusEvidence) {
+										netWithnewCPT.node(nodeName).finding(Number(stateI));				
+									}					
+								}
+
+								netWithnewCPT.update();
+
+								let entry = {
+									child:childname,
+									parent:parentname,
+									targetBelief:{}
+									
+								}
+								Object.keys(selectedStates).forEach(targetNodeName => {
+									entry.targetBelief[targetNodeName] = netWithnewCPT.node(targetNodeName).beliefs()
+								})
+								
+								console.log('-----------------------------------------------')
+								console.log('entry without focus evidence:', entry)
+								
+								arcsFocus.push(entry)								
+							})
+						})						
+						bn.arcInfluenceWithoutFocusEvidence = arcsFocus;
 
 						return bn;
 					}

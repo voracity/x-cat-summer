@@ -471,7 +471,6 @@ function colorTargetBar(listTargetNodes, m, preAnimation = false) {
     let absDiff = 100*Math.abs(diff)
     let targetColorClass = getColor(diff)			
 
-    console.log('---------targetColorClass:', targetColorClass, 'diff:', diff, 'absDiff:', absDiff)	
     let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
     Array.from(barchangeElem.classList).forEach(classname=> {
@@ -500,6 +499,59 @@ function colorTargetBar(listTargetNodes, m, preAnimation = false) {
       barchangeElem.classList.add(targetColorClass+"-box");
 
   })
+}
+
+function doPreAnimation(m, bnView) {
+  if (m.arcInfluenceWithoutFocusEvidence) {
+    console.log('m.arcInfluenceWithoutFocusEvidence:', m.arcInfluenceWithoutFocusEvidence)
+    m.arcInfluenceWithoutFocusEvidence.forEach((arcEntry) => {
+      let arc = document.querySelector(
+        `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+      );
+
+      Object.entries(arcEntry.targetBelief).forEach(
+        ([targetNodeName, arcBeliefs]) => {
+          let targetNode = bnView.querySelector(
+            `div.node[data-name=${targetNodeName}]`
+          );
+          let targetStateElem =
+            targetNode.querySelector(".state.istarget");
+          let targetStateIdx = targetStateElem.dataset.index;
+
+          let diff =
+            m.beliefsWithoutFocusEvidence[targetNodeName][targetStateIdx] -
+            arcBeliefs[targetStateIdx];
+
+          // let absDiff = Math.abs(diff);
+          // let arcSize = Math.max(3, (absDiff) * 15);
+
+          // Changed to fixed arc size
+          let arcSize = 8;
+          // let headSize = 2;
+          let arcColor = getColor(diff);
+
+          // console.log(
+          //   arcEntry.child,
+          //   arcEntry.parent,
+          //   diff,
+          //   arcSize,
+          //   arcColor
+          // );
+          // we know the first child is the colour arc
+          let influeceArcElems = arc.querySelectorAll(
+            "[data-preanimation=true]"
+          );	
+          console.log('influeceArcElems:', influeceArcElems)
+          influeceArcElems.forEach((elem) => {
+            elem.style.strokeWidth = arcSize;
+            elem.style.stroke = getComputedStyle(
+              document.documentElement
+            ).getPropertyValue(`--${arcColor}`);
+          });
+        }
+      );
+    });
+  }
 }
 
 function colorTargetBarByFocusEvidence(evidenceContributions, focusEvidence, listTargetNodes) {

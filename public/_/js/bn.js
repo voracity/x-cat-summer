@@ -138,6 +138,8 @@ var bn = {
 					this.beliefsWithoutFocusEvidence = reqData.beliefsWithoutFocusEvidence;
 					// console.log('beliefsWithoutFocusEvidence:', this.beliefsWithoutFocusEvidence);
 
+					this.arcInfluenceWithoutFocusEvidence = reqData.arcInfluenceWithoutFocusEvidence;
+
 					// this.colliderDiff = reqData.colliderDiff;
 					this.activePaths = reqData.activePaths;
 					this.classifiedPaths = reqData.classifiedPaths;					
@@ -151,7 +153,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates, beliefsWithoutFocusEvidence: this.beliefsWithoutFocusEvidence, influencesWithoutFocusEvidence: this.influencesWithoutFocusEvidence});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates, beliefsWithoutFocusEvidence: this.beliefsWithoutFocusEvidence, influencesWithoutFocusEvidence: this.influencesWithoutFocusEvidence, arcInfluenceWithoutFocusEvidence: this.arcInfluenceWithoutFocusEvidence});
 	},
 
 	guiUpdateInfoWindows() {

@@ -174,9 +174,11 @@ var draw = {
 					.css({left: svgX-sx, top: svgY-sy, position: "absolute"});
         // Assign 'body' to the arrow body path
         path.setAttribute("data-influencearc", "body");
+				path.setAttribute("data-preanimation", "true");
 
         // Assign 'head' to the arrowhead
         arrow.setAttribute("data-influencearc", "head");
+				arrow.setAttribute("data-preanimation", "true");
 			}
 		}
 		/// Store opts for next time, if updating
