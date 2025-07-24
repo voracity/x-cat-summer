@@ -550,6 +550,7 @@ class BnDetail {
 				verbalListDisplay.innerHTML = '';				
 				let arcsContribution = [];
 				let numsEntries = entries.length;		
+				let preAnimation = numsEntries > 1;
 
 				let evidenceContributions = {}		
 				entries.forEach(([evidenceNodeName, value]) => {
@@ -571,6 +572,8 @@ class BnDetail {
 
 						console.log('focusEvidenceName:', focusEvidenceName)
 						console.log('evidenceNodeName:', evidenceNodeName)
+						console.log('influencesFocus[evidenceNodeName]:', influencesFocus[evidenceNodeName])
+						
 
 						let focusEvidenceIndex = m.nodeBeliefs[focusEvidenceName]?.indexOf(1);
 						let focusEvidenceStateElem = focusEvidence?.querySelector(`.state[data-index="${focusEvidenceIndex}"] .label`);
@@ -611,13 +614,19 @@ class BnDetail {
 
 						let targetBaseModel = m.origModel.find(item => item.name == targetNodeName)
 						listTargetNodes[targetNodeName] = {targetStateElem: targetStateElem, index: targetStateIdx, model: targetBaseModel}
+
+						let baseBelief = targetBaseModel.beliefs[targetStateIdx]
+						// let currentBelief = preAnimation
+						// ? m.beliefsWithoutFocusEvidence[targetNodeName][targetStateIdx]
+						// : m.nodeBeliefs[targetNodeName][targetStateIdx];
+						let currentBelief = m.nodeBeliefs[targetNodeName][targetStateIdx];
 						
 						// calculate the relative change this evidence had on the target
 						// and set the change color accordingly
 
 						let targetStateColor = getTargetStateColor(
-							targetBaseModel.beliefs[targetStateIdx], 
-							m.nodeBeliefs[targetNodeName][targetStateIdx]
+							baseBelief, 
+							currentBelief
 						);
 
 						// console.log('targetStateColor:', targetStateColor)
@@ -636,8 +645,16 @@ class BnDetail {
 						let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
 						let colorClass = getColor(relativeBeliefChange);
 
-						// COLOR STATE BAR NODE
-						cellProbabilityElem.classList.add(colorClass);
+						// COLOR STATE BAR EVIDENCE NODE
+
+						if (preAnimation && influencesFocus[evidenceNodeName]) {
+							let preAnimationBelief = m.beliefsWithoutFocusEvidence[targetNodeName][targetStateIdx] - baseBelief;
+							let preAnimationColorClass = getColor(preAnimationBelief);
+							console.log('preAnimationColorClass:', preAnimationColorClass)
+							cellProbabilityElem.classList.add(preAnimationColorClass);
+						} else {
+							cellProbabilityElem.classList.add(colorClass);
+						}
 
 						evidenceContributions[evidenceNodeName] = {
 							contribution: absChange,
@@ -690,6 +707,8 @@ class BnDetail {
 					})
 					// console.log('listTargetNodes:', listTargetNodes)					
 					// console.log('m.origModel:', m.origModel)
+
+
 				
 					// Build up the arcs for the influence for verbal part					
 					if (m.arcInfluence && m.activePaths && m.classifiedPaths) {												
@@ -719,66 +738,66 @@ class BnDetail {
 					}
 				})
 
-				// color target bar every time a new evidence is added, use focus evidence is true
-				let preAnimation = numsEntries > 1;
+				// color target bar every time a new evidence is added, use focus evidence is true				
 				colorTargetBar(listTargetNodes, m, preAnimation)		
 
 				console.log('----------influencesFocus:', influencesFocus)
 				console.log('----------beliefsFocus:', beliefsFocus)
+				console.log('----------m.influences:', m.influences)
 
-				doPreAnimation(m, this.bnView)
-
-
-
+				if (preAnimation) {
+					doPreAnimation(m, this.bnView)
+				}
 
 				// Generate detailed explaination for the focus node
-				// if (m.classifiedPaths && displayDetail) {					
-				// 	generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
-				// 	// Animation when new focus node is added
+				if (m.classifiedPaths && displayDetail) {					
+					generateDetailedExplanations(m.activePaths, arcsContribution, m.colliders, verbalListDisplay, bn.arcInfluence, m.focusEvidence);					
+					// Animation when new focus node is added
 
 
-				// 	if (window.animation) {										
-				// 		console.log('numsEntries:', numsEntries)
+					if (window.animation) {										
 
-				// 		// I need to show the arc contribution without the focus node here
-				// 		// how to show the arc contribution without the focus node?
-				// 		// how to show the arc contribution?
+						// I need to show the arc contribution without the focus node here
+						// how to show the arc contribution without the focus node?
+						// how to show the arc contribution?
 						
-				// 		reset(m.arcInfluence, bn, this.bnView);
-				// 		resetTargetBar(listTargetNodes)
+						if (!preAnimation) {
+							reset(m.arcInfluence, bn, this.bnView);
+							resetTargetBar(listTargetNodes)
+						}
 						
-				// 		const activeNodes = extractActiveNodes(m.classifiedPaths);	
-				// 		fadeNodes(activeNodes, this.bnView);	
-				// 		fadeAllArrows(activeNodes, m.arcInfluence)
+						const activeNodes = extractActiveNodes(m.classifiedPaths);	
+						fadeNodes(activeNodes, this.bnView);	
+						fadeAllArrows(activeNodes, m.arcInfluence)
 											
-				// 		let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
-				// 		const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
+						let animationOrderBN = generateAnimationOrder(m.classifiedPaths);									
+						const arcColorDict = getArcColors(m.arcInfluence, m.nodeBeliefs)																										
 						
-				// 		for (let index = 0; index < animationOrderBN.length; index++) {
-				// 			setTimeout(() => {
-				// 				const path = animationOrderBN[index];
-				// 				if (path.type == 'arrow') {
-				// 					const { arcParent, arcChildren } = getArcEndpoints(path);							
-				// 					const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
-				// 					colorArrows(arcParent, arcChildren, path.direction, color);	
+						for (let index = 0; index < animationOrderBN.length; index++) {
+							setTimeout(() => {
+								const path = animationOrderBN[index];
+								if (path.type == 'arrow') {
+									const { arcParent, arcChildren } = getArcEndpoints(path);							
+									const color = arcColorDict[`${arcParent}, ${arcChildren}`];												
+									colorArrows(arcParent, arcChildren, path.direction, color);	
 									
-				// 				} else if (path.type == 'node') {
-				// 					let nextPath = animationOrderBN[index + 1];
-				// 					// temporary solution
-				// 					colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
+								} else if (path.type == 'node') {
+									let nextPath = animationOrderBN[index + 1];
+									// temporary solution
+									colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
 
-				// 				} else if (path.type == 'target') {
-				// 					colorTargetBarByFocusEvidence(evidenceContributions, m.focusEvidence, listTargetNodes);
-				// 				}
-				// 			}, (index + 1) * 850); // start index at 1 so the flashing go first
-				// 		}
-				// 	} 
-				// }	else {				
-				// 	// Summary mode	
-				// 	displayAllNodes(this.bnView)
-				// 	displayAllArrows(m.arcInfluence)
-				// 	uncolorAllArrows(m.arcInfluence)
-				// }								
+								} else if (path.type == 'target') {
+									colorTargetBarByFocusEvidence(m, evidenceContributions, m.focusEvidence, listTargetNodes, preAnimation);
+								}
+							}, (index + 1) * 850); // start index at 1 so the flashing go first
+						}
+					} 
+				}	else {				
+					// Summary mode	
+					displayAllNodes(this.bnView)
+					displayAllArrows(m.arcInfluence)
+					uncolorAllArrows(m.arcInfluence)
+				}								
 			}					
 		} 
 	}
