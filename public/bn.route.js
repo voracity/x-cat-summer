@@ -554,7 +554,7 @@ class BnDetail {
 					// Activate Evidence - Flash Node - Shining Node
 					// console.log('displayDetail:', displayDetail)
 					let focusEvidence = this.bnView.querySelector('div.node.focusEvidence');
-		
+					
 					// console.log('focusEvidence:', focusEvidence)	
 					
 					// console.log('-----focuse Evidence----- :',focusEvidence)

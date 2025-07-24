@@ -579,7 +579,10 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
   const colliderNode = arc0.to;  
   const parent1 = arc0.from;
   const parent2 = arc1.from;  
-
+  if (!arc0 || !arc1) {
+    verbalListDisplay.appendChild(n('p', '(Unable to explain due to missing arcs.)'));
+    return;
+  }
   // **Check if the clicked node is the collider or an evidence node**
   if (focusEvidenceName === colliderNode) {
 
@@ -677,6 +680,7 @@ function buildDetailCombinedSpecial(arcsContribution, verbalListDisplay, arcInfl
 // Generates both normal and collider-specific detailed explanations based on active paths.
 function generateDetailedExplanations(activePaths, arcsContribution, colliderNodes, verbalListDisplay, arcInfluence, focusEvidenceName, globalTargetNodeName, globalTargetNodeState) {
   verbalListDisplay.innerHTML = '';
+  
   // **Sort Paths into Collider and Normal Paths**
   const colliderPaths = [];
   const normalPaths = [];

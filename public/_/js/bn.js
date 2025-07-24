@@ -346,22 +346,36 @@ class Node {
 		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
-			//delete bn.evidence[nodeName];
 			evidence[nodeName] = null;
 			nodeEl.classList.remove('hasEvidence');
+
+			// Reset detail mode if this was the focus evidence AND part of a collider
+			const isFocus = bn.focusEvidence === nodeName;
+			const isCollider = (bn.colliders || []).some(c =>
+				c.node === nodeName || c.parents.includes(nodeName)
+			);
+
+			if (isFocus && isCollider) {
+				bn.focusEvidence = null;
+				bn.detail = false;
+				bn.currentDetailNode = null;
+				nodeEl.classList.remove('focusEvidence');
+			}
+
 			let influenceBars = nodeEl.querySelectorAll("span.barchange");
 			Array.from(influenceBars).forEach(elem => {
 				elem.style.width = "0%";
-			})
+			});
 			let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
 			if (!stateElem.classList.contains('istarget'))
-				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=>
-					Array.from(elem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0)
-							elem.classList.remove(classname);
-					})
-				)
-		}
+				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem =>
+				Array.from(elem.classList).forEach(classname => {
+					if (classname.indexOf("influence-idx") == 0)
+					elem.classList.remove(classname);
+				})
+				);
+			}
+
 		else {
 			//bn.evidence[nodeName] = state.dataset.index;
 			evidence[nodeName] = stateIndex;
