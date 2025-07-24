@@ -107,12 +107,12 @@ function colorNodeByColorArrow(nodeName, path, arcColorDict, m) {
         return;
     }
 
-    console.log('color:', color, 'arcParent:', arcParent, 'arcChildren:', arcChildren);
+    // console.log('color:', color, 'arcParent:', arcParent, 'arcChildren:', arcChildren);
 
     let evidenceStateIdx = m.nodeBeliefs[nodeName].indexOf(1);
     let stateElem = node.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
     let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
-    
+
     cellProbabilityElem.classList.forEach(className => {
       if (/^influence-idx[0-6]$/.test(className)) {
         cellProbabilityElem.classList.remove(className);
@@ -120,7 +120,7 @@ function colorNodeByColorArrow(nodeName, path, arcColorDict, m) {
     });
     cellProbabilityElem.classList.add(color);
 
-    console.log('stateElem:', stateElem, 'cellProbabilityElem:', cellProbabilityElem);
+    // console.log('stateElem:', stateElem, 'cellProbabilityElem:', cellProbabilityElem);
 
 
     // Barchange coloring
@@ -464,8 +464,8 @@ function colorTargetBar(listTargetNodes, m, preAnimation = false) {
     ? m.beliefsWithoutFocusEvidence[targetNodeName][data.index]
     : m.nodeBeliefs[targetNodeName][data.index];
     
-    console.log('---------baseBelief:', baseBelief)
-    console.log('---------currentBelief:', currentBelief)
+    // console.log('---------baseBelief:', baseBelief)
+    // console.log('---------currentBelief:', currentBelief)
 
     if (preAnimation) {
       const targetNode = document.querySelector('.istargetnode');
@@ -518,7 +518,7 @@ function colorTargetBar(listTargetNodes, m, preAnimation = false) {
 
 function doPreAnimation(m, bnView) {
   if (m.arcInfluenceWithoutFocusEvidence) {
-    console.log('m.arcInfluenceWithoutFocusEvidence:', m.arcInfluenceWithoutFocusEvidence)
+    // console.log('m.arcInfluenceWithoutFocusEvidence:', m.arcInfluenceWithoutFocusEvidence)
     m.arcInfluenceWithoutFocusEvidence.forEach((arcEntry) => {
       if (!m.influences[arcEntry.child] && !m.influences[arcEntry.parent]) return; // Skip if the arc is not in the influences map
 
@@ -558,7 +558,7 @@ function doPreAnimation(m, bnView) {
           let influeceArcElems = arc.querySelectorAll(
             "[data-preanimation=true]"
           );	
-          console.log('influeceArcElems:', influeceArcElems)
+          // console.log('influeceArcElems:', influeceArcElems)
           influeceArcElems.forEach((elem) => {
             elem.style.strokeWidth = arcSize;
             elem.style.stroke = getComputedStyle(
@@ -603,7 +603,7 @@ function colorTargetBarByFocusEvidence(m, evidenceContributions, focusEvidence, 
       }
     })
     
-    console.log('colorNum:', colorNum, 'contribution:', contribution, 'color:', color);
+    // console.log('colorNum:', colorNum, 'contribution:', contribution, 'color:', color);
     if (colorNum <= 3) {
       barchangeElem.style.marginLeft = `-${contribution}%`;
       barchangeElem.style.width = `${contribution}%`;

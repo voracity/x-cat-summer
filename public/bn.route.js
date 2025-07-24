@@ -741,9 +741,9 @@ class BnDetail {
 				// color target bar every time a new evidence is added, use focus evidence is true				
 				colorTargetBar(listTargetNodes, m, preAnimation)		
 
-				console.log('----------influencesFocus:', influencesFocus)
-				console.log('----------beliefsFocus:', beliefsFocus)
-				console.log('----------m.influences:', m.influences)
+				// console.log('----------influencesFocus:', influencesFocus)
+				// console.log('----------beliefsFocus:', beliefsFocus)
+				// console.log('----------m.influences:', m.influences)
 
 				if (preAnimation) {
 					doPreAnimation(m, this.bnView)
