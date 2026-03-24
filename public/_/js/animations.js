@@ -343,13 +343,13 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
       // console.log('bodyElem working:');						
       setTimeout(() => {											
         // console.log("headElem:", headElem, "Tag:", headElem?.tagName);
-        colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);												
+        colorElement(headElem, paintColor, arcSize, colorOrder, false);								
         
       }, 800);
     
     } else {
       // coloring arrow from top to bottom														
-      colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);											  
+      colorElement(headElem, paintColor, arcSize, colorOrder, false);							  						  
       colorElement(bodyElem, paintColor, arcSize, colorOrder);												        
     }										
   });
@@ -357,58 +357,50 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
 
 function colorElement(elem, paintColor, arcSize = 8, direction = 'normal', isBody = true) {
   if (!elem) {
-      console.warn("colorElement: Element is null or undefined");
-      return;
-  }
-
-  if (paintColor === "original") {
-    elem.style.stroke = "";
-    elem.style.strokeWidth = "";
-    elem.style.strokeDasharray = "";
-    elem.style.strokeDashoffset = "";
-    elem.style.transition = "";    
+    console.warn("colorElement: Element is null or undefined");
     return;
   }
 
-  elem.style.stroke = paintColor;
-  elem.style.strokeWidth = arcSize;
-
-  let elemLength = 100; 
-
-  if (elem.tagName.toLowerCase() === "path") {
-      elemLength = elem.getTotalLength();
-
-  } else if (elem.tagName.toLowerCase() === "g") {      
-      let pathElem = elem.querySelector("path");
-      
-      if (pathElem && typeof pathElem.getTotalLength === "function") {
-          elemLength = pathElem.getTotalLength();
-          elem = pathElem; 
-      } else {
-          console.warn("colorElement: No valid path inside <g> or getTotalLength() not supported.");
-      }
-      
-  } else {
-      console.warn("colorElement: getTotalLength() not supported for", elem);
+  // Resolve the actual drawable element (prefer a <path>).
+  let target = elem;
+  if (target.tagName && target.tagName.toLowerCase() === "g") {
+    const pathElem = target.querySelector("path");
+    if (pathElem) target = pathElem;
   }
 
-  elem.style.strokeDasharray = elemLength;
-
-  if (direction === 'normal') {
-      elem.style.strokeDashoffset = elemLength; // Normal start (hidden)
-  } else {
-      elem.style.strokeDashoffset = -elemLength; // Reverse the animation
-  } 
-
-  elem.style.transition = "none"; 
-  elem.getBoundingClientRect(); // Trigger reflow to apply changes
-  
-  if (isBody) {
-    elem.style.transition = "stroke-dashoffset 1s ease-in-out";
+  if (paintColor === "original") {
+    target.style.stroke = "";
+    target.style.strokeWidth = "";
+    target.style.strokeDasharray = "";
+    target.style.strokeDashoffset = "";
+    target.style.transition = "";
+    return;
   }
-  
-  // Animate stroke from hidden to full visibility
-  elem.style.strokeDashoffset = 0;
+
+  let elemLength = 100;
+  if (target.tagName && target.tagName.toLowerCase() === "path" && typeof target.getTotalLength === "function") {
+    elemLength = target.getTotalLength();
+  } else {
+    console.warn("colorElement: getTotalLength() not supported for", target);
+  }
+
+  target.style.stroke = paintColor;
+  target.style.strokeWidth = arcSize;
+
+  // Disable transitions BEFORE setting the start dashoffset (prevents accidental erase animation).
+  target.style.transition = "none";
+  target.style.strokeDasharray = `${elemLength} ${elemLength}`;
+
+  // Hidden start state.
+  const startOffset = (direction === "reverse") ? -elemLength : elemLength;
+  target.style.strokeDashoffset = startOffset;
+
+  // Force the browser to apply the start state.
+  target.getBoundingClientRect();
+
+  // Animate hidden -> visible.
+  target.style.transition = isBody ? "stroke-dashoffset 1s ease-in-out" : "";
+  target.style.strokeDashoffset = 0;
 }
 
 function uncolorAllArrows(arcInfluence){
