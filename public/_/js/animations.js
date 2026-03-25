@@ -107,25 +107,42 @@ function colorNodeByColorArrow(nodeName, path, arcColorDict, m) {
         return;
     }
 
-    let currentBelief = m.nodeBeliefs[nodeName];
-    let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
-    
-    currentBelief.forEach((curBelief, idx) => {
-      let diff = curBelief - origBeliefs[idx]
-      let absDiff = diff * 100;
-      let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
-      
-      barchangeElem.classList.add(color)						
+    // console.log('color:', color, 'arcParent:', arcParent, 'arcChildren:', arcChildren);
 
-      if (absDiff > 0) {
-        // overlay change over the current belief bar
-        barchangeElem.style.marginLeft = `-${absDiff}%`;
-        barchangeElem.style.width = `${absDiff}%`;
-      } else {
-        // the change will be placed right next to the original belief bar
-        barchangeElem.style.width = `${absDiff}%`;
+    let evidenceStateIdx = m.nodeBeliefs[nodeName].indexOf(1);
+    let stateElem = node.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
+    let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
+
+    cellProbabilityElem.classList.forEach(className => {
+      if (/^influence-idx[0-6]$/.test(className)) {
+        cellProbabilityElem.classList.remove(className);
       }
     });
+    cellProbabilityElem.classList.add(color);
+
+    // console.log('stateElem:', stateElem, 'cellProbabilityElem:', cellProbabilityElem);
+
+
+    // Barchange coloring
+    // let currentBelief = m.nodeBeliefs[nodeName];
+    // let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
+    
+    // currentBelief.forEach((curBelief, idx) => {
+    //   let diff = curBelief - origBeliefs[idx]
+    //   let absDiff = diff * 100;
+    //   let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
+      
+    //   barchangeElem.classList.add(color)						
+
+    //   if (absDiff > 0) {
+    //     // overlay change over the current belief bar
+    //     barchangeElem.style.marginLeft = `-${absDiff}%`;
+    //     barchangeElem.style.width = `${absDiff}%`;
+    //   } else {
+    //     // the change will be placed right next to the original belief bar
+    //     barchangeElem.style.width = `${absDiff}%`;
+    //   }
+    // });
   
 }
 
@@ -202,7 +219,6 @@ function reset(arcInfluence, bn, bnView) {
   }
   bnView.querySelectorAll('div.node').forEach(node => {						
     node.style.opacity = 1
-    node.style.boxShadow = ""
   });        
 }
 
@@ -236,6 +252,7 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
     .map((arcEntry) => {
       // Calculate max diff for this arcEntry       
       const diffs = Object.entries(arcEntry.targetBelief).map(
+
         ([targetNodeName, arcBeliefs]) => {
           const targetNode = document.querySelector(
             `div.node[data-name=${targetNodeName}]`
@@ -243,7 +260,7 @@ function sortArcInfluenceByDiff(arcInfluence, nodeBeliefs, evidenceNodeName) {
           const targetStateElem = targetNode.querySelector(".state.istarget");
           const targetStateIdx = targetStateElem.dataset.index;
 
-          // Calculate diff for this target
+          // Calculate diff for this target by getting current belief of the target node minus the belief of an arc without the evidence node
           return nodeBeliefs[targetNodeName][targetStateIdx] - arcBeliefs[targetStateIdx];
         }
       );
@@ -326,13 +343,13 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
       // console.log('bodyElem working:');						
       setTimeout(() => {											
         // console.log("headElem:", headElem, "Tag:", headElem?.tagName);
-        colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);												
+        colorElement(headElem, paintColor, arcSize, colorOrder, false);								
         
       }, 800);
     
     } else {
       // coloring arrow from top to bottom														
-      colorElement(headElem, paintColor, arcSize, colorOrder, isBody = false);											  
+      colorElement(headElem, paintColor, arcSize, colorOrder, false);							  						  
       colorElement(bodyElem, paintColor, arcSize, colorOrder);												        
     }										
   });
@@ -340,58 +357,50 @@ function colorArrows(arcParent, arcChildren, colorOrder, color) {
 
 function colorElement(elem, paintColor, arcSize = 8, direction = 'normal', isBody = true) {
   if (!elem) {
-      console.warn("colorElement: Element is null or undefined");
-      return;
-  }
-
-  if (paintColor === "original") {
-    elem.style.stroke = "";
-    elem.style.strokeWidth = "";
-    elem.style.strokeDasharray = "";
-    elem.style.strokeDashoffset = "";
-    elem.style.transition = "";    
+    console.warn("colorElement: Element is null or undefined");
     return;
   }
 
-  elem.style.stroke = paintColor;
-  elem.style.strokeWidth = arcSize;
-
-  let elemLength = 100; 
-
-  if (elem.tagName.toLowerCase() === "path") {
-      elemLength = elem.getTotalLength();
-
-  } else if (elem.tagName.toLowerCase() === "g") {      
-      let pathElem = elem.querySelector("path");
-      
-      if (pathElem && typeof pathElem.getTotalLength === "function") {
-          elemLength = pathElem.getTotalLength();
-          elem = pathElem; 
-      } else {
-          console.warn("colorElement: No valid path inside <g> or getTotalLength() not supported.");
-      }
-      
-  } else {
-      console.warn("colorElement: getTotalLength() not supported for", elem);
+  // Resolve the actual drawable element (prefer a <path>).
+  let target = elem;
+  if (target.tagName && target.tagName.toLowerCase() === "g") {
+    const pathElem = target.querySelector("path");
+    if (pathElem) target = pathElem;
   }
 
-  elem.style.strokeDasharray = elemLength;
-
-  if (direction === 'normal') {
-      elem.style.strokeDashoffset = elemLength; // Normal start (hidden)
-  } else {
-      elem.style.strokeDashoffset = -elemLength; // Reverse the animation
-  } 
-
-  elem.style.transition = "none"; 
-  elem.getBoundingClientRect(); // Trigger reflow to apply changes
-  
-  if (isBody) {
-    elem.style.transition = "stroke-dashoffset 1s ease-in-out";
+  if (paintColor === "original") {
+    target.style.stroke = "";
+    target.style.strokeWidth = "";
+    target.style.strokeDasharray = "";
+    target.style.strokeDashoffset = "";
+    target.style.transition = "";
+    return;
   }
-  
-  // Animate stroke from hidden to full visibility
-  elem.style.strokeDashoffset = 0;
+
+  let elemLength = 100;
+  if (target.tagName && target.tagName.toLowerCase() === "path" && typeof target.getTotalLength === "function") {
+    elemLength = target.getTotalLength();
+  } else {
+    console.warn("colorElement: getTotalLength() not supported for", target);
+  }
+
+  target.style.stroke = paintColor;
+  target.style.strokeWidth = arcSize;
+
+  // Disable transitions BEFORE setting the start dashoffset (prevents accidental erase animation).
+  target.style.transition = "none";
+  target.style.strokeDasharray = `${elemLength} ${elemLength}`;
+
+  // Hidden start state.
+  const startOffset = (direction === "reverse") ? -elemLength : elemLength;
+  target.style.strokeDashoffset = startOffset;
+
+  // Force the browser to apply the start state.
+  target.getBoundingClientRect();
+
+  // Animate hidden -> visible.
+  target.style.transition = isBody ? "stroke-dashoffset 1s ease-in-out" : "";
+  target.style.strokeDashoffset = 0;
 }
 
 function uncolorAllArrows(arcInfluence){
@@ -439,13 +448,36 @@ function getArcEndpoints(path) {
       : { arcParent: path.to, arcChildren: path.from };
 }
 
-function colorTargetBar(listTargetNodes, m) {
+// preAnimation is to display how is everything before getting the focus node
+function colorTargetBar(listTargetNodes, m, preAnimation = false) {
   Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
     let baseBelief = data.model.beliefs[data.index];
-    let currentBelief = m.nodeBeliefs[targetNodeName][data.index];
+    let currentBelief = preAnimation
+    ? m.beliefsWithoutFocusEvidence[targetNodeName][data.index]
+    : m.nodeBeliefs[targetNodeName][data.index];
+    
+    // console.log('---------baseBelief:', baseBelief)
+    // console.log('---------currentBelief:', currentBelief)
+
+    if (preAnimation) {
+      const targetNode = document.querySelector('.istargetnode');
+      const probSpans = targetNode.querySelectorAll('span.prob');
+
+      topBlackBg = (100 * m.beliefsWithoutFocusEvidence[targetNodeName][0]).toFixed(0)
+      botBlackBg = (100 * m.beliefsWithoutFocusEvidence[targetNodeName][1]).toFixed(0)
+
+      probSpans[0].textContent = topBlackBg;
+      probSpans[1].textContent = botBlackBg;
+
+      const spanBar = targetNode.querySelectorAll('span.bar');
+      spanBar[0].style.width = `${topBlackBg}%`;
+      spanBar[1].style.width = `${botBlackBg}%`;
+    }
+
     let diff = currentBelief - baseBelief
     let absDiff = 100*Math.abs(diff)
-    let targetColorClass = getColor(diff)				
+    let targetColorClass = getColor(diff)			
+
     let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
     Array.from(barchangeElem.classList).forEach(classname=> {
@@ -457,8 +489,10 @@ function colorTargetBar(listTargetNodes, m) {
     })
 
     if (diff > 0) {
+      // barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.marginLeft = `-${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
+      // barchangeElem.style.backgroundColor = `black`;
     } else {
       barchangeElem.style.marginRight = `${absDiff}%`;
       barchangeElem.style.width = `${absDiff}%`;
@@ -474,12 +508,83 @@ function colorTargetBar(listTargetNodes, m) {
   })
 }
 
-function colorTargetBarByFocusEvidence(evidenceContributions, focusEvidence, listTargetNodes) {
+function doPreAnimation(m, bnView) {
+  if (m.arcInfluenceWithoutFocusEvidence) {
+    // console.log('m.arcInfluenceWithoutFocusEvidence:', m.arcInfluenceWithoutFocusEvidence)
+    m.arcInfluenceWithoutFocusEvidence.forEach((arcEntry) => {
+      if (!m.influences[arcEntry.child] && !m.influences[arcEntry.parent]) return; // Skip if the arc is not in the influences map
+
+      let arc = document.querySelector(
+        `[data-child=${arcEntry.child}][data-parent=${arcEntry.parent}]`
+      );
+
+      Object.entries(arcEntry.targetBelief).forEach(
+        ([targetNodeName, arcBeliefs]) => {
+          let targetNode = bnView.querySelector(
+            `div.node[data-name=${targetNodeName}]`
+          );
+          let targetStateElem =
+            targetNode.querySelector(".state.istarget");
+          let targetStateIdx = targetStateElem.dataset.index;
+
+          let diff =
+            m.beliefsWithoutFocusEvidence[targetNodeName][targetStateIdx] -
+            arcBeliefs[targetStateIdx];
+
+          // let absDiff = Math.abs(diff);
+          // let arcSize = Math.max(3, (absDiff) * 15);
+
+          // Changed to fixed arc size
+          let arcSize = 8;
+          // let headSize = 2;
+          let arcColor = getColor(diff);
+
+          // console.log(
+          //   arcEntry.child,
+          //   arcEntry.parent,
+          //   diff,
+          //   arcSize,
+          //   arcColor
+          // );
+          // we know the first child is the colour arc
+          let influeceArcElems = arc.querySelectorAll(
+            "[data-preanimation=true]"
+          );	
+          // console.log('influeceArcElems:', influeceArcElems)
+          influeceArcElems.forEach((elem) => {
+            elem.style.strokeWidth = arcSize;
+            elem.style.stroke = getComputedStyle(
+              document.documentElement
+            ).getPropertyValue(`--${arcColor}`);
+          });
+        }
+      );
+    });
+  }
+}
+
+function colorTargetBarByFocusEvidence(m, evidenceContributions, focusEvidence, listTargetNodes, preAnimation = false) {
   const {contribution, color} = evidenceContributions[focusEvidence];
   const colorNum = parseInt(color[color.length-1], 10);
   
 
-  Object.entries(listTargetNodes).forEach(([_, data]) => {
+  Object.entries(listTargetNodes).forEach(([targetNodeName, data]) => {
+
+    if (preAnimation) { 
+      topBlackBg = (100 * m.nodeBeliefs[targetNodeName][0]).toFixed(0)
+      botBlackBg = (100 * m.nodeBeliefs[targetNodeName][1]).toFixed(0)
+      
+      const targetNode = document.querySelector('.istargetnode');
+      const probSpans = targetNode.querySelectorAll('span.prob');
+
+      probSpans[0].textContent = topBlackBg;
+      probSpans[1].textContent = botBlackBg;
+
+      const spanBar = targetNode.querySelectorAll('span.bar');
+      spanBar[0].style.width = `${topBlackBg}%`;
+      spanBar[1].style.width = `${botBlackBg}%`;
+    }
+
     let barchangeElem = data.targetStateElem.querySelector(`span.barchange`);
 
     Array.from(barchangeElem.classList).forEach(classname=> {
@@ -490,12 +595,13 @@ function colorTargetBarByFocusEvidence(evidenceContributions, focusEvidence, lis
       }
     })
     
+    // console.log('colorNum:', colorNum, 'contribution:', contribution, 'color:', color);
     if (colorNum <= 3) {
       barchangeElem.style.marginLeft = `-${contribution}%`;
       barchangeElem.style.width = `${contribution}%`;
       barchangeElem.classList.add(color+"-box");
     } else if (colorNum > 3) {
-      barchangeElem.style.marginRight = `${contribution}%`;
+      barchangeElem.style.marginLeft = `${0}%`;
       barchangeElem.style.width = `${contribution}%`;
       barchangeElem.classList.add(color+"-box");
       // barchangeElem.style.backgroundColor = `var(${color})`;

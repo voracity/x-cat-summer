@@ -24,7 +24,8 @@ Then visit `http://localhost:3000` to see if things are working.
 For development, you can use nodemon (install with `npm install -g nodemon`) which will auto-reload the JS files:
 
 ```
-nodemon start
+
+
 ```
 
 For running as a server, you can use pm2 (install with `npm install -g pm2`). And then run:

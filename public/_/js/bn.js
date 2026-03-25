@@ -129,8 +129,17 @@ var bn = {
 				this.measureResults = reqData.measureResults;
 				if (reqData.influences) {
 					this.influences = reqData.influences;
+					// console.log('influences:', this.influences); 
 					this.arcInfluence = reqData.arcInfluence;
 					this.colliders = reqData.colliders;
+
+					this.influencesWithoutFocusEvidence = reqData.influencesWithoutFocusEvidence;
+					// console.log('influencesWithoutFocusEvidence:', this.influencesWithoutFocusEvidence);
+					this.beliefsWithoutFocusEvidence = reqData.beliefsWithoutFocusEvidence;
+					// console.log('beliefsWithoutFocusEvidence:', this.beliefsWithoutFocusEvidence);
+
+					this.arcInfluenceWithoutFocusEvidence = reqData.arcInfluenceWithoutFocusEvidence;
+
 					// this.colliderDiff = reqData.colliderDiff;
 					this.activePaths = reqData.activePaths;
 					this.classifiedPaths = reqData.classifiedPaths;					
@@ -144,7 +153,7 @@ var bn = {
 	},
 	
 	async guiUpdate() {
-		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates});
+		bnDetail.$handleUpdate({nodeBeliefs: this.beliefs, influences: this.influences, arcInfluence: this.arcInfluence, origModel:this.model, activePaths: this.activePaths, colliders: this.colliders, classifiedPaths: this.classifiedPaths, focusEvidence: this.focusEvidence, selectedStates: this.selectedStates, beliefsWithoutFocusEvidence: this.beliefsWithoutFocusEvidence, influencesWithoutFocusEvidence: this.influencesWithoutFocusEvidence, arcInfluenceWithoutFocusEvidence: this.arcInfluenceWithoutFocusEvidence});
 	},
 
 	guiUpdateInfoWindows() {
@@ -346,22 +355,36 @@ class Node {
 		nodeEl.style.boxShadow = "";
 
 		if (nodeName in bn.evidence && bn.evidence[nodeName] == stateIndex) {
-			//delete bn.evidence[nodeName];
 			evidence[nodeName] = null;
 			nodeEl.classList.remove('hasEvidence');
+
+			// Reset detail mode if this was the focus evidence AND part of a collider
+			const isFocus = bn.focusEvidence === nodeName;
+			const isCollider = (bn.colliders || []).some(c =>
+				c.node === nodeName || c.parents.includes(nodeName)
+			);
+
+			if (isFocus && isCollider) {
+				bn.focusEvidence = null;
+				bn.detail = false;
+				bn.currentDetailNode = null;
+				nodeEl.classList.remove('focusEvidence');
+			}
+
 			let influenceBars = nodeEl.querySelectorAll("span.barchange");
 			Array.from(influenceBars).forEach(elem => {
 				elem.style.width = "0%";
-			})
+			});
 			let stateElem = nodeEl.querySelector(`div[data-index="${stateIndex}"]`);
 			if (!stateElem.classList.contains('istarget'))
-				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem=>
-					Array.from(elem.classList).forEach(classname=> {
-						if (classname.indexOf("influence-idx") == 0)
-							elem.classList.remove(classname);
-					})
-				)
-		}
+				Array.from(stateElem.querySelectorAll(":scope>span:not(.barParent)")).forEach(elem =>
+				Array.from(elem.classList).forEach(classname => {
+					if (classname.indexOf("influence-idx") == 0)
+					elem.classList.remove(classname);
+				})
+				);
+			}
+
 		else {
 			//bn.evidence[nodeName] = state.dataset.index;
 			evidence[nodeName] = stateIndex;
@@ -421,7 +444,7 @@ class Node {
 		bn.focusEvidence = nodeElement.dataset.name;
 	}
 
-	static removeFocusEvidence(nodeElement,bn){
+	static removeFocusEvidence(nodeElement, bn){
 		bn.focusEvidence = nodeElement.dataset.name;
 		nodeElement.classList.remove("focusEvidence");
 		document.querySelectorAll(".play-button").forEach(button => button.remove());
@@ -506,22 +529,25 @@ class Node {
 				// If a different node is in detail mode, deactivate it first
 				if (bn.detail && bn.currentDetailNode && bn.currentDetailNode !== focusEvidenceNode) {
 					Node.removeFlashNode(bn.currentDetailNode);
-					document.querySelectorAll(".play-button").forEach(button => button.remove());
+					// document.querySelectorAll(".play-button").forEach(button => button.remove());
 					Node.removeFocusEvidence(bn.currentDetailNode, bn);
 					bn.detail = false; // Reset detail mode
+					console.log("If a different node is in detail mode, deactivate it first");
 				}
 		
 				// activate detail mode for the selected node
 				if (!bn.detail || bn.currentDetailNode !== focusEvidenceNode) {
+						console.log("activate detail mode for the selected node");
 						Node.flashNode(focusEvidenceNode);
 						Node.setFocusEvidence(focusEvidenceNode, bn);
 						bn.detail = true;
 						bn.currentDetailNode = focusEvidenceNode; // Store the currently active detail node
 				} else {
 						// If the same node is clicked again, deactivate detail mode
+						console.log("If the same node is clicked again, deactivate detail mode");
 						bn.detail = false;
 						Node.removeFlashNode(focusEvidenceNode);
-						document.querySelectorAll(".play-button").forEach(button => button.remove());
+						// document.querySelectorAll(".play-button").forEach(button => button.remove());
 						Node.removeFocusEvidence(focusEvidenceNode, bn);
 						bn.currentDetailNode = null;
 				}

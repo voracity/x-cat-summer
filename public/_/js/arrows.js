@@ -108,10 +108,16 @@ var draw = {
 		}
 		else {
 			let toDeg = 360/(2*Math.PI);
-			let endX = lastX-marginEndX;
-			let endY = lastY-marginEndY;
-			let ratio = (lastY-firstY)/(lastX-firstX);
-			let angle = (Math.atan(ratio) + Math.PI*(lastX-firstX<0))*toDeg;
+			// Local (SVG) coordinates for the original endpoints.
+			let fromX = from.x - svgX + sx;
+			let fromY = from.y - svgY + sy;
+			let toX = to.x - svgX + sx;
+			let toY = to.y - svgY + sy;
+			// End of the drawable line segment (leave a gap for arrowhead).
+			let endX = toX - marginEndX;
+			let endY = toY - marginEndY;
+			// Angle for rotating the arrowhead.
+			let angle = Math.atan2((toY - fromY), (toX - fromX)) * toDeg;
 			if (isPath) {
 				/// If we've been given a path, just update what we need to
 				let $arc = $(outputEl).closest('[data-standalone]').find('.arc');
@@ -125,7 +131,7 @@ var draw = {
 					$svg.attr('height', height+sy*2);
 					$svg.css({left: svgX-sx, top: svgY-sy, position: "absolute"});
 					
-					path.attr('d', "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY));
+					path.attr('d', `M ${fromX} ${fromY} L ${endX} ${endY}`);
 					//$svg.find('.head').attr('transform', `rotate(${angle},${endX},${endY})`);
 					$svg.find('.head').css({transform: `rotate(${angle}deg)`, 'transform-origin': `${endX}px ${endY}px`});
 					$svg.find('.triangle').attr('d', `M${endX},${endY} l-1,-4 l10,4 l-10,4 l1,-4 Z`);
@@ -143,13 +149,13 @@ var draw = {
 				
 				$svg.append(this.makeSvg('g', {class: opts.isBlocked ? 'blocked arc': 'arc', ...endpoints}, [
 					path = this.makeSvg("path", {
-						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
+						d: `M ${fromX} ${fromY} L ${endX} ${endY}`,
 						class: 'line',
 						//"marker-end": `url(#arrowhead${blockedMarker})`
 					}),
 					
 					this.makeSvg("path", {
-						d: "M "+firstX+" "+firstY+" L "+(lastX-marginEndX)+" "+(lastY-marginEndY),
+						d: `M ${fromX} ${fromY} L ${endX} ${endY}`,
 						class: 'line',
 						stroke:"rgb(180,180,180)",
 						"stroke-width": 1
@@ -174,9 +180,11 @@ var draw = {
 					.css({left: svgX-sx, top: svgY-sy, position: "absolute"});
         // Assign 'body' to the arrow body path
         path.setAttribute("data-influencearc", "body");
+				path.setAttribute("data-preanimation", "true");
 
         // Assign 'head' to the arrowhead
         arrow.setAttribute("data-influencearc", "head");
+				arrow.setAttribute("data-preanimation", "true");
 			}
 		}
 		/// Store opts for next time, if updating
