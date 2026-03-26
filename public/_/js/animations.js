@@ -96,9 +96,10 @@ function colorNode(nodeName, m) {
 }
 
 function colorNodeByColorArrow(nodeName, path, arcColorDict, m) { 
-    
-    const { arcParent, arcChildren } = getArcEndpoints(path);		
-    let color = arcColorDict[`${arcParent}, ${arcChildren}`]	
+  if (!path || path.type !== 'arrow') return;
+
+  const { arcParent, arcChildren } = getArcEndpoints(path);		
+  let arrowColor = arcColorDict[`${arcParent}, ${arcChildren}`];	
 
     let node = document.querySelector(`.node[data-name="${nodeName}"]:not(.focusEvidence)`);
 
@@ -109,40 +110,60 @@ function colorNodeByColorArrow(nodeName, path, arcColorDict, m) {
 
     // console.log('color:', color, 'arcParent:', arcParent, 'arcChildren:', arcChildren);
 
-    let evidenceStateIdx = m.nodeBeliefs[nodeName].indexOf(1);
-    let stateElem = node.querySelector(`div.state[data-index="${evidenceStateIdx}"]`);
-    let cellProbabilityElem = stateElem.querySelector(`.cellProbability`);
+    // IMPORTANT: For sub-impact nodes, do NOT change .cellProbability/background.
+    // Only color the bar-change overlay (span.barchange) to match the preceding arrow.
 
-    cellProbabilityElem.classList.forEach(className => {
-      if (/^influence-idx[0-6]$/.test(className)) {
-        cellProbabilityElem.classList.remove(className);
+    let currentBelief = m.nodeBeliefs?.[nodeName];
+    let origBeliefs = m.origModel?.find(entry => entry.name == nodeName)?.beliefs;
+    if (!currentBelief || !origBeliefs) return;
+
+    // Pick exactly ONE state to color for this node.
+    // Heuristic: choose the state with the largest absolute belief change.
+    // Tie-breaker: prefer a positive diff (the state that increased).
+    let winningIdx = null;
+    let winningDiff = 0;
+    let winningAbs = 0;
+
+    currentBelief.forEach((curBelief, idx) => {
+      const diff = curBelief - origBeliefs[idx];
+      const absDiff = Math.abs(diff);
+      if (absDiff > winningAbs || (absDiff === winningAbs && diff > winningDiff)) {
+        winningAbs = absDiff;
+        winningDiff = diff;
+        winningIdx = idx;
       }
     });
-    cellProbabilityElem.classList.add(color);
 
-    // console.log('stateElem:', stateElem, 'cellProbabilityElem:', cellProbabilityElem);
+    currentBelief.forEach((curBelief, idx) => {
+      const diff = curBelief - origBeliefs[idx];
+      const absDiffPct = Math.abs(diff) * 100;
+      const barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`);
+      if (!barchangeElem) return;
 
+      // Clear prior influence classes.
+      Array.from(barchangeElem.classList).forEach(className => {
+        if (/^influence-idx[0-6]$/.test(className) || /^influence-idx[0-6]-box$/.test(className)) {
+          barchangeElem.classList.remove(className);
+        }
+      });
 
-    // Barchange coloring
-    // let currentBelief = m.nodeBeliefs[nodeName];
-    // let origBeliefs = m.origModel.find(entry => entry.name == nodeName).beliefs;
-    
-    // currentBelief.forEach((curBelief, idx) => {
-    //   let diff = curBelief - origBeliefs[idx]
-    //   let absDiff = diff * 100;
-    //   let barchangeElem = node.querySelector(`.state[data-index="${idx}"] .barchange`)      
-      
-    //   barchangeElem.classList.add(color)						
+      // Hide/reset everything by default.
+      barchangeElem.style.width = '0%';
+      barchangeElem.style.marginLeft = '0%';
 
-    //   if (absDiff > 0) {
-    //     // overlay change over the current belief bar
-    //     barchangeElem.style.marginLeft = `-${absDiff}%`;
-    //     barchangeElem.style.width = `${absDiff}%`;
-    //   } else {
-    //     // the change will be placed right next to the original belief bar
-    //     barchangeElem.style.width = `${absDiff}%`;
-    //   }
-    // });
+      // Only color the winning state (and only if it actually changed).
+      if (idx !== winningIdx || absDiffPct <= 0) return;
+
+      barchangeElem.classList.add(arrowColor);
+      if (diff > 0) {
+        // Overlay from the right.
+        barchangeElem.style.marginLeft = `-${absDiffPct}%`;
+        barchangeElem.style.width = `${absDiffPct}%`;
+      } else {
+        // the change will be placed right next to the original belief bar
+        barchangeElem.style.width = `${absDiffPct}%`;
+      }
+    });
   
 }
 
