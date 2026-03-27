@@ -784,9 +784,13 @@ class BnDetail {
 									colorArrows(arcParent, arcChildren, path.direction, color);	
 									
 								} else if (path.type == 'node') {
-									let nextPath = animationOrderBN[index + 1];
-									// temporary solution
-									colorNodeByColorArrow(path.name, nextPath, arcColorDict, m);				
+									// Color this node using the arrow that led into it (previous step).
+									let prevPath = animationOrderBN[index - 1];
+									if (!prevPath || prevPath.type != 'arrow') {
+										// Fallback: keep existing behavior if we don't have a preceding arrow.
+										prevPath = animationOrderBN[index + 1];
+									}
+									colorNodeByColorArrow(path.name, prevPath, arcColorDict, m);				
 
 								} else if (path.type == 'target') {
 									colorTargetBarByFocusEvidence(m, evidenceContributions, m.focusEvidence, listTargetNodes, preAnimation);
